@@ -18,6 +18,7 @@ import logging
 import openai
 import random
 import re
+import os
 import string
 import time
 
@@ -34,7 +35,7 @@ nltk.download('averaged_perceptron_tagger_eng')
 logger = logging.getLogger(__name__)
 
 # OpenAI API Config
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 ASSISTANT_ID = "asst_aEB3hdxPZJTwZrU0zqPtkilU"
 Entrez.email = 'stevedev0323@gmail.com'
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
