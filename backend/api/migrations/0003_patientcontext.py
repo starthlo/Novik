@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0002_banner_bannerstat'),
+        ("api", "0002_banner_bannerstat"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PatientContext',
+            name="PatientContext",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_id', models.CharField(max_length=36)),
-                ('content', models.TextField(blank=True, null=True)),
-                ('created_by', models.IntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("session_id", models.CharField(max_length=36)),
+                ("content", models.TextField(blank=True, null=True)),
+                ("created_by", models.IntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
     ]

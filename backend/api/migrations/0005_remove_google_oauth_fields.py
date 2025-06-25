@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0004_add_google_oauth_fields'),
+        ("api", "0004_add_google_oauth_fields"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='customuser',
-            name='google_id',
+            model_name="customuser",
+            name="google_id",
         ),
         migrations.RemoveField(
-            model_name='customuser',
-            name='google_oauth_incomplete',
+            model_name="customuser",
+            name="google_oauth_incomplete",
         ),
     ]

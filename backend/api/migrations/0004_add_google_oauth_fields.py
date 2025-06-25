@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0003_patientcontext'),
+        ("api", "0003_patientcontext"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customuser',
-            name='google_id',
+            model_name="customuser",
+            name="google_id",
             field=models.CharField(blank=True, max_length=255, null=True, unique=True),
         ),
         migrations.AddField(
-            model_name='customuser',
-            name='google_oauth_incomplete',
+            model_name="customuser",
+            name="google_oauth_incomplete",
             field=models.BooleanField(default=False),
         ),
     ]
