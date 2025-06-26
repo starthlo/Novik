@@ -77,7 +77,7 @@ class GoogleLoginSerializer(serializers.Serializer):
             ]:
                 raise serializers.ValidationError("Invalid issuer")
 
-            google_id = idinfo["sub"]
+            # google_id = idinfo["sub"]
             email = idinfo.get("email")
             name = idinfo.get("name")
 

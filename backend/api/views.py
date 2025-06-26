@@ -163,7 +163,7 @@ def openai_response_shared_code(request, content):
         sessionId = request.data.get("sessionId")
         createdBy = request.data.get("createdBy", 0)
 
-        chat = PatientContext.objects.create(
+        PatientContext.objects.create(
             session_id=sessionId,
             content=content,
             # created_by=request.user.id,
@@ -383,31 +383,6 @@ def enrich_response(text, anchor_random_string):
         else:
             all_refs.append({"title": t_strip})
 
-    # print("-----------\r\n all_refs: %s \r\n-----------" % all_refs)
-
-    # if match_found:
-    # ref_block = "\n\n".join([
-    ## f"{i+1}. [{ref['title']}]({ref['url']})\n{ref['authors']}.\n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
-    ## f"###### {i+1}. [{ref['title']}]({ref['url']}) {{ #{i+1} }}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
-    # f"###### {i+1}. [{ref['title']}]({ref['url']}) {{#{'%s%s' % (i+1, anchor_random_string)}}}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
-    # for i, ref in enumerate(all_refs)
-    # ])
-    ## Replace (and remove) references from raw AI response
-    ## text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", f"### References:\n{ref_block}\n", text)
-    # text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", f"", text)
-
-    ## Add new PubMed references on top of raw AI response
-    # text = "%s  \r\n\r\n%s\r\n%s  \r\n" % (text, "### PubMed References:", ref_block )
-    # else:
-    # text = "%s  \r\n\r\n%s\r\n" % (text, "**No recent PubMed references were found that specifically relate to these factors.**")
-
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     ## Enrich the bulleted lines just below these headings
     refmes = ["Preoperative Precautions", "Postoperative Guidelines"]
 
@@ -415,7 +390,6 @@ def enrich_response(text, anchor_random_string):
     anchor_index = len(all_refs)
 
     t_w_r_s = []
-    publication_found = False
 
     for refme in refmes:
         ## get the bulleted list below the heading
@@ -424,13 +398,7 @@ def enrich_response(text, anchor_random_string):
 
         pps = []
         if ref_block_match:
-            # print(ref_block_match.group())
-            # print('---')
-            # print(ref_block_match.group(1))
-            # print('---')
-
             ref_block = ref_block_match.group()
-            # ref_block = ref_block_match.group(1)
 
             pps = re.findall(r"[-|\d\.]\s+(.*)\n", ref_block)
 
@@ -477,9 +445,6 @@ def enrich_response(text, anchor_random_string):
                                 "eye": eye,
                                 "content": pp_content,
                                 "anchor_index": anchor_index,
-                                ## we don't really use this
-                                # 'pubmed': 'XXX link for %s XXX' % anchor_index,
-                                # 'pubmed': article,
                             }
                         )
 
@@ -500,13 +465,6 @@ def enrich_response(text, anchor_random_string):
         ## append references. see line 365-ish in django/novik/api/views.py
         # extra_refs.append("###### %s. %s {{#{%s}}}" % (a_i, a_c, a_f))
 
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     # match_found = True if len(t_w_r_s) > 0 else match_found
 
     print("-----------\r\n all_refs: %s \r\n-----------" % all_refs)
@@ -514,14 +472,11 @@ def enrich_response(text, anchor_random_string):
     if match_found:
         ref_block = "\n\n".join(
             [
-                # f"{i+1}. [{ref['title']}]({ref['url']})\n{ref['authors']}.\n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
-                # f"###### {i+1}. [{ref['title']}]({ref['url']}) {{ #{i+1} }}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
                 f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{'%s%s' % (i + 1, anchor_random_string)}}}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
                 for i, ref in enumerate(all_refs)
             ]
         )
         ## Replace (and remove) references from raw AI response
-        # text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", f"### References:\n{ref_block}\n", text)
         text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
 
         ## Add new PubMed references on top of raw AI response
@@ -654,7 +609,7 @@ class BannerViewSet(viewsets.ModelViewSet):
         ip = request.META.get("REMOTE_ADDR", "")
         try:
             country = GeoIP2().country(ip).get("country_name", "Unknown")
-        except:
+        except Exception:
             country = "Unknown"
         stat, _ = BannerStat.objects.get_or_create(
             banner=banner, date=timezone.now().date(), country=country
@@ -670,7 +625,7 @@ class BannerViewSet(viewsets.ModelViewSet):
         ip = request.META.get("REMOTE_ADDR", "")
         try:
             country = GeoIP2().country(ip).get("country_name", "Unknown")
-        except:
+        except Exception:
             country = "Unknown"
         stat, _ = BannerStat.objects.get_or_create(
             banner=banner, date=timezone.now().date(), country=country
@@ -694,22 +649,6 @@ class BannerStatViewSet(viewsets.ReadOnlyModelViewSet):
 
 @api_view(["GET"])
 def users_view(request):
-    ## MOD : change superuser password
-    # uzzer = CustomUser.objects.get(id=8)
-    # uzzer.email = 'dentalnovikai@gmail.com'
-    # uzzer.set_password('NovikAI1971')
-    # uzzer.is_staff = True
-    # uzzer.is_superuser = True
-    # uzzer.save()
-
-    # uzzer = CustomUser.objects.get(id=6)
-    # uzzer.set_password('jjjound14/155C')
-    # uzzer.username = 'katseye'
-    # uzzer.dob = '1988-05-13'
-    # uzzer.country = 'France'
-    # uzzer.city = 'Nice'
-    # uzzer.save()
-
     # Fetch all from the CustomUser table
     qs = CustomUser.objects.all()
     serializer = UserListSerializer(qs, many=True)
