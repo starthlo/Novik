@@ -4,7 +4,6 @@ import Partners from './Common/Partners';
 import Footer from './Common/Footer';
 import CookieConsent from './Common/CookieConsent';
 import NovikLogo from '../assets/Novik.png';
-// import BannerDisplay from "./Common/BannerDisplay";
 
 function HomePage() {
   return (

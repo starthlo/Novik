@@ -42,7 +42,6 @@ export default function UserManagement() {
   if (loading) return <div>Loading users…</div>;
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
 
-  // compute simple stats
   const total = users.length;
   const byCountry = users.reduce(
     (acc, u) => {
@@ -60,15 +59,11 @@ export default function UserManagement() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id: id }),
-        // body: { id: id }
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      // setStats(await res.json());
-
       if (res.ok) {
-        // // Update the users array
         const nextUsers = users.map(user => {
           if (user.id === id) {
             // Toggle is_active & return
@@ -97,15 +92,11 @@ export default function UserManagement() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ id: id }),
-          // body: { id: id }
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        // setStats(await res.json());
-
         if (res.ok) {
-          // // Update the users array
           const nextUsers = users.filter(function (user) {
             return user.id !== id;
           });
@@ -115,7 +106,7 @@ export default function UserManagement() {
         console.error(err);
       }
     } else {
-      // // do nothing
+      // do nothing
     }
   };
 

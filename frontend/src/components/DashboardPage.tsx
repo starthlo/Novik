@@ -41,14 +41,10 @@ function Dashboard() {
   }, [input]);
 
   useEffect(() => {
-    // // set session id
     const uuid = uuidv4();
-
-    console.log(`uuid = ${uuid}`); // i.e. '398de222-5bf9-4754-8e3e-011a55307014'
-
+    console.log(`uuid = ${uuid}`);
     setSessionId(uuid);
 
-    // // custom init for the resizable textarea
     resizeTextArea();
     window.addEventListener('resize', resizeTextArea);
 
@@ -225,7 +221,7 @@ function Dashboard() {
                               a: ({ node, ...props }) => {
                                 let pc: any = props.children;
                                 if (pc) {
-                                  // // link as superscript
+                                  // link as superscript
                                   if (pc[0] && typeof pc[0] === 'string' && pc[0].startsWith('^')) {
                                     return (
                                       <a
@@ -237,7 +233,7 @@ function Dashboard() {
                                     );
                                   }
                                 }
-                                // // link as usual
+                                // link as usual
                                 return (
                                   <a
                                     target="_blank"

@@ -18,16 +18,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('token');
     setIsLoggedInState(!!token);
 
-    // // MOD
     const is_superuser = localStorage.getItem('is_superuser');
     setIsSuperuser(!!is_superuser);
   }, []);
-
-  // // MOD
-  /* useEffect(() => {
-    const is_superuser = localStorage.getItem("is_superuser");
-    setIsSuperuser(!!is_superuser);
-  }); */
 
   const setIsLoggedIn = (value: boolean) => {
     setIsLoggedInState(value);
@@ -45,7 +38,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     setIsLoggedIn(false);
-    // // MOD
     setIsSuperuser(false);
     localStorage.removeItem('is_superuser');
   };
