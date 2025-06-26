@@ -163,11 +163,6 @@ def openai_response_shared_code(request, content):
         sessionId = request.data.get("sessionId")
         createdBy = request.data.get("createdBy", 0)
 
-        # print("request.user.id = %s" % request.user.id)
-        # print("request.user = %s" % request.user)
-        # print("request.auth = %s" % request.auth)
-
-        ## store this chat
         chat = PatientContext.objects.create(
             session_id=sessionId,
             content=content,
@@ -261,20 +256,12 @@ def openai_response_shared_code(request, content):
                 + "\r\n"
             )
 
-        # print("ai_response (post custom refs):\r\n ******* \r\n %s \r\n *******" % ai_response)
-
-        ## Some cleanup ?
         ai_response = re.sub(
             r"^.*https?:\/\/(?:www\.|go\.)?drugbank\.(?:com|ca)\/drugs\/DB\d+.*\n?",
             "",
             ai_response,
             flags=re.MULTILINE,
         )
-        # ai_response = re.sub(r"\n\s*\n", "\n", ai_response)
-        # ai_response = re.sub(r"\(\s*\)", "", ai_response)
-
-        ## The line breaks preceeding a section makes it look cleaner no ?
-        # ai_response = re.sub(r"([A-Z]+-\s+.*)\n", r"\n" + r"\g<0>", ai_response)
 
         print(
             "ai_response (before enrich_response):\r\n ******* \r\n %s \r\n *******"
@@ -288,39 +275,7 @@ def openai_response_shared_code(request, content):
             % updated_response
         )
 
-        ## START: TEST
-        test_response = """
-The planned treatment involving [Paracetamol](https://go.drugbank.com/drugs/DB00316) and [Ibuprofen](https://go.drugbank.com/drugs/DB01050) for your 48-year-old male patient weighing 73 kg is generally appropriate given the provided information that the patient is not currently on any medication. 
-
-### Detailed Assessment:
-1. **[Paracetamol](https://go.drugbank.com/drugs/DB00316) (500 mg every 6 hours)**:
-   - **Dosage**: The suggested dosage aligns with standard guidelines for adults where the recommended maximum daily dose is generally up to 4,000 mg, ensuring a safe approach with your proposed therapy.
-   - **Considerations**: Ensure the patient does not have any history of liver disease, which could contraindicate the use of [Paracetamol](https://go.drugbank.com/drugs/DB00316). 
-
-2. **[Ibuprofen](https://go.drugbank.com/drugs/DB01050) (400 mg every 6-8 hours)**:
-   - **Dosage**: This regimen is also well within the safety limits for conventional use in adults, typically not exceeding 1,200 mg to 3,200 mg per day for mild to moderate pain [^1^](#1) [^2^](#2).
-   - **Considerations**: Caution should be taken in patients with a history of gastrointestinal issues or renal impairment, none of which are indicated in this patient's case.
-
-### Conclusion:
-Based on the available data and the patient’s background, the analgesics prescribed ([Paracetamol](https://go.drugbank.com/drugs/DB00316) and [Ibuprofen](https://go.drugbank.com/drugs/DB01050)) appear proper, considering he has no current medications or conditions that further complicate their use.  
-
-### References:
-###### 1. [Anti-Inflammatory Drugs as Anticancer Agents.](https://pubmed.ncbi.nlm.nih.gov/32283655/) {#1}
-Zappavigna S, Cossu AM, Grimaldi A, Bocchetti M, Ferraro GA, Nicoletti GF, et al..
-International journal of molecular sciences. 2020;21(7):. doi:10.3390/ijms21072605
-
-###### 2. [A systematic review of the use of local analgesia in medically compromised children and adolescents.](https://pubmed.ncbi.nlm.nih.gov/28983877/) {#2}
-Dougall A, Hayes M, Daly B.
-European archives of paediatric dentistry : official journal of the European Academy of Paediatric Dentistry. 2017;18(5):331-343. doi:10.1007/s40368-017-0304-x
-
-###### 3. [Anti-Inflammatory Drugs as Anticancer Agents.](https://pubmed.ncbi.nlm.nih.gov/32283655/) {#3}
-Zappavigna S, Cossu AM, Grimaldi A, Bocchetti M, Ferraro GA, Nicoletti GF, et al..
-International journal of molecular sciences. 2020;21(7):. doi:10.3390/ijms21072605
-"""
-        ## END: TEST
-
         return updated_response
-        # return test_response
 
     except Exception as e:
         logger.error(f"OpenAI API error: {str(e)}")

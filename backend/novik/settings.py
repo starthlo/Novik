@@ -31,8 +31,6 @@ DEBUG = True
 ALLOWED_HOSTS = ["novik.ai", "82.29.174.61", "127.0.0.1"]
 STATIC_ROOT = BASE_DIR / "static"
 
-# Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -68,7 +66,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "api.backends.EmailBackend",
+    "api.authentication.CustomBackend",
 ]
 
 ROOT_URLCONF = "novik.urls"
