@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 .bg-dental {
-  background-image: url("./assets/Front Image.png");
+  background-image: url('./assets/Front Image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -29,13 +29,14 @@
 }
 
 @font-face {
-  font-family: "Montserrat";
-  src: url("./assets/fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
+  font-family: 'Montserrat';
+  src: url('./assets/fonts/Montserrat-VariableFont_wght.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
 }
-body, pre {
-  font-family: "Montserrat", sans-serif;
+body,
+pre {
+  font-family: 'Montserrat', sans-serif;
 }
 
 .accordion-container {
@@ -72,7 +73,7 @@ body, pre {
 }
 
 .user-accordion summary:after {
-  content: "▼";
+  content: '▼';
   font-size: 0.8rem;
   transform-origin: center;
   transition: transform 0.2s ease;

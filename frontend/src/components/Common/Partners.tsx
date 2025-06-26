@@ -1,5 +1,5 @@
-import { useState } from "react";
-import osstem_logo from "../../assets/ossem_logo.png";
+import { useState } from 'react';
+import osstem_logo from '../../assets/ossem_logo.png';
 
 const Partners = () => {
   const [clicks, setClicks] = useState(0);
@@ -18,7 +18,11 @@ const Partners = () => {
         rel="noopener noreferrer"
         onClick={handleClick}
       >
-        <img src={osstem_logo} alt="Osstem" className="h-16 mx-auto cursor-pointer hover:scale-105 transition-transform" />
+        <img
+          src={osstem_logo}
+          alt="Osstem"
+          className="h-16 mx-auto cursor-pointer hover:scale-105 transition-transform"
+        />
       </a>
       <p className="text-xs text-gray-200 mt-2">clicks: {clicks}</p>
     </div>

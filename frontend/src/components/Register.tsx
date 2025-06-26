@@ -45,12 +45,12 @@ function Register() {
     const { name, value, type } = e.target;
 
     if (type === 'checkbox') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }));
     } else {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [name]: value,
       }));
@@ -98,7 +98,8 @@ function Register() {
         <div className="bg-white p-8 rounded-lg shadow-md w-[600px] mb-8">
           <h2 className="text-3xl text-gray-500 font-bold text-center mb-4">User Registration</h2>
           <p className="text-gray-500 text-center mb-6">
-            To use the NOVIK Dental Assistant you need to register. Once you have registered you will be able to use Novik and discover its full potential.
+            To use the NOVIK Dental Assistant you need to register. Once you have registered you
+            will be able to use Novik and discover its full potential.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +199,9 @@ function Register() {
             >
               <option value="">Select Country</option>
               {countries.map(c => (
-                <option key={c.isoCode} value={c.name}>{c.name}</option>
+                <option key={c.isoCode} value={c.name}>
+                  {c.name}
+                </option>
               ))}
             </select>
 
@@ -210,7 +213,9 @@ function Register() {
             >
               <option value="">Select State</option>
               {states.map(s => (
-                <option key={s.isoCode} value={s.name}>{s.name}</option>
+                <option key={s.isoCode} value={s.name}>
+                  {s.name}
+                </option>
               ))}
             </select>
 
@@ -222,10 +227,11 @@ function Register() {
             >
               <option value="">Select City</option>
               {cities.map(city => (
-                <option key={city.name} value={city.name}>{city.name}</option>
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
               ))}
             </select>
-
 
             <div className="space-y-2">
               <label className="flex items-center text-gray-500 gap-2">

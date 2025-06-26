@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-eqy+4$t(t@h6p6p)$(c_z699g=87#m7_rwc9$3kf!15e=lpgfw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["novik.ai", "95.85.93.198", "82.29.174.61", "127.0.0.1"]
+ALLOWED_HOSTS = ["novik.ai", "95.85.93.198", "82.29.174.61", "127.0.0.1", "localhost"]
 STATIC_ROOT = BASE_DIR / "static"
 
 INSTALLED_APPS = [

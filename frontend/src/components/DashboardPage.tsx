@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef, ChangeEvent } from "react";
-import { useLocation } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkHeaderId from "remark-heading-id";
-import { v4 as uuidv4 } from "uuid";
-// // Next one silently fails in build resulting in that dreaded blank page
-// import TextareaAutosize from "react-textarea-autosize";
-import { FaPaperclip } from "react-icons/fa";
+import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkHeaderId from 'remark-heading-id';
+import { v4 as uuidv4 } from 'uuid';
+import { FaPaperclip } from 'react-icons/fa';
 
-import Header from "./Common/Header";
-import PoweredBy from "./Common/PoweredBy";
-import Partners from "./Common/Partners";
-import Footer from "./Common/Footer";
+import Header from './Common/Header';
+import PoweredBy from './Common/PoweredBy';
+import Partners from './Common/Partners';
+import Footer from './Common/Footer';
 
 type ChatMessage = {
   question: string;
@@ -18,7 +16,7 @@ type ChatMessage = {
 };
 
 function Dashboard() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,14 +26,12 @@ function Dashboard() {
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const footerObserverRef = useRef<HTMLDivElement>(null);
   const inputWrapperRef = useRef<HTMLDivElement>(null);
-  const [sessionId, setSessionId] = useState("");
+  const [sessionId, setSessionId] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (location.state?.clear) {
       setChatHistory([]);
-
-      // // something to appease vite :)
       console.log(`isFooterVisible: ${isFooterVisible}`);
     }
   }, [location.state]);
@@ -54,7 +50,7 @@ function Dashboard() {
 
     // // custom init for the resizable textarea
     resizeTextArea();
-    window.addEventListener("resize", resizeTextArea);
+    window.addEventListener('resize', resizeTextArea);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -66,7 +62,7 @@ function Dashboard() {
       },
       {
         threshold: 0.1,
-        rootMargin: "50px",
+        rootMargin: '50px',
       }
     );
 
@@ -82,19 +78,18 @@ function Dashboard() {
       return;
     }
 
-    let textAreaHeight = "48px";
-    if (input != "") {
+    let textAreaHeight = '48px';
+    if (input != '') {
       textAreaHeight = `${textAreaRef.current.scrollHeight}px`;
     }
 
-    textAreaRef.current.style.height = "auto"; // will not work without this!
-    // textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+    textAreaRef.current.style.height = 'auto'; // will not work without this!
     textAreaRef.current.style.height = textAreaHeight;
   };
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || file.type !== "application/pdf") return;
+    if (!file || file.type !== 'application/pdf') return;
     setSelectedFile(file);
   };
 
@@ -102,30 +97,25 @@ function Dashboard() {
     if (!input.trim() && !selectedFile) return;
 
     const currentInput = input;
-    setInput("");
-    setPendingQuestion(
-      selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput
-    );
+    setInput('');
+    setPendingQuestion(selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput);
     setLoading(true);
 
-    // // MOD: Scroll to the bottom of the chat
-    // footerObserverRef
-    bottomRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    // MOD: Scroll to the bottom of the chat
+    bottomRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
 
     try {
-      let endpoint = "/api/dashboard/";
+      let endpoint = '/api/dashboard/';
       let body: FormData | string;
 
       if (selectedFile) {
-        // If there's a PDF file, use FormData to send both file and text
         const formData = new FormData();
-        formData.append("sessionId", sessionId);
-        formData.append("pdf", selectedFile);
-        formData.append("message", currentInput);
+        formData.append('sessionId', sessionId);
+        formData.append('pdf', selectedFile);
+        formData.append('message', currentInput);
         body = formData;
-        endpoint = "/api/dashboard/pdf/";
+        endpoint = '/api/dashboard/pdf/';
       } else {
-        // If there's only text, send as JSON
         body = JSON.stringify({
           sessionId: sessionId,
           message: currentInput,
@@ -133,23 +123,17 @@ function Dashboard() {
       }
 
       const res = await fetch(endpoint, {
-        method: "POST",
-        headers: selectedFile
-          ? undefined
-          : { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: selectedFile ? undefined : { 'Content-Type': 'application/json' },
         body: body,
       });
 
-      const data = (await res.ok)
-        ? await res.json()
-        : { message: "Please try again..." };
+      const data = (await res.ok) ? await res.json() : { message: 'Please try again...' };
 
-      setChatHistory((prev) => [
+      setChatHistory(prev => [
         ...prev,
         {
-          question: selectedFile
-            ? `📄 ${selectedFile.name}: ${currentInput}`
-            : currentInput,
+          question: selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput,
           answer: data.message,
         },
       ]);
@@ -157,20 +141,18 @@ function Dashboard() {
       // Clear the selected file after submission
       setSelectedFile(null);
 
-      // // MOD: Scroll to the bottom of the chat
+      // MOD: Scroll to the bottom of the chat
       bottomRef.current?.scrollIntoView({
-        block: "center",
-        behavior: "smooth",
+        block: 'center',
+        behavior: 'smooth',
       });
     } catch (error) {
       console.error(error);
-      setChatHistory((prev) => [
+      setChatHistory(prev => [
         ...prev,
         {
-          question: selectedFile
-            ? `📄 ${selectedFile.name}: ${currentInput}`
-            : currentInput,
-          answer: "Error connecting to server.",
+          question: selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput,
+          answer: 'Error connecting to server.',
         },
       ]);
     } finally {
@@ -179,20 +161,12 @@ function Dashboard() {
     }
   };
 
-  const handleKeyPress =
-    // (e: React.KeyboardEvent<HTMLInputElement>) => {
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // // MOD: On ENTER, only submit if the SHIFT key isn't clicked too
-      // if (e.key === "Enter") handleSubmit();
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-  // useEffect(() => {
-  //   bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // }, [chatHistory, loading]);
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
 
   return (
     <div className="bg-dental w-screen h-screen flex flex-col">
@@ -210,32 +184,21 @@ function Dashboard() {
                 <div className="bg-white rounded-lg shadow-md p-4">
                   <pre className="text-gray-800 mb-2">{chat.question}</pre>
                   <span className="text-gray-500 text-sm">
-                    {new Date().toLocaleDateString()}{" "}
-                    {new Date().toLocaleTimeString()}
+                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-end mt-2">
                 <div className="bg-orange-400 rounded-lg shadow-md p-4 max-w-[60%] space-y-4">
-                  {chat.answer.split("@@@@@").map((section, i) => {
+                  {chat.answer.split('@@@@@').map((section, i) => {
                     const trimmed = section.trim();
                     if (!trimmed) return null;
 
-                    // const lines = trimmed.split("\n");
-                    // const title = lines[0];
-                    // // "  \r\n" below ensures that new lines don't get swallowed by the previous one.
-                    // const body = lines.slice(1).join("  \r\n");
-
                     let isReferences: boolean = false;
-                    // title.toLowerCase().startsWith("references");
 
                     return (
                       <div key={i} className="text-grey-900 p-2 rounded">
-                        {/* <h4 className="text-lg font-bold mb-2">
-                          <ReactMarkdown>{title}</ReactMarkdown>
-                        </h4> 
-                        */}
                         <div className="prose prose-sm">
                           <ReactMarkdown
                             remarkPlugins={[remarkHeaderId]}
@@ -245,21 +208,17 @@ function Dashboard() {
 
                                 // console.log('pc =', pc);
 
-                                if (typeof pc == "string") {
-                                  isReferences = pc
-                                    .trim()
-                                    .endsWith("References");
+                                if (typeof pc == 'string') {
+                                  isReferences = pc.trim().endsWith('References');
                                 }
 
-                                return (
-                                  <h3 className="font-bold mt-4" {...props} />
-                                );
+                                return <h3 className="font-bold mt-4" {...props} />;
                               },
                               p: ({ node, ...props }) => {
-                                let cs = "mb-1";
+                                let cs = 'mb-1';
 
                                 if (isReferences) {
-                                  cs += " text-xs";
+                                  cs += ' text-xs';
                                 }
                                 return <p className={cs} {...props} />;
                               },
@@ -267,11 +226,7 @@ function Dashboard() {
                                 let pc: any = props.children;
                                 if (pc) {
                                   // // link as superscript
-                                  if (
-                                    pc[0] &&
-                                    typeof pc[0] === "string" &&
-                                    pc[0].startsWith("^")
-                                  ) {
+                                  if (pc[0] && typeof pc[0] === 'string' && pc[0].startsWith('^')) {
                                     return (
                                       <a
                                         className="text-blue-800 underline hover:text-blue-800"
@@ -293,14 +248,9 @@ function Dashboard() {
                                 );
                               },
                               ul: ({ node, ...props }) => (
-                                <ul
-                                  className="list-disc list-inside my-2"
-                                  {...props}
-                                />
+                                <ul className="list-disc list-inside my-2" {...props} />
                               ),
-                              li: ({ node, ...props }) => (
-                                <li className="mb-1" {...props} />
-                              ),
+                              li: ({ node, ...props }) => <li className="mb-1" {...props} />,
                               ol: ({ node, ...props }) => {
                                 if (isReferences) {
                                   return (
@@ -314,9 +264,6 @@ function Dashboard() {
                               },
                             }}
                           >
-                            {/* isReferences
-                              ? body.replace(/^\d+\.\s/gm, "\n$&")
-                              : body */}
                             {trimmed}
                           </ReactMarkdown>
                         </div>
@@ -325,8 +272,7 @@ function Dashboard() {
                   })}
 
                   <span className="text-white text-sm block text-right">
-                    {new Date().toLocaleDateString()}{" "}
-                    {new Date().toLocaleTimeString()}
+                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                   </span>
                 </div>
               </div>
@@ -339,8 +285,7 @@ function Dashboard() {
                 <div className="bg-white rounded-lg shadow-md p-4">
                   <pre className="text-gray-800 mb-2">{pendingQuestion}</pre>
                   <span className="text-gray-500 text-sm">
-                    {new Date().toLocaleDateString()}{" "}
-                    {new Date().toLocaleTimeString()}
+                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
                   </span>
                 </div>
               </div>
@@ -350,9 +295,7 @@ function Dashboard() {
           {loading && (
             <div className="mt-4 flex flex-col items-center">
               <div className="w-8 h-8 border-4 border-gray-300 border-t-orange-500 rounded-full animate-spin"></div>
-              <p className="text-gray-500 mt-2">
-                Preparing response, please be patient...
-              </p>
+              <p className="text-gray-500 mt-2">Preparing response, please be patient...</p>
             </div>
           )}
 
@@ -368,27 +311,14 @@ function Dashboard() {
             <div className="flex items-end bg-white rounded-lg shadow-md overflow-hidden w-full max-w-6xl mx-auto">
               <label
                 className={`cursor-pointer hover:text-orange-500 transition mb-3 px-3 flex items-center space-x-1 ${
-                  selectedFile ? "text-orange-500" : ""
+                  selectedFile ? 'text-orange-500' : ''
                 }`}
               >
                 <FaPaperclip
                   className="h-5 w-5 text-xl text-black-500 hover:scale-120 transition cursor-pointer"
                   title="Upload file"
                 />
-                {/* <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg> */}
+
                 <input
                   type="file"
                   accept="application/pdf"
@@ -400,9 +330,7 @@ function Dashboard() {
               <div className="flex-1 flex items-center">
                 {selectedFile && (
                   <div className="flex items-center px-2 py-1 bg-orange-100 rounded-full mr-2 text-sm">
-                    <span className="truncate max-w-xs">
-                      {selectedFile.name}
-                    </span>
+                    <span className="truncate max-w-xs">{selectedFile.name}</span>
                     <button
                       onClick={() => setSelectedFile(null)}
                       className="ml-1 text-gray-500 hover:text-gray-700"
@@ -411,36 +339,22 @@ function Dashboard() {
                     </button>
                   </div>
                 )}
-                {/* <input
-                  type="text"
-                  placeholder={
-                    selectedFile
-                      ? "Enter your question about the PDF..."
-                      : "Please provide the patient's age, weight, medications, and treatment to be performed"
-                  }
-                  className="flex-1 p-3 outline-none text-gray-700"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => handleKeyPress(e)}
-                /> */}
                 <textarea
                   className="resize-none overflow-hidden w-full flex-1 p-3 outline-none text-gray-700"
                   placeholder={
                     selectedFile
-                      ? "Enter your question about the PDF..."
+                      ? 'Enter your question about the PDF...'
                       : "Please provide the patient's age, weight, medications, and treatment to be performed"
                   }
                   value={input}
                   ref={textAreaRef}
-                  onChange={(e) => {
+                  onChange={e => {
                     setInput(e.target.value);
-                    // resizeTextArea();
                   }}
-                  onKeyDown={(e) => handleKeyPress(e)}
+                  onKeyDown={e => handleKeyPress(e)}
                 ></textarea>
               </div>
 
-              {/* orange submit button */}
               <button
                 onClick={handleSubmit}
                 className="bg-orange-500 text-white px-4 py-2 mb-1 mx-1 rounded"

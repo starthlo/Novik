@@ -1,17 +1,17 @@
-import "./App.css";
-import "./index.css";
-import { Route, Routes } from "react-router-dom";
+import './App.css';
+import './index.css';
+import { Route, Routes } from 'react-router-dom';
 
-import Login from "./components/Login";
-import Register from "./components/Register";
-import ContactPage from "./components/ContactPage";
-import PartnersPage from "./components/PartnersPage";
-import HomePage from "./components/HomePage";
-import DashboardPage from "./components/DashboardPage";
-import PrivateRoute from "./components/PrivateRoute";
-import LegalPage from "./components/LegalPage";
-import UserManagement from "./components/UserManagement";
-import BannerManagement from "./components/Bannermanagement";
+import Login from './components/Login';
+import Register from './components/Register';
+import ContactPage from './components/ContactPage';
+import PartnersPage from './components/PartnersPage';
+import HomePage from './components/HomePage';
+import DashboardPage from './components/DashboardPage';
+import PrivateRoute from './components/PrivateRoute';
+import LegalPage from './components/LegalPage';
+import UserManagement from './components/UserManagement';
+import BannerManagement from './components/Bannermanagement';
 
 function App() {
   return (

@@ -26,7 +26,8 @@ const CookieConsent = () => {
         </button>
         <h2 className="text-lg font-semibold mb-2">Manage cookie consent</h2>
         <p className="text-gray-700 text-sm mb-4">
-          We use cookies to enhance your experience. You can accept all, only essential cookies, or decline.
+          We use cookies to enhance your experience. You can accept all, only essential cookies, or
+          decline.
         </p>
         <div className="flex flex-wrap gap-2 justify-between mb-4">
           <button
@@ -49,9 +50,15 @@ const CookieConsent = () => {
           </button>
         </div>
         <div className="flex justify-center gap-4 text-sm text-orange-500 underline">
-          <a href="/legal#terms" target="_blank" rel="noopener noreferrer">Terms of service</a>
-          <a href="/legal#privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-          <a href="/legal#cookies" target="_blank" rel="noopener noreferrer">Cookie Policy</a>
+          <a href="/legal#terms" target="_blank" rel="noopener noreferrer">
+            Terms of service
+          </a>
+          <a href="/legal#privacy" target="_blank" rel="noopener noreferrer">
+            Privacy Policy
+          </a>
+          <a href="/legal#cookies" target="_blank" rel="noopener noreferrer">
+            Cookie Policy
+          </a>
         </div>
       </div>
     </div>

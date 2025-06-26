@@ -5,8 +5,8 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
-} from "react-icons/fa";
-import { Link } from "react-router-dom";
+} from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
@@ -77,11 +77,10 @@ function Footer() {
       </div>
 
       <p className="max-w-7xl text-center md:text-left mx-auto mt-6 px-4 text-base text-gray-500">
-        Novik is an experimental technology demonstrator. Novik does not provide
-        medical advice, diagnosis or treatment. User questions and other inputs
-        on Novik are not covered by HIPAA. It is the responsibility of the user
-        to ensure questions do not contain protected health information (PHI) or
-        any information that violates the privacy of any person.
+        Novik is an experimental technology demonstrator. Novik does not provide medical advice,
+        diagnosis or treatment. User questions and other inputs on Novik are not covered by HIPAA.
+        It is the responsibility of the user to ensure questions do not contain protected health
+        information (PHI) or any information that violates the privacy of any person.
       </p>
     </footer>
   );

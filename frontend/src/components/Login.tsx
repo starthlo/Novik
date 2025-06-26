@@ -1,68 +1,68 @@
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import Header from "./Common/Header";
-import { Lock, User } from "lucide-react";
-import NovikLogo from "../assets/Novik.png";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Header from './Common/Header';
+import { Lock, User } from 'lucide-react';
+import NovikLogo from '../assets/Novik.png';
 
 function Login() {
   const { setIsLoggedIn, setIsSuperuserState } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log("user data => ", data);
-        localStorage.setItem("token", data.token);
+        console.log('user data => ', data);
+        localStorage.setItem('token', data.token);
         setIsLoggedIn(true);
         setIsSuperuserState(data.user.is_superuser);
-        navigate("/dashboard");
+        navigate('/dashboard');
       } else {
         const error = await response.json();
-        alert(error.detail || "Login failed");
+        alert(error.detail || 'Login failed');
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
     }
   };
 
   const handleSuccess = async (response: any) => {
     try {
-      const res = await fetch("/api/google-login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/google-login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: response.credential }),
       });
 
       if (res.ok) {
         setIsLoggedIn(true);
-        navigate("/dashboard");
+        navigate('/dashboard');
       } else {
         const error = await res.json();
-        alert(error.detail || "Google login failed");
+        alert(error.detail || 'Google login failed');
       }
     } catch (error) {
-      console.error("Google login error:", error);
+      console.error('Google login error:', error);
     }
   };
 
   const handleError = () => {
-    console.error("Google login failed");
+    console.error('Google login failed');
   };
 
   return (
@@ -78,16 +78,11 @@ function Login() {
       <div className="flex justify-center">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-md">
           <h2 className="text-2xl font-semibold text-gray-800 mb-1">Login</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Login to use the NOVIK Dental Assistant
-          </p>
+          <p className="text-sm text-gray-500 mb-6">Login to use the NOVIK Dental Assistant</p>
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4 relative">
-              <User
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="email"
                 name="email"
@@ -100,10 +95,7 @@ function Login() {
             </div>
 
             <div className="mb-4 relative">
-              <Lock
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="password"
                 name="password"

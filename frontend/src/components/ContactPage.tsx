@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Header from "./Common/Header"
+import Header from './Common/Header';
 import PoweredBy from './Common/PoweredBy';
 import Partners from './Common/Partners';
-import Footer from "./Common/Footer";
+import Footer from './Common/Footer';
 import NovikLogo from '../assets/Novik.png';
 
 interface FormData {
@@ -22,9 +22,11 @@ function ContactPage() {
     message: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
@@ -47,44 +49,39 @@ function ContactPage() {
           </p>
         </div>
         <div className="bg-white p-10 shadow-md rounded-lg w-[90%] max-w-[1000px] mx-auto mb-16">
-          <h2 className="text-4xl font-bold text-gray-500 mb-6">
-            We want to hear from you!
-          </h2>
+          <h2 className="text-4xl font-bold text-gray-500 mb-6">We want to hear from you!</h2>
           <p className="text-gray-500 mb-4">
-            We're thrilled you made it this far, because it only means one thing:
-            you want to get in touch with us!
+            We're thrilled you made it this far, because it only means one thing: you want to get in
+            touch with us!
           </p>
           <p className="text-gray-500 mb-4">
-            Whether you've got a question, a suggestion, a crazy idea, or just
-            want to say hello (and hey, we love that too), no one here will
-            judge your curiosity, quite the opposite, we're huge fans of it.
+            Whether you've got a question, a suggestion, a crazy idea, or just want to say hello
+            (and hey, we love that too), no one here will judge your curiosity, quite the opposite,
+            we're huge fans of it.
           </p>
           <p className="text-gray-500 mb-4">
-            If you're looking for answers, a collaboration, or even just a
-            friendly chat, we're here for you.
+            If you're looking for answers, a collaboration, or even just a friendly chat, we're here
+            for you.
           </p>
           <p className="text-gray-500 mb-4">
-            We promise not to be the type who hides behind endless forms or
-            leaves you on "read." We love conversation as much as we love coffee
-            (and that's saying a lot).
+            We promise not to be the type who hides behind endless forms or leaves you on "read." We
+            love conversation as much as we love coffee (and that's saying a lot).
           </p>
           <p className="text-gray-500 mb-4">
-            Let's make this easy: choose how you want to reach us and send your
-            message our way.
+            Let's make this easy: choose how you want to reach us and send your message our way.
           </p>
           <p className="text-gray-500 mb-4">
-            Whether by email, a call, or even smoke signals (well, maybe not
-            smoke signals, but you get the idea).
+            Whether by email, a call, or even smoke signals (well, maybe not smoke signals, but you
+            get the idea).
           </p>
           <p className="text-gray-500 mb-4">
             We're here to listen, to help, and if needed, to throw in a bad joke or two.
           </p>
           <p className="text-gray-500 mb-4">
-            So go ahead, don't be shy. Reach out, we're just a click away and would love to know what's on your mind.
+            So go ahead, don't be shy. Reach out, we're just a click away and would love to know
+            what's on your mind.
           </p>
-          <h2 className="text-4xl font-bold text-gray-500 mb-6">
-            Contact US!
-          </h2>
+          <h2 className="text-4xl font-bold text-gray-500 mb-6">Contact US!</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex gap-4">
               <input

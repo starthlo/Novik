@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -15,11 +15,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSuperuser, setIsSuperuser] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     setIsLoggedInState(!!token);
 
     // // MOD
-    const is_superuser = localStorage.getItem("is_superuser");
+    const is_superuser = localStorage.getItem('is_superuser');
     setIsSuperuser(!!is_superuser);
   }, []);
 
@@ -32,22 +32,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const setIsLoggedIn = (value: boolean) => {
     setIsLoggedInState(value);
     if (value) {
-      localStorage.setItem("token", "dummy");
+      localStorage.setItem('token', 'dummy');
     } else {
-      localStorage.removeItem("token");
+      localStorage.removeItem('token');
     }
   };
 
   const setIsSuperuserState = (value: boolean) => {
     setIsSuperuser(value);
-    localStorage.setItem("is_superuser", value.toString());
+    localStorage.setItem('is_superuser', value.toString());
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     // // MOD
     setIsSuperuser(false);
-    localStorage.removeItem("is_superuser");
+    localStorage.removeItem('is_superuser');
   };
 
   return (
@@ -67,6 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

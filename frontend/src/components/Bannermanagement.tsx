@@ -1,5 +1,5 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import Header from "./Common/Header";
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import Header from './Common/Header';
 
 type Banner = {
   id: number;
@@ -32,7 +32,7 @@ export default function BannerManagement() {
   // fetch list
   const fetchBanners = async () => {
     try {
-      const res = await fetch("/api/banners/", { credentials: "include" });
+      const res = await fetch('/api/banners/', { credentials: 'include' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setBanners(data);
@@ -47,7 +47,7 @@ export default function BannerManagement() {
   const fetchStats = async (bid: number) => {
     try {
       const res = await fetch(`/api/banner-stats/?banner=${bid}`, {
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -62,13 +62,11 @@ export default function BannerManagement() {
   }, []);
 
   // form handlers
-  const handleInput = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInput = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -81,24 +79,23 @@ export default function BannerManagement() {
     const fd = new FormData();
 
     // Add form fields to FormData
-    if (form.title) fd.append("title", form.title);
-    if (form.link) fd.append("link", form.link);
-    if (form.code) fd.append("code", form.code);
-    if (form.is_active !== undefined)
-      fd.append("is_active", form.is_active.toString());
+    if (form.title) fd.append('title', form.title);
+    if (form.link) fd.append('link', form.link);
+    if (form.code) fd.append('code', form.code);
+    if (form.is_active !== undefined) fd.append('is_active', form.is_active.toString());
 
     // Add file if it exists
     if (file) {
-      fd.append("image", file);
+      fd.append('image', file);
     }
 
-    const url = editingId ? `/api/banners/${editingId}/` : "/api/banners/";
-    const method = editingId ? "PUT" : "POST";
+    const url = editingId ? `/api/banners/${editingId}/` : '/api/banners/';
+    const method = editingId ? 'PUT' : 'POST';
 
     try {
       const res = await fetch(url, {
         method,
-        credentials: "include",
+        credentials: 'include',
         body: fd,
         // Don't set Content-Type header - browser will set it with boundary
       });
@@ -122,18 +119,18 @@ export default function BannerManagement() {
     setEditingId(b.id);
     setForm({
       title: b.title,
-      link: b.link || "",
-      code: b.code || "",
+      link: b.link || '',
+      code: b.code || '',
       is_active: b.is_active,
     });
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this banner?")) return;
+    if (!confirm('Delete this banner?')) return;
     try {
       const res = await fetch(`/api/banners/${id}/`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE',
+        credentials: 'include',
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       fetchBanners();
@@ -163,18 +160,16 @@ export default function BannerManagement() {
         {/* Form Section */}
         <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-            {editingId ? "Edit Banner" : "Create New Banner"}
+            {editingId ? 'Edit Banner' : 'Create New Banner'}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                 <input
                   name="title"
-                  value={form.title || ""}
+                  value={form.title || ''}
                   onChange={handleInput}
                   className="w-full py-2 px-2 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                   required
@@ -182,12 +177,10 @@ export default function BannerManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link URL
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
                 <input
                   name="link"
-                  value={form.link || ""}
+                  value={form.link || ''}
                   onChange={handleInput}
                   className="w-full py-2 px-1 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                   placeholder="https://"
@@ -196,12 +189,10 @@ export default function BannerManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                HTML Code
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">HTML Code</label>
               <textarea
                 name="code"
-                value={form.code || ""}
+                value={form.code || ''}
                 onChange={handleInput}
                 rows={4}
                 className="w-full py-2 px-2 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
@@ -210,9 +201,7 @@ export default function BannerManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Banner Image
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image</label>
               <div className="mt-1 flex items-center">
                 <input
                   type="file"
@@ -246,7 +235,7 @@ export default function BannerManagement() {
                 type="submit"
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
-                {editingId ? "Update Banner" : "Create Banner"}
+                {editingId ? 'Update Banner' : 'Create Banner'}
               </button>
             </div>
           </form>
@@ -254,9 +243,7 @@ export default function BannerManagement() {
 
         {/* Banners List */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">
-            Manage Banners
-          </h2>
+          <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">Manage Banners</h2>
 
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -280,7 +267,7 @@ export default function BannerManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {banners.map((b) => (
+                {banners.map(b => (
                   <tr key={b.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">{b.title}</td>
                     <td className="px-6 py-4">
@@ -293,7 +280,7 @@ export default function BannerManagement() {
                       ) : (
                         <div
                           className="max-w-xs overflow-hidden"
-                          dangerouslySetInnerHTML={{ __html: b.code || "" }}
+                          dangerouslySetInnerHTML={{ __html: b.code || '' }}
                         />
                       )}
                     </td>
@@ -301,12 +288,10 @@ export default function BannerManagement() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                         ${
-                          b.is_active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                          b.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {b.is_active ? "Active" : "Inactive"}
+                        {b.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -343,9 +328,7 @@ export default function BannerManagement() {
         {/* Stats Section */}
         {stats.length > 0 && (
           <div className="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
-            <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">
-              Banner Statistics
-            </h2>
+            <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">Banner Statistics</h2>
 
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -366,16 +349,12 @@ export default function BannerManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {stats.map((s) => (
+                  {stats.map(s => (
                     <tr key={s.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">{s.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {s.country}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{s.country}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{s.views}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {s.clicks}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{s.clicks}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Header from './Common/Header';
 import PoweredBy from './Common/PoweredBy';
 import Partners from './Common/Partners';
-import Footer from "./Common/Footer";
+import Footer from './Common/Footer';
 import NovikLogo from '../assets/Novik.png';
 
 interface FormData {
@@ -22,9 +22,11 @@ function PartnersPage() {
     message: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
@@ -51,23 +53,27 @@ function PartnersPage() {
             Hello, potential partners and allies!
           </h2>
           <p className="text-gray-500 mb-4">
-            We're thrilled to have you here because it means something about Novik has already caught your attention.
+            We're thrilled to have you here because it means something about Novik has already
+            caught your attention.
           </p>
           <p className="text-gray-500 mb-4">
-            And let me tell you the excitement is mutual! We're always on the lookout for connections that feel more like partnerships, something that just clicks, like it was meant to happen (yeah, we get a little romantic about it, what can we say?).
+            And let me tell you the excitement is mutual! We're always on the lookout for
+            connections that feel more like partnerships, something that just clicks, like it was
+            meant to happen (yeah, we get a little romantic about it, what can we say?).
           </p>
           <p className="text-gray-500 mb-4">
-            We know sponsoring a project is a big decision, and here at Novik, we believe the best decisions are made with a smile.
+            We know sponsoring a project is a big decision, and here at Novik, we believe the best
+            decisions are made with a smile.
           </p>
           <p className="text-gray-500 mb-4">
-            Our mission is to ensure that everyone, from dentists to students, feels supported and guided, and we believe that together we can take this experience to the next level.
+            Our mission is to ensure that everyone, from dentists to students, feels supported and
+            guided, and we believe that together we can take this experience to the next level.
           </p>
           <p className="text-gray-500 mb-6">
-            So go ahead, if you think Novik could be a great place for your support, we're just a message away.
+            So go ahead, if you think Novik could be a great place for your support, we're just a
+            message away.
           </p>
-          <h2 className="text-4xl font-bold text-gray-500 mb-6">
-            Contact US!
-          </h2>
+          <h2 className="text-4xl font-bold text-gray-500 mb-6">Contact US!</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex gap-4">
               <input
@@ -154,7 +160,6 @@ function PartnersPage() {
         <Partners />
         <Footer />
       </div>
-
     </div>
   );
 }

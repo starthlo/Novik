@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build files
+dist
+build
+out
+coverage
+
+# Cache and logs
+.cache
+.next
+.nuxt
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Misc
+.env*
+!.env.example
+.vercel

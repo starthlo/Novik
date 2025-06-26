@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react';
 
 type Banner = {
   id: number;
@@ -22,10 +22,10 @@ export default function BannerDisplay() {
   useEffect(() => {
     async function fetchBanners() {
       try {
-        const res = await fetch("/api/banners/", { credentials: "include" });
+        const res = await fetch('/api/banners/', { credentials: 'include' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Banner[] = await res.json();
-        setBanners(data.filter((b) => b.is_active));
+        setBanners(data.filter(b => b.is_active));
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -39,7 +39,7 @@ export default function BannerDisplay() {
   useEffect(() => {
     if (banners.length <= 1) return;
     intervalRef.current = setInterval(() => {
-      setCurrent((c) => (c + 1) % banners.length);
+      setCurrent(c => (c + 1) % banners.length);
     }, 5000);
     return () => {
       if (intervalRef.current) {
@@ -52,30 +52,30 @@ export default function BannerDisplay() {
     if (intervalRef.current) {
       clearInterval(intervalRef.current as unknown as number);
     }
-    setCurrent((c) => (c - 1 + banners.length) % banners.length);
+    setCurrent(c => (c - 1 + banners.length) % banners.length);
   };
   const next = () => {
     clearInterval(intervalRef.current as unknown as number);
-    setCurrent((c) => (c + 1) % banners.length);
+    setCurrent(c => (c + 1) % banners.length);
   };
 
   const handleClick = async (b: Banner) => {
     if (!b.link) return;
     try {
       await fetch(`/api/banners/${b.id}/click/`, {
-        method: "POST",
-        credentials: "include",
+        method: 'POST',
+        credentials: 'include',
       });
-      window.open(b.link, "_blank");
+      window.open(b.link, '_blank');
     } catch {}
   };
 
   // record views once on load
   useEffect(() => {
-    banners.forEach((b) => {
+    banners.forEach(b => {
       fetch(`/api/banners/${b.id}/view/`, {
-        method: "POST",
-        credentials: "include",
+        method: 'POST',
+        credentials: 'include',
       }).catch(() => {});
     });
   }, [banners]);
@@ -92,16 +92,9 @@ export default function BannerDisplay() {
           onClick={() => handleClick(b)}
         >
           {b.image_url ? (
-            <img
-              src={b.image_url}
-              alt={b.title}
-              className="w-full h-auto object-cover"
-            />
+            <img src={b.image_url} alt={b.title} className="w-full h-auto object-cover" />
           ) : (
-            <div
-              className="w-full"
-              dangerouslySetInnerHTML={{ __html: b.code || "" }}
-            />
+            <div className="w-full" dangerouslySetInnerHTML={{ __html: b.code || '' }} />
           )}
         </div>
       </div>
@@ -116,23 +109,16 @@ export default function BannerDisplay() {
         className="flex transition-transform duration-500 ease-out"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
-        {banners.map((b) => (
+        {banners.map(b => (
           <div
             key={b.id}
             className="flex-shrink-0 w-full px-10 cursor-pointer rounded-xl overflow-hidden"
             onClick={() => handleClick(b)}
           >
             {b.image_url ? (
-              <img
-                src={b.image_url}
-                alt={b.title}
-                className="w-full h-auto object-cover"
-              />
+              <img src={b.image_url} alt={b.title} className="w-full h-auto object-cover" />
             ) : (
-              <div
-                className="w-full"
-                dangerouslySetInnerHTML={{ __html: b.code || "" }}
-              />
+              <div className="w-full" dangerouslySetInnerHTML={{ __html: b.code || '' }} />
             )}
           </div>
         ))}
@@ -164,7 +150,7 @@ export default function BannerDisplay() {
               setCurrent(idx);
             }}
             className={`w-2 h-2 rounded-full transition-all ${
-              idx === current ? "bg-white w-4" : "bg-white/50 hover:bg-white"
+              idx === current ? 'bg-white w-4' : 'bg-white/50 hover:bg-white'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import NovikLogo from "../../assets/Novik.png";
-import { useAuth } from "../../context/AuthContext";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import NovikLogo from '../../assets/Novik.png';
+import { useAuth } from '../../context/AuthContext';
+import { Menu, X } from 'lucide-react';
 
 function Header() {
   const { isLoggedIn, isSuperuser, logout } = useAuth();
@@ -15,7 +15,7 @@ function Header() {
   const handleLogout = () => {
     logout();
     navigate('/login');
-  }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,18 +32,18 @@ function Header() {
       if (e.clientY < 40) setShowHeader(true);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [lastScrollY]);
 
   return (
     <header
       className={`sticky top-0 left-0 w-full z-50 transition-transform duration-300 backdrop-blur-md bg-white/50 shadow-md h-16 ${
-        showHeader ? "translate-y-0" : "-translate-y-full"
+        showHeader ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
       {/* <header className="fixed top-0 left-0 w-full shadow-md h-16 z-50"> */}
@@ -58,11 +58,7 @@ function Header() {
 
         <div className="md:hidden">
           <button onClick={toggleMenu}>
-            {menuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
@@ -102,10 +98,7 @@ function Header() {
                   </span>
                   <ul className="absolute left-0 mt-2 w-52 bg-white shadow-lg rounded-md overflow-hidden hidden group-hover:block">
                     <li>
-                      <Link
-                        to="/users"
-                        className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                      >
+                      <Link to="/users" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                         User Management
                       </Link>
                     </li>
