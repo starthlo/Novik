@@ -75,7 +75,7 @@ function Dashboard() {
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     bottomRef.current?.scrollIntoView({
       block: 'center',
-      behavior
+      behavior,
     });
   };
 
@@ -127,11 +127,12 @@ function Dashboard() {
       if (res.ok) {
         data = await res.json();
       } else {
-        const errorMessage = res.status === 429
-          ? 'Too many requests. Please wait a moment and try again.'
-          : res.status >= 500
-            ? 'Server error. Please try again later.'
-            : 'Request failed. Please try again.';
+        const errorMessage =
+          res.status === 429
+            ? 'Too many requests. Please wait a moment and try again.'
+            : res.status >= 500
+              ? 'Server error. Please try again later.'
+              : 'Request failed. Please try again.';
         data = { message: errorMessage };
       }
 
@@ -155,7 +156,8 @@ function Dashboard() {
         ...prev,
         {
           question: questionText,
-          answer: 'Error connecting to server. Please check your internet connection and try again.',
+          answer:
+            'Error connecting to server. Please check your internet connection and try again.',
           timestamp: currentTimestamp,
         },
       ]);
@@ -309,8 +311,9 @@ function Dashboard() {
             {/* plus button for file uploads */}
             <div className="flex items-end bg-white rounded-lg shadow-md overflow-hidden w-full max-w-6xl mx-auto">
               <label
-                className={`cursor-pointer hover:text-orange-500 transition mb-3 px-3 flex items-center space-x-1 ${selectedFile ? 'text-orange-500' : ''
-                  }`}
+                className={`cursor-pointer hover:text-orange-500 transition mb-3 px-3 flex items-center space-x-1 ${
+                  selectedFile ? 'text-orange-500' : ''
+                }`}
               >
                 <FaPaperclip
                   className="h-5 w-5 text-xl text-black-500 hover:scale-120 transition cursor-pointer"
