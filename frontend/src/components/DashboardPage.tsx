@@ -306,7 +306,10 @@ function Dashboard() {
           <Partners />
         </div>
 
-        <div ref={inputWrapperRef} className="sticky bottom-0 z-10">
+        <div
+          ref={inputWrapperRef}
+          className={isFooterVisible ? 'sticky bottom-0 z-10 pb-20' : 'sticky bottom-0 z-10'}
+        >
           <div className="w-full p-4">
             {/* plus button for file uploads */}
             <div className="flex items-end bg-white rounded-lg shadow-md overflow-hidden w-full max-w-6xl mx-auto">

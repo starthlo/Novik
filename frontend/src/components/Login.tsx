@@ -121,7 +121,7 @@ function Login() {
           </form>
 
           <div className="my-4 text-center">
-            <GoogleOAuthProvider clientId="415749549321-2g2mhh6ugbk8fhjfdcd4jo7sk00dfa8v.apps.googleusercontent.com">
+            <GoogleOAuthProvider clientId="987942304785-pgbga1jso8do4amugc6sgbbapmt1e5pf.apps.googleusercontent.com">
               <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
             </GoogleOAuthProvider>
           </div>
