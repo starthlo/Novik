@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
-import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkHeaderId from 'remark-heading-id';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +12,7 @@ import Footer from './Common/Footer';
 type ChatMessage = {
   question: string;
   answer: string;
+  timestamp: Date;
 };
 
 function Dashboard() {
@@ -22,7 +22,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const location = useLocation();
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const footerObserverRef = useRef<HTMLDivElement>(null);
   const inputWrapperRef = useRef<HTMLDivElement>(null);
@@ -30,31 +29,18 @@ function Dashboard() {
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    if (location.state?.clear) {
-      setChatHistory([]);
-      console.log(`isFooterVisible: ${isFooterVisible}`);
-    }
-  }, [location.state]);
-
-  useEffect(() => {
     resizeTextArea();
   }, [input]);
 
   useEffect(() => {
     const uuid = uuidv4();
-    console.log(`uuid = ${uuid}`);
     setSessionId(uuid);
-
     resizeTextArea();
     window.addEventListener('resize', resizeTextArea);
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.intersectionRatio > 0.1) {
-          setIsFooterVisible(true);
-        } else {
-          setIsFooterVisible(false);
-        }
+        setIsFooterVisible(entry.intersectionRatio > 0.1);
       },
       {
         threshold: 0.1,
@@ -66,7 +52,10 @@ function Dashboard() {
       observer.observe(footerObserverRef.current);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      window.removeEventListener('resize', resizeTextArea);
+      observer.disconnect();
+    };
   }, []);
 
   const resizeTextArea = () => {
@@ -74,13 +63,20 @@ function Dashboard() {
       return;
     }
 
-    let textAreaHeight = '48px';
-    if (input != '') {
-      textAreaHeight = `${textAreaRef.current.scrollHeight}px`;
-    }
+    // Reset height first to properly calculate scrollHeight
+    textAreaRef.current.style.height = '48px';
 
-    textAreaRef.current.style.height = 'auto'; // will not work without this!
-    textAreaRef.current.style.height = textAreaHeight;
+    // Set to auto height based on content (if any)
+    if (input !== '') {
+      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+    }
+  };
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    bottomRef.current?.scrollIntoView({
+      block: 'center',
+      behavior
+    });
   };
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -93,12 +89,15 @@ function Dashboard() {
     if (!input.trim() && !selectedFile) return;
 
     const currentInput = input;
+    const currentTimestamp = new Date();
+    const questionText = selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput;
+
     setInput('');
-    setPendingQuestion(selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput);
+    setPendingQuestion(questionText);
     setLoading(true);
 
-    // MOD: Scroll to the bottom of the chat
-    bottomRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // Scroll to show the pending question
+    scrollToBottom();
 
     try {
       let endpoint = '/api/dashboard/';
@@ -124,31 +123,40 @@ function Dashboard() {
         body: body,
       });
 
-      const data = (await res.ok) ? await res.json() : { message: 'Please try again...' };
+      let data;
+      if (res.ok) {
+        data = await res.json();
+      } else {
+        const errorMessage = res.status === 429
+          ? 'Too many requests. Please wait a moment and try again.'
+          : res.status >= 500
+            ? 'Server error. Please try again later.'
+            : 'Request failed. Please try again.';
+        data = { message: errorMessage };
+      }
 
       setChatHistory(prev => [
         ...prev,
         {
-          question: selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput,
+          question: questionText,
           answer: data.message,
+          timestamp: currentTimestamp,
         },
       ]);
 
       // Clear the selected file after submission
       setSelectedFile(null);
 
-      // MOD: Scroll to the bottom of the chat
-      bottomRef.current?.scrollIntoView({
-        block: 'center',
-        behavior: 'smooth',
-      });
+      // Scroll to show the new response
+      scrollToBottom();
     } catch (error) {
-      console.error(error);
+      console.error('API request failed:', error);
       setChatHistory(prev => [
         ...prev,
         {
-          question: selectedFile ? `📄 ${selectedFile.name}: ${currentInput}` : currentInput,
-          answer: 'Error connecting to server.',
+          question: questionText,
+          answer: 'Error connecting to server. Please check your internet connection and try again.',
+          timestamp: currentTimestamp,
         },
       ]);
     } finally {
@@ -176,11 +184,10 @@ function Dashboard() {
           {chatHistory.map((chat, index) => (
             <div key={index} className="w-full max-w-6xl mx-auto">
               <div className="flex justify-start mt-4">
-                {/* max-w-[40%] */}
                 <div className="bg-white rounded-lg shadow-md p-4">
                   <pre className="text-gray-800 mb-2">{chat.question}</pre>
                   <span className="text-gray-500 text-sm">
-                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                    {chat.timestamp.toLocaleDateString()} {chat.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
               </div>
@@ -191,6 +198,7 @@ function Dashboard() {
                     const trimmed = section.trim();
                     if (!trimmed) return null;
 
+                    // Track references section state
                     let isReferences: boolean = false;
 
                     return (
@@ -200,13 +208,9 @@ function Dashboard() {
                             remarkPlugins={[remarkHeaderId]}
                             components={{
                               h3: ({ node, ...props }) => {
-                                let pc: any = props.children;
-
-                                // console.log('pc =', pc);
-
-                                if (typeof pc == 'string') {
-                                  isReferences = pc.trim().endsWith('References');
-                                }
+                                // Check for references header in a more robust way
+                                const content = props.children?.toString?.() || '';
+                                isReferences = /^references$/i.test(content.trim());
 
                                 return <h3 className="font-bold mt-4" {...props} />;
                               },
@@ -268,7 +272,7 @@ function Dashboard() {
                   })}
 
                   <span className="text-white text-sm block text-right">
-                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+                    {chat.timestamp.toLocaleDateString()} {chat.timestamp.toLocaleTimeString()}
                   </span>
                 </div>
               </div>
@@ -277,7 +281,6 @@ function Dashboard() {
           {pendingQuestion && (
             <div className="w-full max-w-6xl mx-auto">
               <div className="flex justify-start mt-4">
-                {/* max-w-[50%] */}
                 <div className="bg-white rounded-lg shadow-md p-4">
                   <pre className="text-gray-800 mb-2">{pendingQuestion}</pre>
                   <span className="text-gray-500 text-sm">
@@ -306,9 +309,8 @@ function Dashboard() {
             {/* plus button for file uploads */}
             <div className="flex items-end bg-white rounded-lg shadow-md overflow-hidden w-full max-w-6xl mx-auto">
               <label
-                className={`cursor-pointer hover:text-orange-500 transition mb-3 px-3 flex items-center space-x-1 ${
-                  selectedFile ? 'text-orange-500' : ''
-                }`}
+                className={`cursor-pointer hover:text-orange-500 transition mb-3 px-3 flex items-center space-x-1 ${selectedFile ? 'text-orange-500' : ''
+                  }`}
               >
                 <FaPaperclip
                   className="h-5 w-5 text-xl text-black-500 hover:scale-120 transition cursor-pointer"
