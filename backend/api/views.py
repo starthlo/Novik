@@ -173,10 +173,16 @@ def openai_response_shared_code(request, content):
 
         ## retrieve context i.e. previous & current chat
         chat_context = ""
-        for pc in PatientContext.objects.filter(session_id=sessionId).order_by("id"):
-            chat_context = chat_context + "\r\n" + pc.content
+        # for pc in PatientContext.objects.filter(session_id=sessionId).order_by("id"):
+        #     chat_context = chat_context + "\r\n" + pc.content
+        last_pc = (
+            PatientContext.objects.filter(session_id=sessionId).order_by("-id").first()
+        )
 
-        print("chat_context:\r\n ~~~~~~~ \r\n %s \r\n ~~~~~~~" % chat_context)
+        if last_pc:
+            chat_context = last_pc.content
+
+        print(f"chat_context:\n {chat_context}")
 
         thread = client.beta.threads.create()
         client.beta.threads.messages.create(
