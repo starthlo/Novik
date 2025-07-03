@@ -1,13 +1,5 @@
 @import 'tailwindcss';
 
-.nav-link {
-  @apply text-xl text-gray-800 px-6 py-2 rounded-md hover:bg-orange-500 hover:text-white;
-}
-
-.btn-orange {
-  @apply text-lg bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md;
-}
-
 @font-face {
   font-family: 'Montserrat';
   src: url('./assets/fonts/Montserrat-VariableFont_wght.ttf') format('truetype');
