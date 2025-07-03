@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+import { Box, Container, Grid, Typography, Link, IconButton } from '@mui/material';
 import {
   FaEnvelope,
   FaPhone,
@@ -6,84 +8,153 @@ import {
   FaInstagram,
   FaLinkedinIn,
 } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
-function Footer() {
+const Footer = () => {
+  const contactLinks: { icon: ReactNode; href: string; label: string }[] = [
+    { icon: <FaEnvelope />, href: 'mailto:info@novik.ai', label: 'Email' },
+    { icon: <FaPhone />, href: 'tel:+34690957910', label: 'Call' },
+    { icon: <FaWhatsapp />, href: 'https://wa.me/34690957910', label: 'WhatsApp' },
+  ];
+
+  const socialLinks: { icon: ReactNode; href: string; label: string }[] = [
+    {
+      icon: <FaFacebookF />,
+      href: 'https://www.facebook.com/profile.php?id=61567745501156',
+      label: 'Facebook',
+    },
+    {
+      icon: <FaInstagram />,
+      href: 'https://www.instagram.com/dentalnovik/',
+      label: 'Instagram',
+    },
+    {
+      icon: <FaLinkedinIn />,
+      href: 'https://www.linkedin.com/company/novik-ai',
+      label: 'LinkedIn',
+    },
+  ];
+
   return (
-    <footer className="bg-white text-gray-500 border-t pt-8 pb-4 text-sm mt-0">
-      <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        <div>
-          <h2 className="text-2xl font-semibold">
-            Novik<span className="text-orange-600">.</span>
-          </h2>
-          <p className="mt-2 text-base">© 2024 Novik. All rights reserved.</p>
-          <div className="flex flex-wrap gap-2 mt-2 text-base text-orange-500">
-            <Link to="/legal#terms">Terms of Service</Link> |
-            <Link to="/legal#privacy">Privacy Policy</Link> |
-            <Link to="/legal#cookies">Cookie Policy</Link>
-          </div>
-        </div>
+    <Box
+      component="footer"
+      sx={{
+        backgroundColor: '#ffffff',
+        color: '#6B7280',
+        borderTop: '1px solid #E5E7EB',
+        py: 4,
+        fontSize: '0.875rem',
+      }}
+    >
+      <Container maxWidth="lg">
+        <Grid container spacing={4} alignItems="flex-start">
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography
+              variant="h5"
+              component="div"
+              gutterBottom
+              sx={{ fontWeight: 600, color: '#6B7280' }}
+            >
+              Novik
+              <Box component="span" sx={{ color: '#EA580C' }}>
+                .
+              </Box>
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              © 2024 Novik. All rights reserved.
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              <Link
+                component={RouterLink}
+                to="/legal#terms"
+                underline="hover"
+                sx={{ color: '#F97316' }}
+              >
+                Terms of Service
+              </Link>
+              <Typography component="span">|</Typography>
+              <Link
+                component={RouterLink}
+                to="/legal#privacy"
+                underline="hover"
+                sx={{ color: '#F97316' }}
+              >
+                Privacy Policy
+              </Link>
+              <Typography component="span">|</Typography>
+              <Link
+                component={RouterLink}
+                to="/legal#cookies"
+                underline="hover"
+                sx={{ color: '#F97316' }}
+              >
+                Cookie Policy
+              </Link>
+            </Box>
+          </Grid>
 
-        <div className="flex flex-col gap-4 text-center md:text-left">
-          <div>
-            <h3 className="text-base font-semibold">Contact Us</h3>
-            <div className="flex justify-center md:justify-start gap-4 text-orange-500 mt-2">
-              <a href="mailto:info@novik.ai" title="Email">
-                <FaEnvelope className="text-xl hover:scale-110 transition" />
-              </a>
-              <a href="tel:+34690957910" title="Call">
-                <FaPhone className="text-xl hover:scale-110 transition" />
-              </a>
-              <a
-                href="https://wa.me/34690957910"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="WhatsApp"
-              >
-                <FaWhatsapp className="text-xl hover:scale-110 transition" />
-              </a>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-base font-semibold">Social Links</h3>
-            <div className="flex justify-center md:justify-start gap-4 text-orange-500 mt-2">
-              <a
-                href="https://www.facebook.com/profile.php?id=61567745501156"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Facebook"
-              >
-                <FaFacebookF className="text-xl hover:scale-110 transition" />
-              </a>
-              <a
-                href="https://www.instagram.com/dentalnovik/"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Instagram"
-              >
-                <FaInstagram className="text-xl hover:scale-110 transition" />
-              </a>
-              <a
-                href="https://www.linkedin.com/company/novik-ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="LinkedIn"
-              >
-                <FaLinkedinIn className="text-xl hover:scale-110 transition" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant="subtitle1" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
+              Contact Us
+            </Typography>
+            <Box>
+              {contactLinks.map(({ icon, href, label }, idx) => (
+                <IconButton
+                  key={idx}
+                  component="a"
+                  href={href}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  aria-label={label}
+                  sx={{
+                    color: '#F97316',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.1)' },
+                  }}
+                >
+                  {icon}
+                </IconButton>
+              ))}
+            </Box>
+          </Grid>
 
-      <p className="max-w-7xl text-center md:text-left mx-auto mt-6 px-4 text-base text-gray-500">
-        Novik is an experimental technology demonstrator. Novik does not provide medical advice,
-        diagnosis or treatment. User questions and other inputs on Novik are not covered by HIPAA.
-        It is the responsibility of the user to ensure questions do not contain protected health
-        information (PHI) or any information that violates the privacy of any person.
-      </p>
-    </footer>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant="subtitle1" gutterBottom sx={{ color: '#6B7280', fontWeight: 600 }}>
+              Social Links
+            </Typography>
+            <Box>
+              {socialLinks.map(({ icon, href, label }, idx) => (
+                <IconButton
+                  key={idx}
+                  component="a"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  sx={{
+                    color: '#F97316',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.1)' },
+                  }}
+                >
+                  {icon}
+                </IconButton>
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="body2" sx={{ color: '#6B7280' }}>
+            Novik is an experimental technology demonstrator. Novik does not provide medical advice,
+            diagnosis or treatment. User questions and other inputs on Novik are not covered by
+            HIPAA. It is the responsibility of the user to ensure questions do not contain protected
+            health information (PHI) or any information that violates the privacy of any person.
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
-}
+};
 
 export default Footer;

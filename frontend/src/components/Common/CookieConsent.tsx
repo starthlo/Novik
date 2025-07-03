@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Box, Button, Typography, Link, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
@@ -16,52 +18,138 @@ const CookieConsent = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative border border-gray-200">
-        <button
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom: theme => theme.spacing(6),
+        right: theme => theme.spacing(6),
+        zIndex: theme => theme.zIndex.modal,
+      }}
+    >
+      <Box
+        sx={{
+          position: 'relative',
+          backgroundColor: '#ffffff',
+          border: '1px solid #E5E7EB',
+          borderRadius: 2,
+          boxShadow: 24,
+          maxWidth: 600,
+          width: '100%',
+          p: 4,
+        }}
+      >
+        <IconButton
           onClick={() => setVisible(false)}
-          className="absolute top-2 right-2 text-gray-500 hover:text-black text-lg"
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            color: '#6B7280',
+            '&:hover': { color: '#000000' },
+          }}
+          size="small"
+          aria-label="Close"
         >
-          ×
-        </button>
-        <h2 className="text-lg font-semibold mb-2">Manage cookie consent</h2>
-        <p className="text-gray-700 text-sm mb-4">
+          <CloseIcon fontSize="small" />
+        </IconButton>
+
+        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+          Manage cookie consent
+        </Typography>
+
+        <Typography variant="body2" sx={{ mb: 3, color: '#374151' }}>
           We use cookies to enhance your experience. You can accept all, only essential cookies, or
           decline.
-        </p>
-        <div className="flex flex-wrap gap-2 justify-between mb-4">
-          <button
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-medium"
+        </Typography>
+
+        <Box
+          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between', mb: 2 }}
+        >
+          <Button
+            variant="contained"
             onClick={() => handleConsent('all')}
+            sx={{
+              backgroundColor: '#F97316',
+              color: '#ffffff',
+              '&:hover': { backgroundColor: '#EA580C' },
+              px: 2,
+              py: 1,
+              fontWeight: 500,
+            }}
           >
             Accept
-          </button>
-          <button
-            className="bg-gray-200 hover:bg-orange-600 px-4 py-2 rounded font-medium text-gray-800"
+          </Button>
+          <Button
+            variant="outlined"
             onClick={() => handleConsent('functional')}
+            sx={{
+              borderColor: '#E5E7EB',
+              color: '#1F2937',
+              '&:hover': {
+                backgroundColor: '#EA580C',
+                color: '#ffffff',
+                borderColor: '#EA580C',
+              },
+              px: 2,
+              py: 1,
+              fontWeight: 500,
+            }}
           >
             Accept only functional cookies
-          </button>
-          <button
-            className="bg-gray-200 hover:bg-orange-60 px-4 py-2 rounded font-medium text-gray-800"
+          </Button>
+          <Button
+            variant="outlined"
             onClick={() => handleConsent('decline')}
+            sx={{
+              borderColor: '#E5E7EB',
+              color: '#1F2937',
+              '&:hover': {
+                backgroundColor: '#EA580C',
+                color: '#ffffff',
+                borderColor: '#EA580C',
+              },
+              px: 2,
+              py: 1,
+              fontWeight: 500,
+            }}
           >
             Decline
-          </button>
-        </div>
-        <div className="flex justify-center gap-4 text-sm text-orange-500 underline">
-          <a href="/legal#terms" target="_blank" rel="noopener noreferrer">
+          </Button>
+        </Box>
+
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2, fontSize: '0.875rem' }}
+        >
+          <Link
+            href="/legal#terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ color: '#F97316' }}
+          >
             Terms of service
-          </a>
-          <a href="/legal#privacy" target="_blank" rel="noopener noreferrer">
+          </Link>
+          <Link
+            href="/legal#privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ color: '#F97316' }}
+          >
             Privacy Policy
-          </a>
-          <a href="/legal#cookies" target="_blank" rel="noopener noreferrer">
+          </Link>
+          <Link
+            href="/legal#cookies"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ color: '#F97316' }}
+          >
             Cookie Policy
-          </a>
-        </div>
-      </div>
-    </div>
+          </Link>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

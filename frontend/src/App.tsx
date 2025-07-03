@@ -1,39 +1,47 @@
-import './App.css';
-import './index.css';
-import { Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { SWRConfig } from 'swr';
 
-import Login from './components/Login';
-import Register from './components/Register';
-import ContactPage from './components/ContactPage';
-import PartnersPage from './components/PartnersPage';
-import HomePage from './components/HomePage';
 import DashboardPage from './components/DashboardPage';
-import PrivateRoute from './components/PrivateRoute';
 import LegalPage from './components/LegalPage';
 import UserManagement from './components/UserManagement';
 import BannerManagement from './components/Bannermanagement';
 
-function App() {
+import Login from './pages/Login';
+import Register from './pages/Register';
+import HomePage from './pages/HomePage';
+import ContactUs from './pages/ContactUs';
+import PartnersPage from './pages/PartnersPage';
+
+import { PublicRoute } from './routes/PublicRoute';
+import { PrivateRoute } from './routes/PrivateRoute';
+
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/partners" element={<PartnersPage />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/legal" element={<LegalPage />} />
-      <Route path="/users" element={<UserManagement />} />
-      <Route path="/banner" element={<BannerManagement />} />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <DashboardPage />
-          </PrivateRoute>
-        }
-      />
-    </Routes>
+    <BrowserRouter>
+      <SWRConfig
+        value={{
+          revalidateOnFocus: true,
+          shouldRetryOnError: false,
+        }}
+      >
+        <Routes>
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />}></Route>
+            <Route path="/register" element={<Register />}></Route>
+          </Route>
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<DashboardPage />}></Route>
+
+            <Route path="/legal" element={<LegalPage />}></Route>
+            <Route path="/users" element={<UserManagement />}></Route>
+            <Route path="/banner" element={<BannerManagement />}></Route>
+          </Route>
+          <Route path="/" element={<HomePage />}></Route>
+          <Route path="/contact" element={<ContactUs />}></Route>
+          <Route path="/partners" element={<PartnersPage />}></Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </SWRConfig>
+    </BrowserRouter>
   );
 }
-
-export default App;
