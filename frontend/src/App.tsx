@@ -14,6 +14,7 @@ import PartnersPage from './pages/PartnersPage';
 
 import { PublicRoute } from './routes/PublicRoute';
 import { PrivateRoute } from './routes/PrivateRoute';
+import PublicLayout from './layouts/PublicLayout';
 
 export default function App() {
   return (
@@ -31,14 +32,16 @@ export default function App() {
           </Route>
           <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardPage />}></Route>
-
             <Route path="/legal" element={<LegalPage />}></Route>
             <Route path="/users" element={<UserManagement />}></Route>
             <Route path="/banner" element={<BannerManagement />}></Route>
           </Route>
-          <Route path="/" element={<HomePage />}></Route>
-          <Route path="/contact" element={<ContactUs />}></Route>
-          <Route path="/partners" element={<PartnersPage />}></Route>
+
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />}></Route>
+            <Route path="/contact" element={<ContactUs />}></Route>
+            <Route path="/partners" element={<PartnersPage />}></Route>
+          </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </SWRConfig>
