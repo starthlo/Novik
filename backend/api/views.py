@@ -1,17 +1,15 @@
-import csv
 import logging
 import os
 import random
 import re
 import string
 import time
+from typing import Dict, List, Union
 
-import nltk
 import openai
 from Bio import Entrez
 from django.contrib.gis.geoip2 import GeoIP2
 from django.db.models import F
-from django.http import HttpResponse
 from django.utils import timezone
 from dotenv import load_dotenv
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
@@ -19,28 +17,20 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from .models import Banner, BannerStat, CustomUser, PatientContext
+from .models import Banner, BannerStat, PatientContext
 from .schemas.openai_schemas import (
     ErrorResponseSerializer,
     OpenAIPDFRequestSerializer,
     OpenAIResponseSerializer,
 )
-from .schemas.user_schemas import (
-    ClearSessionsResponseSerializer,
-    ToggleUserStatusRequestSerializer,
-    ToggleUserStatusResponseSerializer,
-    UserDeleteRequestSerializer,
-    UserDeleteResponseSerializer,
-)
 from .serializers import (
     BannerSerializer,
     BannerStatSerializer,
 )
-
-nltk.download("punkt_tab")
-nltk.download("averaged_perceptron_tagger_eng")
+from .utils import get_nouns
 
 load_dotenv()
 
@@ -55,7 +45,7 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 
 @extend_schema(
-    tags=["Dashboard"],
+    tags=["Patients"],
     description="Process a text message or PDF file with message through OpenAI",
     request=OpenAIPDFRequestSerializer,
     responses={
@@ -134,13 +124,13 @@ def patient_assistant_view(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def openai_response_shared_code(request, content):
+def openai_response_shared_code(request: Request, content: str) -> Union[str, Response]:
     try:
-        sessionId = request.data.get("session_id")
+        session_id = request.data.get("session_id")
         createdBy = request.data.get("createdBy", 0)
 
         PatientContext.objects.create(
-            session_id=sessionId,
+            session_id=session_id,
             content=content,
             created_by=createdBy,
             created_at=timezone.now().date(),
@@ -148,7 +138,7 @@ def openai_response_shared_code(request, content):
 
         ## retrieve context i.e. previous & current chat
         chat_context = ""
-        pcs = list(PatientContext.objects.filter(session_id=sessionId).order_by("id"))
+        pcs = list(PatientContext.objects.filter(session_id=session_id).order_by("id"))
         for i, pc in enumerate(pcs):
             suffix = " [LANGUAGE]" if i == len(pcs) - 1 else ""
             chat_context += "\r\n" + pc.content.strip() + suffix
@@ -176,7 +166,7 @@ def openai_response_shared_code(request, content):
         ai_response = m_d_c_t.value
         ai_annotations = m_d_c_t.annotations
 
-        print("RAW ai_response:\r\n ******* \r\n %s \r\n *******" % ai_response)
+        print(f"RAW ai_response:\r\n ******* \r\n {ai_response} \r\n *******")
 
         anchor_random_string = "".join(
             random.choices(string.ascii_letters + string.digits, k=5)
@@ -236,7 +226,7 @@ def openai_response_shared_code(request, content):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def enrich_response(text, anchor_random_string):
+def enrich_response(text: str, anchor_random_string: str) -> str:
     medications = {
         "Amoxicillin": "DB01060",
         "Clindamycin": "DB01190",
@@ -306,7 +296,7 @@ def enrich_response(text, anchor_random_string):
     ## Ensure only unique elements
     titles = list(set(non_empty_titles))
 
-    print("-----------\r\n titles: %s \r\n-----------" % titles)
+    print(f"-----------\r\n titles: {titles} \r\n-----------")
 
     result_limit = 1
     match_found = False
@@ -318,7 +308,7 @@ def enrich_response(text, anchor_random_string):
         if len(t_strip) == 0:
             continue
 
-        print("--R--> getting pubmed articles for term: %s" % t_strip)
+        print(f"--R--> getting pubmed articles for term: {t_strip}")
 
         articles = get_pubmed_articles(t_strip, count=result_limit)
         if articles:
@@ -346,7 +336,7 @@ def enrich_response(text, anchor_random_string):
 
             pps = re.findall(r"[-|\d\.]\s+(.*)\n", ref_block)
 
-            print("~~~~~~\r\n%s pps:\r\n%s\r\n~~~~~~" % (refme, pps))
+            print(f"~~~~~~\r\n{refme} pps:\r\n{pps}\r\n~~~~~~")
 
             result_limit = 3
 
@@ -368,14 +358,14 @@ def enrich_response(text, anchor_random_string):
                 ## Sometimes the AI return these **BLABLABLA** text in the beginning of the sentence
                 t_strip = t_strip.replace("**", "")
 
-                print("~~~~> getting pubmed articles for term: %s" % t_strip)
+                print(f"~~~~> getting pubmed articles for term: {t_strip}")
 
                 # articles = get_pubmed_articles(t_strip, count=result_limit)
                 articles = []
 
                 # publication_found = True if random.randint(0, 9) < 5 else False
 
-                print("~o~~> got %s articles for term: %s" % (len(articles), t_strip))
+                print(f"~o~~> got {len(articles)} articles for term: {t_strip}")
 
                 ## say we found one ...
                 if articles:
@@ -394,7 +384,7 @@ def enrich_response(text, anchor_random_string):
                         )
 
         else:
-            print("no list matches %s" % refme)
+            print(f"no list matches {refme}")
 
     # extra_refs = []
 
@@ -403,21 +393,21 @@ def enrich_response(text, anchor_random_string):
         ## Next one should be the publication title, not the text it was derived from
         a_c = t_w_r["content"]
         a_i = t_w_r["anchor_index"]
-        a_f = "%s%s" % (a_i, anchor_random_string)
-        a_c_a_f = "%s %s" % (a_c, f"[^{a_i}^](#{a_f})")
+        a_f = f"{a_i}{anchor_random_string}"
+        a_c_a_f = f"{a_c} [^{a_i}^](#{a_f})"
         ## append superscripts. see line 184-ish in django/novik/api/views.py
         text = text.replace(a_c, a_c_a_f)
         ## append references. see line 365-ish in django/novik/api/views.py
-        # extra_refs.append("###### %s. %s {{#{%s}}}" % (a_i, a_c, a_f))
+        # extra_refs.append(f"###### {a_i}. {a_c} {{#{{{a_f}}}}}")
 
     # match_found = True if len(t_w_r_s) > 0 else match_found
 
-    print("-----------\r\n all_refs: %s \r\n-----------" % all_refs)
+    print(f"-----------\r\n all_refs: {all_refs} \r\n-----------")
 
     if match_found:
         ref_block = "\n\n".join(
             [
-                f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{'%s%s' % (i + 1, anchor_random_string)}}}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
+                f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{i + 1}{anchor_random_string}}}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
                 for i, ref in enumerate(all_refs)
             ]
         )
@@ -425,41 +415,24 @@ def enrich_response(text, anchor_random_string):
         text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
 
         ## Add new PubMed references on top of raw AI response
-        text = "%s  \r\n\r\n%s\r\n%s  \r\n" % (
-            text,
-            "-------\n### PubMed References",
-            ref_block,
-        )
+        text = f"{text}  \r\n\r\n-------\n### PubMed References\r\n{ref_block}  \r\n"
     else:
-        text = "%s  \r\n\r\n%s\r\n" % (
-            text,
-            "**No recent PubMed references were found that specifically relate to these factors.**",
-        )
+        text = f"{text}  \r\n\r\n**No recent PubMed references were found that specifically relate to these factors.**\r\n"
 
     return text
 
 
-def get_nouns(text):
-    tokens = nltk.word_tokenize(text)
-    tagged = nltk.pos_tag(tokens)
-    nouns = [word for word, pos in tagged if pos.startswith("NN")]
-    return nouns
-
-
-def get_pubmed_articles(query, count=2):
-    print("query = %s" % query)
+def get_pubmed_articles(query: str, count: int = 2) -> List[Dict[str, str]]:
+    print(f"query = {query}")
 
     nouns = get_nouns(query)
     nouns_joined = " OR ".join(nouns)
 
-    print("nouns_joined = %s" % nouns_joined)
+    print(f"nouns_joined = {nouns_joined}")
 
-    term = (
-        "%s AND (dental[mh] OR dentistry[mh] OR endodontics[mh] OR periodontics[mh] OR maxillofacial[mh])"
-        % nouns_joined
-    )
+    term = f"{nouns_joined} AND (dental[mh] OR dentistry[mh] OR endodontics[mh] OR periodontics[mh] OR maxillofacial[mh])"
 
-    print("term = %s" % term)
+    print(f"term = {term}")
 
     ymax = timezone.now().date().year
     ymin = ymax - 5
@@ -549,7 +522,6 @@ class BannerViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def get_serializer_context(self):
-        # ensure .context['request'] is available to BannerSerializer
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
@@ -646,136 +618,3 @@ class BannerStatViewSet(viewsets.ReadOnlyModelViewSet):
         if banner_id:
             qs = qs.filter(banner__id=banner_id)
         return qs
-
-
-@extend_schema(
-    tags=["Users"],
-    description="Export all users to a CSV file",
-    responses={
-        200: OpenApiResponse(description="CSV file with user data"),
-    },
-)
-@api_view(["GET"])
-def export_users_csv(request):
-    """
-    Export all users to a CSV file.
-
-    Returns a CSV file containing user data with fields: id, username, email,
-    date_joined, dob, phone, occupation, country, state, city, is_staff,
-    is_superuser.
-    """
-    qs = CustomUser.objects.all()
-    fields = [
-        "id",
-        "username",
-        "email",
-        "date_joined",
-        "dob",
-        "phone",
-        "occupation",
-        "country",
-        "state",
-        "city",
-        "is_staff",
-        "is_superuser",
-    ]
-    resp = HttpResponse(content_type="text/csv")
-    resp["Content-Disposition"] = 'attachment; filename="users.csv"'
-    writer = csv.writer(resp)
-    writer.writerow(fields)
-    for u in qs:
-        writer.writerow([getattr(u, f) for f in fields])
-    return resp
-
-
-@extend_schema(
-    tags=["Users"],
-    description="Toggle a user's active status",
-    request=ToggleUserStatusRequestSerializer,
-    responses={
-        200: OpenApiResponse(
-            response=ToggleUserStatusResponseSerializer,
-            description="Status toggled successfully",
-        ),
-        400: OpenApiResponse(
-            response=ErrorResponseSerializer, description="Bad request"
-        ),
-    },
-)
-@api_view(["POST"])
-def toggle_user_active_status(request):
-    """
-    Toggle a user's active status.
-
-    Takes a user ID and toggles the is_active field between 0 and 1.
-    """
-    try:
-        eyed = request.data.get("id")
-
-        uzzer = CustomUser.objects.get(pk=eyed)
-        uzzer.is_active = 1 if uzzer.is_active == 0 else 0
-        uzzer.save()
-
-        return Response(
-            {"status": "user status set to %s successfully" % uzzer.is_active}
-        )
-    except Exception:
-        return Response({"status": "unable to toggle user active status"})
-
-
-@extend_schema(
-    tags=["Users"],
-    description="Delete a user",
-    request=UserDeleteRequestSerializer,
-    responses={
-        200: OpenApiResponse(
-            response=UserDeleteResponseSerializer,
-            description="User deleted successfully",
-        ),
-        400: OpenApiResponse(
-            response=ErrorResponseSerializer, description="Bad request"
-        ),
-    },
-)
-@api_view(["DELETE"])
-def user_delete(request):
-    """
-    Delete a user.
-
-    Takes a user ID and permanently deletes the user from the database.
-    """
-    try:
-        eyed = request.data.get("id")
-
-        uzzer = CustomUser.objects.get(pk=eyed)
-        uzzer.delete()
-
-        return Response({"status": "user deleted successfully"})
-    except Exception:
-        return Response({"status": "unable to deleted user"})
-
-
-@extend_schema(
-    tags=["Sessions"],
-    description="Clear all patient context sessions",
-    responses={
-        200: OpenApiResponse(
-            response=ClearSessionsResponseSerializer,
-            description="Sessions cleared successfully",
-        ),
-    },
-)
-@api_view(["GET"])
-def clear_sessions(request):
-    """
-    Clear all patient context sessions.
-
-    Removes all collected prompts from the database and returns the count
-    of deleted rows.
-    """
-    ## Remove collected prompts
-    pcs = PatientContext.objects.all()
-    kount = pcs.count()
-    pcs.delete()
-
-    return Response({"status": "ok", "message": "cleared %d rows" % (kount)})

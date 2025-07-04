@@ -1,4 +1,5 @@
 import apiClient from '../lib/apiClient';
+import { useAuthStore } from '../stores/auth';
 
 export const patientService = {
   /**
@@ -12,7 +13,7 @@ export const patientService = {
   sendQuery: async (sessionId: string, message?: string, pdf?: File, createdBy?: number) => {
     if (pdf) {
       const formData = new FormData();
-      formData.append('sessionId', sessionId);
+      formData.append('session_id', sessionId);
       formData.append('pdf', pdf);
 
       if (message) {
@@ -22,10 +23,13 @@ export const patientService = {
       if (createdBy !== undefined) {
         formData.append('createdBy', createdBy.toString());
       }
-
+      const accessToken = useAuthStore.getState().accessToken;
       const response = await fetch('/api/patient/assistant/', {
         method: 'POST',
         body: formData,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       if (!response.ok) {
