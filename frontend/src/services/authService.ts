@@ -10,7 +10,7 @@ export const authService = {
     return res.data;
   },
   loginWithGoogle: async (token: string) => {
-    const res = await apiClient.post('auth/google-login/', { token });
+    const res = await apiClient.post('auth/google/token/', { token });
     return res.data;
   },
 };
