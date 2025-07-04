@@ -27,7 +27,7 @@ export default function Register() {
     username: '',
     email: '',
     password: '',
-    confirm_password: '',
+    password2: '',
     dob: '',
     phone: '',
     occupation: '',
@@ -50,6 +50,8 @@ export default function Register() {
     message: '',
     severity: 'success',
   });
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (formData.country) {
@@ -84,17 +86,27 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    // Reset field errors before submission
+    setFieldErrors({});
+
     try {
-      const { data } = await authService.register(formData);
-      useAuthStore.setState({ accessToken: data.accessToken, isAuthorized: true, user: data.user });
+      const { accessToken, user } = await authService.register(formData);
+      useAuthStore.setState({ accessToken, isAuthorized: true, user: user });
       setSnackbar({ open: true, message: 'Registration successful!', severity: 'success' });
     } catch (err: any) {
       console.error(err);
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || 'Registration failed',
-        severity: 'error',
-      });
+
+      // Handle field-specific validation errors
+      if (err.response?.status === 400 && typeof err.response.data === 'object') {
+        const errorData = err.response.data;
+        setFieldErrors(errorData);
+      } else {
+        setSnackbar({
+          open: true,
+          message: err.response?.data?.message || 'Registration failed',
+          severity: 'error',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -125,12 +137,14 @@ export default function Register() {
             <Grid container spacing={2}>
               <Grid size={{ xs: 8 }}>
                 <TextField
-                  label="Name"
+                  label="UserName"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
                   fullWidth
                   disabled={isLoading}
+                  error={!!fieldErrors.username}
+                  helperText={fieldErrors.username ? fieldErrors.username[0] : ''}
                 />
               </Grid>
               <Grid size={{ xs: 4 }}>
@@ -155,6 +169,8 @@ export default function Register() {
                   onChange={handleChange}
                   fullWidth
                   disabled={isLoading}
+                  error={!!fieldErrors.email}
+                  helperText={fieldErrors.email ? fieldErrors.email[0] : ''}
                 />
               </Grid>
               <Grid size={{ xs: 6 }}>
@@ -177,17 +193,21 @@ export default function Register() {
                   onChange={handleChange}
                   fullWidth
                   disabled={isLoading}
+                  error={!!fieldErrors.password}
+                  helperText={fieldErrors.password ? fieldErrors.password[0] : ''}
                 />
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Confirm Password"
-                  name="confirm_password"
+                  name="password2"
                   type="password"
-                  value={formData.confirm_password}
+                  value={formData.password2}
                   onChange={handleChange}
                   fullWidth
                   disabled={isLoading}
+                  error={!!fieldErrors.password2}
+                  helperText={fieldErrors.password2 ? fieldErrors.password2[0] : ''}
                 />
               </Grid>
 
@@ -299,6 +319,11 @@ export default function Register() {
                     </Typography>
                   }
                 />
+                {fieldErrors.agree_to_terms && (
+                  <Typography color="error" variant="caption" display="block">
+                    {fieldErrors.agree_to_terms[0]}
+                  </Typography>
+                )}
               </Grid>
 
               <Grid size={{ xs: 12 }}>

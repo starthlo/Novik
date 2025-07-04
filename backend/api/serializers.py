@@ -1,22 +1,46 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from google.auth.transport import requests
-from google.oauth2.id_token import verify_oauth2_token
 from rest_framework import serializers
 
-from .models import Banner, BannerStat, CustomUser
+from .models import Banner, BannerStat
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True)
-
     class Meta:
-        model = CustomUser
-        fields = [
+        model = User
+        fields = (
+            "id",
             "username",
             "email",
+            "first_name",
+            "last_name",
+            "dob",
+            "phone",
+            "occupation",
+            "country",
+            "state",
+            "city",
+        )
+        read_only_fields = ("id",)
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
+    password2 = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
             "password",
-            "confirm_password",
+            "password2",
+            "email",
+            "first_name",
+            "last_name",
             "dob",
             "phone",
             "occupation",
@@ -25,97 +49,49 @@ class UserSerializer(serializers.ModelSerializer):
             "city",
             "agree_to_terms",
             "receive_info",
-        ]
+        )
+        extra_kwargs = {
+            "email": {"required": True},
+            "first_name": {"required": False},
+            "last_name": {"required": False},
+            "agree_to_terms": {"required": True},
+        }
 
-    def validate_email(self, value):
-        if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("This email is already registered.")
-        return value
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError(
+                {"password": "Password fields didn't match."}
+            )
 
-    def validate(self, data):
-        if data["password"] != data["confirm_password"]:
-            raise serializers.ValidationError("Passwords do not match")
-        validate_password(data["password"])
-        return data
+        if not attrs.get("agree_to_terms", False):
+            raise serializers.ValidationError(
+                {"agree_to_terms": "You must agree to the terms and conditions."}
+            )
+
+        return attrs
 
     def create(self, validated_data):
-        validated_data.pop("confirm_password")
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
+        validated_data.pop("password2")
 
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        email = data.get("email")
-        password = data.get("password")
-
-        user = authenticate(username=email, password=password)
-        if not user:
-            raise serializers.ValidationError("Invalid email or password")
-
-        if not user.is_active:
-            raise serializers.ValidationError("Account is inactive")
-
-        data["user"] = user
-        return data
-
-
-class GoogleLoginSerializer(serializers.Serializer):
-    token = serializers.CharField()
-
-    def validate(self, data):
-        token = data.get("token")
-
-        try:
-            idinfo = verify_oauth2_token(token, requests.Request())
-            if idinfo["iss"] not in [
-                "accounts.google.com",
-                "https://accounts.google.com",
-            ]:
-                raise serializers.ValidationError("Invalid issuer")
-
-            # google_id = idinfo["sub"]
-            email = idinfo.get("email")
-            name = idinfo.get("name")
-
-            # Create or update user based on Google info
-            user, created = CustomUser.objects.get_or_create(
-                email=email, defaults={"username": name}
-            )
-            data["user"] = user
-
-            return data
-
-        except Exception:
-            raise serializers.ValidationError("Invalid Google token")
-
-
-class UserListSerializer(serializers.ModelSerializer):
-    """
-    Serializer for listing users with non‑sensitive fields.
-    """
-
-    class Meta:
-        model = CustomUser
-        fields = (
-            "id",
-            "username",
-            "email",
-            "dob",
-            "phone",
-            "occupation",
-            "country",
-            "state",
-            "city",
-            "is_staff",
-            "is_superuser",
-            "is_active",
-            "date_joined",
+        user = User.objects.create(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            dob=validated_data.get("dob", None),
+            phone=validated_data.get("phone", ""),
+            occupation=validated_data.get("occupation", ""),
+            country=validated_data.get("country", ""),
+            state=validated_data.get("state", ""),
+            city=validated_data.get("city", ""),
+            agree_to_terms=validated_data.get("agree_to_terms", False),
+            receive_info=validated_data.get("receive_info", False),
         )
-        read_only_fields = fields
+
+        user.set_password(validated_data["password"])
+        user.save()
+
+        return user
 
 
 class BannerSerializer(serializers.ModelSerializer):

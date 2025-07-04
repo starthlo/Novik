@@ -32,8 +32,7 @@ function Login() {
     setError(null);
     setIsLogging(true);
     try {
-      const response = await authService.login(formData.email, formData.password);
-      const { accessToken, user } = response.data;
+      const { accessToken, user } = await authService.login(formData.email, formData.password);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed');
@@ -46,8 +45,7 @@ function Login() {
     setError(null);
     setIsLogging(true);
     try {
-      const response = await authService.loginWithGoogle(res.credential);
-      const { accessToken, user } = response.data;
+      const { accessToken, user } = await authService.loginWithGoogle(res.credential);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Google login failed');
@@ -88,7 +86,6 @@ function Login() {
             fullWidth
             margin="normal"
             name="email"
-            type="email"
             label="Username or Email Address"
             value={formData.email}
             onChange={handleChange}
@@ -144,7 +141,7 @@ function Login() {
           </Button>
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <GoogleOAuthProvider clientId="987942304785-pgbga1jso8do4amugc6sgbbapmt1e5pf.apps.googleusercontent.com">
+            <GoogleOAuthProvider clientId="415749549321-2g2mhh6ugbk8fhjfdcd4jo7sk00dfa8v.apps.googleusercontent.com">
               <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
             </GoogleOAuthProvider>
           </Box>

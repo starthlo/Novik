@@ -9,25 +9,34 @@ import time
 import nltk
 import openai
 from Bio import Entrez
-from django.contrib.auth import login
 from django.contrib.gis.geoip2 import GeoIP2
 from django.db.models import F
 from django.http import HttpResponse
 from django.utils import timezone
 from dotenv import load_dotenv
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from .models import Banner, BannerStat, CustomUser, PatientContext
+from .schemas.openai_schemas import (
+    ErrorResponseSerializer,
+    OpenAIPDFRequestSerializer,
+    OpenAIResponseRequestSerializer,
+    OpenAIResponseSerializer,
+)
+from .schemas.user_schemas import (
+    ClearSessionsResponseSerializer,
+    ToggleUserStatusRequestSerializer,
+    ToggleUserStatusResponseSerializer,
+    UserDeleteRequestSerializer,
+    UserDeleteResponseSerializer,
+)
 from .serializers import (
     BannerSerializer,
     BannerStatSerializer,
-    GoogleLoginSerializer,
-    LoginSerializer,
-    UserListSerializer,
-    UserSerializer,
 )
 
 nltk.download("punkt_tab")
@@ -40,69 +49,34 @@ logger = logging.getLogger(__name__)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
 
-Entrez.email = "stevedev0323@gmail.com"
+Entrez.email = os.environ.get("ENTREZ_EMAIL")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 
-@api_view(["POST"])
-def register_view(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(
-            {"message": "Registration successful"}, status=status.HTTP_201_CREATED
-        )
-    logger.error(f"Registration failed: {serializer.errors}")
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["POST"])
-def login_view(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data["user"]
-        login(request, user)
-        return Response(
-            {
-                "message": "Login successful",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "is_superuser": user.is_superuser,
-                    "is_staff": user.is_staff,
-                },
-            },
-            status=status.HTTP_200_OK,
-        )
-    logger.error(f"Login failed: {serializer.errors}")
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["POST"])
-def google_login_view(request):
-    serializer = GoogleLoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data["user"]
-        login(request, user)
-        return Response(
-            {
-                "message": "Google login successful",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "is_superuser": user.is_superuser,
-                    "is_staff": user.is_staff,
-                },
-            },
-            status=status.HTTP_200_OK,
-        )
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+@extend_schema(
+    tags=["Dashboard"],
+    description="Process a text message through OpenAI and return an enhanced response",
+    request=OpenAIResponseRequestSerializer,
+    responses={
+        200: OpenApiResponse(
+            response=OpenAIResponseSerializer, description="Successful response"
+        ),
+        400: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Bad request"
+        ),
+        500: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Server error"
+        ),
+    },
+)
 @api_view(["POST"])
 def openai_response_view(request):
+    """
+    Process a text message through OpenAI and return an enhanced response.
+
+    This endpoint takes a message, sends it to OpenAI, and returns an enhanced
+    response with additional context and references if available.
+    """
     try:
         content = request.data.get("message")
         if not content:
@@ -120,8 +94,31 @@ def openai_response_view(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@extend_schema(
+    tags=["Dashboard"],
+    description="Process a PDF file and text message through OpenAI",
+    request=OpenAIPDFRequestSerializer,
+    responses={
+        200: OpenApiResponse(
+            response=OpenAIResponseSerializer, description="Successful response"
+        ),
+        400: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Bad request"
+        ),
+        500: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Server error"
+        ),
+    },
+)
 @api_view(["POST"])
 def openai_pdf_response_view(request):
+    """
+    Process a PDF file and text message through OpenAI.
+
+    This endpoint takes a PDF file and a message, extracts text from the PDF,
+    combines it with the message, sends it to OpenAI, and returns an enhanced
+    response with additional context and references if available.
+    """
     try:
         pdf_file = request.FILES.get("pdf")
         content = request.data.get("message")
@@ -173,10 +170,10 @@ def openai_response_shared_code(request, content):
 
         ## retrieve context i.e. previous & current chat
         chat_context = ""
-        pcs = list(PatientContext.objects.filter(session_id=sessionId).order_by("id"))     
+        pcs = list(PatientContext.objects.filter(session_id=sessionId).order_by("id"))
         for i, pc in enumerate(pcs):
-            suffix = " [LANGUAGE]" if i == len(pcs) - 1 else '' 
-            chat_context += '\r\n' + pc.content.strip() + suffix
+            suffix = " [LANGUAGE]" if i == len(pcs) - 1 else ""
+            chat_context += "\r\n" + pc.content.strip() + suffix
 
         print(f"chat_context:\n {chat_context}")
 
@@ -594,7 +591,14 @@ def get_pubmed_articles(query, count=2):
     return articles
 
 
+@extend_schema(tags=["Banners"])
 class BannerViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing banner advertisements.
+
+    Provides CRUD operations for banners and additional actions to track views and clicks.
+    """
+
     queryset = Banner.objects.all()
     serializer_class = BannerSerializer
     parser_classes = (MultiPartParser, FormParser)
@@ -605,8 +609,23 @@ class BannerViewSet(viewsets.ModelViewSet):
         context["request"] = self.request
         return context
 
+    @extend_schema(
+        description="Record a view for this banner",
+        responses={
+            200: OpenApiResponse(
+                {"type": "object", "properties": {"status": {"type": "string"}}},
+                description="View recorded successfully",
+            ),
+        },
+    )
     @action(detail=True, methods=["post"])
     def view(self, request, pk=None):
+        """
+        Record a view for this banner.
+
+        Increments the view count for this banner and records the country of origin
+        based on the IP address.
+        """
         banner = self.get_object()
         ip = request.META.get("REMOTE_ADDR", "")
         try:
@@ -620,9 +639,23 @@ class BannerViewSet(viewsets.ModelViewSet):
         stat.save()
         return Response({"status": "view recorded"})
 
-    ## MOD
+    @extend_schema(
+        description="Record a click for this banner",
+        responses={
+            200: OpenApiResponse(
+                {"type": "object", "properties": {"status": {"type": "string"}}},
+                description="Click recorded successfully",
+            ),
+        },
+    )
     @action(detail=True, methods=["post"])
     def click(self, request, pk=None):
+        """
+        Record a click for this banner.
+
+        Increments the click count for this banner and records the country of origin
+        based on the IP address.
+        """
         banner = self.get_object()
         ip = request.META.get("REMOTE_ADDR", "")
         try:
@@ -637,11 +670,32 @@ class BannerViewSet(viewsets.ModelViewSet):
         return Response({"status": "click recorded"})
 
 
+@extend_schema(
+    tags=["Banners"],
+    parameters=[
+        OpenApiParameter(
+            name="banner",
+            location=OpenApiParameter.QUERY,
+            description="Filter by banner ID",
+            required=False,
+            type=int,
+        ),
+    ],
+)
 class BannerStatViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for retrieving banner statistics.
+
+    Provides read-only access to banner statistics, with optional filtering by banner ID.
+    """
+
     queryset = BannerStat.objects.all()
     serializer_class = BannerStatSerializer
 
     def get_queryset(self):
+        """
+        Filter queryset by banner ID if provided in query parameters.
+        """
         qs = super().get_queryset()
         banner_id = self.request.query_params.get("banner")
         if banner_id:
@@ -649,16 +703,22 @@ class BannerStatViewSet(viewsets.ReadOnlyModelViewSet):
         return qs
 
 
-@api_view(["GET"])
-def users_view(request):
-    # Fetch all from the CustomUser table
-    qs = CustomUser.objects.all()
-    serializer = UserListSerializer(qs, many=True)
-    return Response({"users": serializer.data}, status=status.HTTP_200_OK)
-
-
+@extend_schema(
+    tags=["Users"],
+    description="Export all users to a CSV file",
+    responses={
+        200: OpenApiResponse(description="CSV file with user data"),
+    },
+)
 @api_view(["GET"])
 def export_users_csv(request):
+    """
+    Export all users to a CSV file.
+
+    Returns a CSV file containing user data with fields: id, username, email,
+    date_joined, dob, phone, occupation, country, state, city, is_staff,
+    is_superuser.
+    """
     qs = CustomUser.objects.all()
     fields = [
         "id",
@@ -683,18 +743,33 @@ def export_users_csv(request):
     return resp
 
 
+@extend_schema(
+    tags=["Users"],
+    description="Toggle a user's active status",
+    request=ToggleUserStatusRequestSerializer,
+    responses={
+        200: OpenApiResponse(
+            response=ToggleUserStatusResponseSerializer,
+            description="Status toggled successfully",
+        ),
+        400: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Bad request"
+        ),
+    },
+)
 @api_view(["POST"])
 def toggle_user_active_status(request):
-    # print('received user id %s' % request.data.get('id'))
+    """
+    Toggle a user's active status.
 
+    Takes a user ID and toggles the is_active field between 0 and 1.
+    """
     try:
         eyed = request.data.get("id")
 
         uzzer = CustomUser.objects.get(pk=eyed)
         uzzer.is_active = 1 if uzzer.is_active == 0 else 0
         uzzer.save()
-
-        # print('user with id %s updated' % eyed)
 
         return Response(
             {"status": "user status set to %s successfully" % uzzer.is_active}
@@ -703,25 +778,56 @@ def toggle_user_active_status(request):
         return Response({"status": "unable to toggle user active status"})
 
 
+@extend_schema(
+    tags=["Users"],
+    description="Delete a user",
+    request=UserDeleteRequestSerializer,
+    responses={
+        200: OpenApiResponse(
+            response=UserDeleteResponseSerializer,
+            description="User deleted successfully",
+        ),
+        400: OpenApiResponse(
+            response=ErrorResponseSerializer, description="Bad request"
+        ),
+    },
+)
 @api_view(["DELETE"])
 def user_delete(request):
-    # print('received user id %s' % request.data.get('id'))
+    """
+    Delete a user.
 
+    Takes a user ID and permanently deletes the user from the database.
+    """
     try:
         eyed = request.data.get("id")
 
         uzzer = CustomUser.objects.get(pk=eyed)
         uzzer.delete()
 
-        # print('user with id %s updated' % eyed)
-
         return Response({"status": "user deleted successfully"})
     except Exception:
         return Response({"status": "unable to deleted user"})
 
 
+@extend_schema(
+    tags=["Sessions"],
+    description="Clear all patient context sessions",
+    responses={
+        200: OpenApiResponse(
+            response=ClearSessionsResponseSerializer,
+            description="Sessions cleared successfully",
+        ),
+    },
+)
 @api_view(["GET"])
 def clear_sessions(request):
+    """
+    Clear all patient context sessions.
+
+    Removes all collected prompts from the database and returns the count
+    of deleted rows.
+    """
     ## Remove collected prompts
     pcs = PatientContext.objects.all()
     kount = pcs.count()

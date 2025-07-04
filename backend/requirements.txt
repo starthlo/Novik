@@ -9,6 +9,7 @@ distro==1.9.0
 Django==5.2.1
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.0
 docopt==0.6.2
 google-api-core==2.24.2
 google-api-python-client==2.169.0
@@ -45,3 +46,4 @@ yarg==0.1.10
 nltk==3.9.1
 python-dotenv==1.1.1
 drf-spectacular==0.28.0
+social-auth-app-django==5.5.1

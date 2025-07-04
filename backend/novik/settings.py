@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,11 +28,15 @@ MEDIA_ROOT = BASE_DIR / "media"
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-eqy+4$t(t@h6p6p)$(c_z699g=87#m7_rwc9$3kf!15e=lpgfw"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-eqy+4$t(t@h6p6p)$(c_z699g=87#m7_rwc9$3kf!15e=lpgfw",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
+# Convert comma-separated string to list, or use default if not provided
 ALLOWED_HOSTS = ["novik.ai", "95.85.93.198", "82.29.174.61", "127.0.0.1", "localhost"]
 STATIC_ROOT = BASE_DIR / "static"
 
@@ -39,14 +48,55 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    # Third-party apps
     "rest_framework",
+    "rest_framework_simplejwt",
+    "social_django",
     "drf_spectacular",
     "api",
 ]
 
+# Required for social auth
+SITE_ID = 1
+AUTH_USER_MODEL = "api.CustomUser"
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
 }
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+# Google OAuth Settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get(
+    "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", ""
+)
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["email", "profile"]
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/api/auth/social/success/"
+SOCIAL_AUTH_LOGIN_ERROR_URL = "/api/auth/social/error/"
+
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    # Custom pipeline function to set required fields
+    "api.pipeline.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
+)
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Novik.ai APIs",
@@ -66,7 +116,9 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "api.authentication.CustomBackend",
+    "social_core.backends.google.GoogleOAuth2",
+    "api.backends.EmailBackend",  # Our custom email authentication backend
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 ROOT_URLCONF = "novik.urls"

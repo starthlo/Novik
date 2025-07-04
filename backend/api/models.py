@@ -13,17 +13,16 @@ class CustomUser(AbstractUser):
     agree_to_terms = models.BooleanField(default=False)
     receive_info = models.BooleanField(default=False)
 
-    # Fix the conflicts by setting unique `related_name` values
     groups = models.ManyToManyField(
         "auth.Group",
-        related_name="custom_user_groups",  # Updated related_name
+        related_name="custom_user_groups",
         blank=True,
         help_text="The groups this user belongs to.",
         verbose_name="groups",
     )
     user_permissions = models.ManyToManyField(
         "auth.Permission",
-        related_name="custom_user_permissions",  # Updated related_name
+        related_name="custom_user_permissions",
         blank=True,
         help_text="Specific permissions for this user.",
         verbose_name="user permissions",
