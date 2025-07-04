@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import Header from './Common/Header';
+import Header from '../components/Common/Header';
 
 const sections = [
   { id: 'terms', label: 'Terms of Service' },
@@ -8,7 +8,7 @@ const sections = [
   { id: 'cookies', label: 'Cookie Policy' },
 ];
 
-export default function LegalPage() {
+const LegalPage = () => {
   const [active, setActive] = useState('terms');
   const location = useLocation();
 
@@ -1088,7 +1088,6 @@ export default function LegalPage() {
 
         <main className="flex-1 p-8 overflow-y-auto shadow-inner">
           <h1 className="text-2xl font-bold mb-4">{sections.find(s => s.id === active)?.label}</h1>
-          {/* <p className="text-gray-500 mb-2">Effective date: 01.01.2024</p> */}
           <div className="text-gray-700 leading-relaxed">
             {content[active as keyof typeof content]}
           </div>
@@ -1096,4 +1095,6 @@ export default function LegalPage() {
       </div>
     </div>
   );
-}
+};
+
+export default LegalPage;
