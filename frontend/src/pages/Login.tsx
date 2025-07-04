@@ -35,7 +35,7 @@ function Login() {
       const { accessToken, user } = await authService.login(formData.email, formData.password);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(err.response?.data?.error || 'Login failed');
     } finally {
       setIsLogging(false);
     }
@@ -48,7 +48,7 @@ function Login() {
       const { accessToken, user } = await authService.loginWithGoogle(res.credential);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Google login failed');
+      setError(err.response?.data?.error || 'Google login failed');
     } finally {
       setIsLogging(false);
     }
