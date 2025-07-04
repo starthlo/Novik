@@ -20,12 +20,7 @@ urlpatterns = [
     path("auth/social/error/", auth_views.social_auth_error, name="social-error"),
     path("auth/google/token/", auth_views.google_auth_token, name="google-auth-token"),
     # Novik Backend URLs
-    path("dashboard/", views.openai_response_view),
-    path("dashboard/pdf/", views.openai_pdf_response_view),
-    path("users/export/", views.export_users_csv),
-    path("user/toggle-active-status/", views.toggle_user_active_status),
-    path("user/trash/", views.user_delete),
-    path("clear-sessions/", views.clear_sessions),
+    path("patient/assistant/", views.patient_assistant_view),
 ]
 
 urlpatterns += router.urls

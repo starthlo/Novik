@@ -30,6 +30,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+    }
     return Promise.reject(error);
   }
 );

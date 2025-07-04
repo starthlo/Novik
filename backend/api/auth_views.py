@@ -111,7 +111,9 @@ def login_view(request):
 
     if user is None:
         return Response(
-            {"error": "Invalid credentials. Please check your email/username and password."},
+            {
+                "error": "Invalid credentials. Please check your email/username and password."
+            },
             status=status.HTTP_401_UNAUTHORIZED,
         )
 

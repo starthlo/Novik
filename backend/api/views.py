@@ -16,15 +16,15 @@ from django.utils import timezone
 from dotenv import load_dotenv
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Banner, BannerStat, CustomUser, PatientContext
 from .schemas.openai_schemas import (
     ErrorResponseSerializer,
     OpenAIPDFRequestSerializer,
-    OpenAIResponseRequestSerializer,
     OpenAIResponseSerializer,
 )
 from .schemas.user_schemas import (
@@ -50,53 +50,13 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
 
 Entrez.email = os.environ.get("ENTREZ_EMAIL")
+
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 
 @extend_schema(
     tags=["Dashboard"],
-    description="Process a text message through OpenAI and return an enhanced response",
-    request=OpenAIResponseRequestSerializer,
-    responses={
-        200: OpenApiResponse(
-            response=OpenAIResponseSerializer, description="Successful response"
-        ),
-        400: OpenApiResponse(
-            response=ErrorResponseSerializer, description="Bad request"
-        ),
-        500: OpenApiResponse(
-            response=ErrorResponseSerializer, description="Server error"
-        ),
-    },
-)
-@api_view(["POST"])
-def openai_response_view(request):
-    """
-    Process a text message through OpenAI and return an enhanced response.
-
-    This endpoint takes a message, sends it to OpenAI, and returns an enhanced
-    response with additional context and references if available.
-    """
-    try:
-        content = request.data.get("message")
-        if not content:
-            return Response(
-                {"error": "Message content is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        enhanced_ai_response = openai_response_shared_code(request, content)
-
-        return Response({"message": enhanced_ai_response}, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        logger.error(f"openai_response_view error: {str(e)}")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@extend_schema(
-    tags=["Dashboard"],
-    description="Process a PDF file and text message through OpenAI",
+    description="Process a text message or PDF file with message through OpenAI",
     request=OpenAIPDFRequestSerializer,
     responses={
         200: OpenApiResponse(
@@ -111,59 +71,77 @@ def openai_response_view(request):
     },
 )
 @api_view(["POST"])
-def openai_pdf_response_view(request):
+@permission_classes([IsAuthenticated])
+def patient_assistant_view(request):
     """
-    Process a PDF file and text message through OpenAI.
+    Process a text message or PDF file with message through OpenAI.
 
-    This endpoint takes a PDF file and a message, extracts text from the PDF,
-    combines it with the message, sends it to OpenAI, and returns an enhanced
-    response with additional context and references if available.
+    This endpoint can handle:
+    1. Text-only messages - just provide the 'message' parameter
+    2. PDF files with messages - provide both 'pdf' file and 'message' parameter
+
+    The function extracts text from PDF (if provided), combines with the message,
+    sends it to OpenAI, and returns an enhanced response with additional context
+    and references if available.
     """
     try:
-        pdf_file = request.FILES.get("pdf")
         content = request.data.get("message")
-        if not pdf_file:
+        pdf_file = request.FILES.get("pdf")
+
+        if not content and not pdf_file:
             return Response(
-                {"error": "PDF file is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Read and decode the PDF content
-        import PyPDF2
-
-        reader = PyPDF2.PdfReader(pdf_file)
-
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text() or ""
-
-        if not text.strip():
-            return Response(
-                {"error": "Could not extract text from PDF"},
+                {"error": "Either message content or PDF file is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        pdf_text_and_content = text + "\r\n" + content
+        # If PDF is provided, process it and combine with message content
+        if pdf_file:
+            import PyPDF2
 
-        enhanced_ai_response = openai_response_shared_code(
-            request, pdf_text_and_content
-        )
+            reader = PyPDF2.PdfReader(pdf_file)
+
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() or ""
+
+            if not text.strip():
+                return Response(
+                    {"error": "Could not extract text from PDF"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if content:
+                content_to_process = text + "\r\n" + content
+            else:
+                content_to_process = text
+        else:
+            if not content:
+                return Response(
+                    {"error": "Message content is required when no PDF is provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            content_to_process = content
+
+        enhanced_ai_response = openai_response_shared_code(request, content_to_process)
+
+        if isinstance(enhanced_ai_response, Response):
+            return enhanced_ai_response
 
         return Response({"message": enhanced_ai_response}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"openai_pdf_response_view error: {str(e)}")
+        logger.error(f"patient_assistant_view error: {str(e)}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def openai_response_shared_code(request, content):
     try:
-        sessionId = request.data.get("sessionId")
+        sessionId = request.data.get("session_id")
         createdBy = request.data.get("createdBy", 0)
 
         PatientContext.objects.create(
             session_id=sessionId,
             content=content,
-            # created_by=request.user.id,
             created_by=createdBy,
             created_at=timezone.now().date(),
         )
@@ -211,20 +189,12 @@ def openai_response_shared_code(request, content):
             ## Replace the text with a footnote
             ai_response = ai_response.replace(
                 annotation.text,
-                # f' [{index}])')
-                # f' [{index+1}](#{index+1})')
-                # f' <sup>[{index+1}](#{index+1})</sup>')
-                # f' ^[{index+1}](#{index+1})^')
-                # f' [^{index+1}^](#{index+1})')
                 f" [^{index + 1}^](#{anchor_id})",
             )
 
             # Gather citations based on annotation attributes
             if file_citation := getattr(annotation, "file_citation", None):
                 cited_file = client.files.retrieve(file_citation.file_id)
-                ## "quote" has been removed from OpenAI's API
-                ## See https://learn.microsoft.com/en-us/answers/questions/2123533/attributeerror-filecitation-object-has-no-attribut
-                # citations.append(f'[{index}] {file_citation.quote} from {cited_file.filename}')
                 citations.append(f"[{index + 1}] {cited_file.filename}")
             elif file_path := getattr(annotation, "file_path", None):
                 cited_file = client.files.retrieve(file_path.file_id)
@@ -233,10 +203,7 @@ def openai_response_shared_code(request, content):
                 )
                 # Note: File download functionality not implemented above for brevity
 
-        # Add footnotes to the end of the message before displaying to user
-        # ai_response += '\n' + '\n'.join(citations)
         if citations:
-            # Remove existing references
             ref_index = ai_response.find("### References")
             if ref_index != -1:
                 ai_response = ai_response[:ref_index]
@@ -244,8 +211,6 @@ def openai_response_shared_code(request, content):
                 ref_index = ai_response.find("**References")
                 if ref_index != -1:
                     ai_response = ai_response[:ref_index]
-
-            # print("ai_response (pre custom refs):\r\n ******* \r\n %s \r\n *******" % ai_response)
 
             ai_response += (
                 "\r\n"
@@ -262,17 +227,7 @@ def openai_response_shared_code(request, content):
             flags=re.MULTILINE,
         )
 
-        print(
-            "ai_response (before enrich_response):\r\n ******* \r\n %s \r\n *******"
-            % ai_response
-        )
-
         updated_response = enrich_response(ai_response, anchor_random_string)
-
-        print(
-            "ai_response (after enrich_response):\r\n ******* \r\n %s \r\n *******"
-            % updated_response
-        )
 
         return updated_response
 
@@ -334,19 +289,9 @@ def enrich_response(text, anchor_random_string):
             text,
         )
 
-    # ref_block_match = re.search(r"### References:?\s*((?:\d+\. .+\n?){1,5})", text)
-    # titles = []
-    # if ref_block_match:
-    # ref_block = ref_block_match.group(1)
-    # titles = re.findall(r'\d+\.\s*"(.+?)"', ref_block)
-
     ref_block_match = re.search(r"### References:?(.*\n){1,9}", text)
     raw_titles = []
     if ref_block_match:
-        # print(ref_block_match.group())
-        # print('---')
-        # print(ref_block_match.group(1))
-        # print('---')
         ref_block = ref_block_match.group()
         raw_titles = re.findall(r"\[\d+\]\s*(.*)\n", ref_block)
     else:
@@ -425,7 +370,8 @@ def enrich_response(text, anchor_random_string):
 
                 print("~~~~> getting pubmed articles for term: %s" % t_strip)
 
-                articles = get_pubmed_articles(t_strip, count=result_limit)
+                # articles = get_pubmed_articles(t_strip, count=result_limit)
+                articles = []
 
                 # publication_found = True if random.randint(0, 9) < 5 else False
 
@@ -522,7 +468,6 @@ def get_pubmed_articles(query, count=2):
 
     handle = Entrez.esearch(
         db="pubmed",
-        # term=query,
         term=term,
         datetype="pdat",
         mindate=ymin,

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkHeaderId from 'remark-heading-id';
 import { v4 as uuidv4 } from 'uuid';
+import { patientService } from '../services';
 import {
   Box,
   Container,
@@ -48,7 +49,7 @@ type AlertType = {
 const Dashboard = () => {
   const theme = useTheme();
   const [input, setInput] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
@@ -110,15 +111,38 @@ const Dashboard = () => {
   };
 
   const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text).then(
-      () => {
-        setCopiedMessageId(id);
-      },
-      err => {
-        console.error('Could not copy text: ', err);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => {
+          setCopiedMessageId(id);
+        },
+        err => {
+          console.error('Could not copy text: ', err);
+          showAlert('Failed to copy to clipboard', 'error');
+        }
+      );
+    } else {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          setCopiedMessageId(id);
+        } else {
+          showAlert('Failed to copy to clipboard', 'error');
+        }
+      } catch (err) {
+        console.error('Fallback: Could not copy text: ', err);
         showAlert('Failed to copy to clipboard', 'error');
       }
-    );
+    }
   };
 
   const exportChat = () => {
@@ -161,44 +185,25 @@ const Dashboard = () => {
     scrollToBottom();
 
     try {
-      let endpoint = '/api/dashboard/';
-      let body: FormData | string;
-      let headers: Record<string, string> | undefined;
-
-      if (selectedFile) {
-        const form = new FormData();
-        form.append('sessionId', sessionId);
-        form.append('pdf', selectedFile);
-        form.append('message', input);
-        body = form;
-        endpoint = '/api/dashboard/pdf/';
-        headers = undefined;
-      } else {
-        body = JSON.stringify({ sessionId, message: messageText });
-        headers = { 'Content-Type': 'application/json' };
-      }
-
-      const res = await fetch(endpoint, { method: 'POST', headers, body });
-
-      if (!res.ok) {
-        throw new Error(`Server responded with ${res.status}: ${res.statusText}`);
-      }
-
-      const data = await res.json();
+      const response = await patientService.sendQuery(
+        sessionId,
+        input,
+        selectedFile // Optional PDF file
+      );
 
       setChatHistory(h => [
         ...h,
         {
           id: messageId,
           question: messageText,
-          answer: data.message,
+          answer: response.message,
           timestamp,
           hasPdf,
           pdfName,
         },
       ]);
 
-      setSelectedFile(null);
+      setSelectedFile(undefined);
       scrollToBottom();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Network error. Please try again.';
@@ -464,7 +469,7 @@ const Dashboard = () => {
         }}
       >
         <Container maxWidth="md">
-          <Box sx={{ display: 'flex', alignItems: 'flex-center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Tooltip title="Attach PDF document">
               <IconButton
                 component="label"
@@ -480,7 +485,7 @@ const Dashboard = () => {
               <Chip
                 icon={<PictureAsPdf />}
                 label={selectedFile.name}
-                onDelete={() => setSelectedFile(null)}
+                onDelete={() => setSelectedFile(undefined)}
                 variant="outlined"
                 color="primary"
                 sx={{ mr: 1, maxWidth: { xs: 150, sm: 200, md: 300 } }}
