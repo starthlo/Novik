@@ -986,7 +986,7 @@ const Dashboard = () => {
 
             {/* Pending question */}
             {pendingQuestion && (
-              <Card variant="outlined" sx={{ mb: 3 }}>
+              <Card variant="outlined" sx={{ mb: 3, borderRadius: '12px' }}>
                 <CardContent>
                   <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
                     {pendingQuestion}
