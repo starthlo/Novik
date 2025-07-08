@@ -685,7 +685,6 @@ const Dashboard = () => {
               <Box>
                 <Tooltip title="Clear conversation">
                   <span>
-                    {' '}
                     {/* Wrap in span to allow tooltip on disabled button */}
                     <Button
                       startIcon={<DeleteOutline />}
@@ -700,7 +699,6 @@ const Dashboard = () => {
                 </Tooltip>
                 <Tooltip title="Export conversation">
                   <span>
-                    {' '}
                     {/* Wrap in span to allow tooltip on disabled button */}
                     <Button
                       startIcon={<FileDownload />}
@@ -818,7 +816,7 @@ const Dashboard = () => {
               <Box key={msg.id} sx={{ mb: 4 }}>
                 {/* User message */}
                 {msg.role === 'user' && (
-                  <Card variant="outlined" sx={{ mb: 2 }}>
+                  <Card variant="outlined" sx={{ mb: 2, borderRadius: '12px' }}>
                     <CardContent sx={{ pb: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
                         <Box sx={{ flexGrow: 1 }}>
@@ -864,8 +862,9 @@ const Dashboard = () => {
                     sx={{
                       ml: { xs: 2, sm: 4 },
                       mb: 2,
-                      bgcolor: theme.palette.primary.light,
+                      bgcolor: '#F97316',
                       color: theme.palette.primary.contrastText,
+                      borderRadius: '12px',
                     }}
                   >
                     <CardContent sx={{ pb: 1 }}>
