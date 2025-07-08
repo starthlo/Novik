@@ -113,6 +113,7 @@ const Header = () => {
           backdropFilter: 'blur(6px)',
           transform: showHeader ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'transform 0.3s',
+          zIndex: theme.zIndex.drawer + 1, // Ensure AppBar is above drawer
         }}
       >
         <Toolbar>
@@ -195,7 +196,18 @@ const Header = () => {
         </Toolbar>
       </AppBar>
 
-      <Drawer anchor="right" open={mobileOpen} onClose={toggleMobile}>
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={toggleMobile}
+        sx={{
+          '& .MuiDrawer-paper': {
+            top: '64px', // Position below AppBar
+            height: 'calc(100% - 64px)', // Adjust height to exclude AppBar
+            boxShadow: 1,
+          },
+        }}
+      >
         <Box sx={{ width: 240 }} role="presentation" onClick={toggleMobile}>
           <List>
             {navItems.map((item, i) =>

@@ -406,6 +406,37 @@ const Dashboard = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffDays === 1) {
+      return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffDays < 7) {
+      return date.toLocaleDateString([], { weekday: 'long' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const getLastMessagePreview = (conversation: Conversation) => {
+    if (!conversation.messages || conversation.messages.length === 0) {
+      return 'No messages';
+    }
+
+    const lastMessage = conversation.messages[conversation.messages.length - 1];
+    const prefix = lastMessage.role === 'user' ? 'You: ' : 'AI: ';
+    const content =
+      lastMessage.content.length > 30
+        ? `${lastMessage.content.substring(0, 30)}...`
+        : lastMessage.content;
+
+    return `${prefix}${content}`;
+  };
+
   // Drawer content - conversation list
   const drawer = (
     <Box sx={{ overflow: 'auto' }}>
@@ -425,12 +456,25 @@ const Dashboard = () => {
       <Divider />
       <List>
         {conversations.length === 0 ? (
-          <ListItem>
-            <ListItemText
-              primary="No conversations"
-              secondary="Create a new conversation to get started"
-            />
-          </ListItem>
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              No conversations yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Start a new conversation to chat with the AI Dental Assistant
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => {
+                setDialogMode('create');
+                setDialogOpen(true);
+              }}
+              size="small"
+            >
+              New Conversation
+            </Button>
+          </Box>
         ) : (
           conversations.map(conversation => (
             <ListItem
@@ -464,6 +508,19 @@ const Dashboard = () => {
                   </Tooltip>
                 </Box>
               }
+              sx={{
+                borderLeft:
+                  selectedConversation?.id === conversation.id
+                    ? `4px solid ${theme.palette.primary.main}`
+                    : '4px solid transparent',
+                bgcolor:
+                  selectedConversation?.id === conversation.id
+                    ? 'rgba(0, 0, 0, 0.04)'
+                    : 'transparent',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.04)',
+                },
+              }}
             >
               <ListItemButton
                 selected={selectedConversation?.id === conversation.id}
@@ -471,14 +528,66 @@ const Dashboard = () => {
                   setSelectedConversation(conversation);
                   if (mobileOpen) setMobileOpen(false);
                 }}
+                sx={{
+                  py: 1.5,
+                  '&.Mui-selected': {
+                    bgcolor: 'transparent',
+                  },
+                }}
               >
-                <ListItemText
-                  primary={conversation.title || 'Untitled'}
-                  secondary={new Date(conversation.updatedAt).toLocaleDateString()}
-                  slotProps={{
-                    primary: { noWrap: true, style: { maxWidth: '150px' } },
-                  }}
-                />
+                <Box sx={{ width: '100%', pr: 8 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      mb: 0.5,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      noWrap
+                      sx={{
+                        fontWeight: selectedConversation?.id === conversation.id ? 700 : 500,
+                        maxWidth: '70%',
+                      }}
+                    >
+                      {conversation.title || 'Untitled'}
+                    </Typography>
+                    {conversation.messages.length > 0 && (
+                      <Chip
+                        size="small"
+                        label={conversation.messages.length}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.7rem',
+                          fontWeight: 500,
+                          bgcolor:
+                            selectedConversation?.id === conversation.id
+                              ? theme.palette.primary.main
+                              : 'rgba(0, 0, 0, 0.08)',
+                          color:
+                            selectedConversation?.id === conversation.id ? 'white' : 'text.primary',
+                        }}
+                      />
+                    )}
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                    sx={{ fontSize: '0.75rem', opacity: 0.8 }}
+                  >
+                    {getLastMessagePreview(conversation)}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: '0.7rem', opacity: 0.6 }}
+                  >
+                    {formatDate(conversation.updatedAt)}
+                  </Typography>
+                </Box>
               </ListItemButton>
             </ListItem>
           ))
@@ -501,7 +610,7 @@ const Dashboard = () => {
   const messages = getMessages();
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
+    <Box sx={{ display: 'flex' }}>
       {/* AppBar for mobile */}
       <AppBar
         position="fixed"
@@ -536,7 +645,14 @@ const Dashboard = () => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+              top: '64px',
+              boxShadow: 3,
+              bgcolor: theme.palette.background.paper,
+              borderRight: `1px solid ${theme.palette.divider}`,
+            },
           }}
         >
           {drawer}
@@ -547,7 +663,16 @@ const Dashboard = () => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+              top: '64px',
+              bgcolor: theme.palette.background.paper,
+              borderRight: `1px solid ${theme.palette.divider}`,
+              boxShadow: '0 0 20px rgba(0,0,0,0.05)',
+              height: 'calc(100% - 64px)',
+              overflowY: 'auto',
+            },
           }}
           open
         >
@@ -562,7 +687,7 @@ const Dashboard = () => {
           flexGrow: 1,
           p: 0,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          height: '100vh',
+          height: `calc(100vh - 64px)`,
           display: 'flex',
           flexDirection: 'column',
           mt: { xs: 7, sm: 0 },
@@ -584,36 +709,62 @@ const Dashboard = () => {
                 alignItems: 'center',
               }}
             >
-              <Typography variant="h5" color="primary">
-                {selectedConversation ? selectedConversation.title : 'AI Dental Assistant'}
-              </Typography>
+              {selectedConversation ? (
+                <Typography variant="h5" color="primary">
+                  {selectedConversation.title}
+                </Typography>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="h5" color="text.secondary">
+                    AI Dental Assistant
+                  </Typography>
+                  <Chip
+                    label="Select a conversation"
+                    color="primary"
+                    size="small"
+                    variant="outlined"
+                    sx={{ ml: 2 }}
+                  />
+                </Box>
+              )}
+
               <Box>
                 <Tooltip title="Clear conversation">
-                  <Button
-                    startIcon={<DeleteOutline />}
-                    onClick={clearChat}
-                    disabled={!selectedConversation || selectedConversation.messages.length === 0}
-                    size="small"
-                    sx={{ mr: 1 }}
-                  >
-                    Clear
-                  </Button>
+                  <span>
+                    {' '}
+                    {/* Wrap in span to allow tooltip on disabled button */}
+                    <Button
+                      startIcon={<DeleteOutline />}
+                      onClick={clearChat}
+                      disabled={!selectedConversation || selectedConversation.messages.length === 0}
+                      size="small"
+                      sx={{ mr: 1 }}
+                    >
+                      Clear
+                    </Button>
+                  </span>
                 </Tooltip>
                 <Tooltip title="Export conversation">
-                  <Button
-                    startIcon={<FileDownload />}
-                    onClick={exportChat}
-                    disabled={!selectedConversation || selectedConversation.messages.length === 0}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Export
-                  </Button>
+                  <span>
+                    {' '}
+                    {/* Wrap in span to allow tooltip on disabled button */}
+                    <Button
+                      startIcon={<FileDownload />}
+                      onClick={exportChat}
+                      disabled={!selectedConversation || selectedConversation.messages.length === 0}
+                      variant="outlined"
+                      size="small"
+                    >
+                      Export
+                    </Button>
+                  </span>
                 </Tooltip>
               </Box>
             </Box>
             <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-              Ask questions about patient treatments, medications, and procedures
+              {selectedConversation
+                ? `This conversation has ${selectedConversation.messages.length} messages. Ask questions about patient treatments, medications, and procedures.`
+                : 'Select a conversation from the sidebar or create a new one to get started.'}
             </Typography>
           </Container>
         </Box>
@@ -632,31 +783,80 @@ const Dashboard = () => {
                 sx={{
                   textAlign: 'center',
                   py: 8,
-                  opacity: 0.7,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '60vh',
                 }}
               >
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  Your conversation with AI Dental Assistant
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {selectedConversation
-                    ? 'Start by asking a question or uploading a patient document'
-                    : 'Select a conversation or create a new one to begin'}
-                </Typography>
-                {!selectedConversation && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<Add />}
-                    onClick={() => {
-                      setDialogMode('create');
-                      setDialogOpen(true);
+                <Box
+                  sx={{
+                    bgcolor: theme.palette.background.paper,
+                    borderRadius: 2,
+                    p: 4,
+                    maxWidth: 500,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                    border: '1px solid',
+                    borderColor: theme.palette.divider,
+                  }}
+                >
+                  <Typography variant="h5" color="primary" gutterBottom>
+                    {selectedConversation
+                      ? 'Start a new conversation'
+                      : 'Welcome to AI Dental Assistant'}
+                  </Typography>
+
+                  <Typography variant="body1" color="text.secondary" paragraph>
+                    {selectedConversation
+                      ? 'Start by asking a question or uploading a patient document to analyze.'
+                      : 'Select an existing conversation from the sidebar or create a new one to begin.'}
+                  </Typography>
+
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+                    You can ask about:
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      gap: 1,
+                      mb: 3,
                     }}
-                    sx={{ mt: 2 }}
                   >
-                    New Conversation
-                  </Button>
-                )}
+                    <Chip label="Patient treatments" size="small" />
+                    <Chip label="Medications" size="small" />
+                    <Chip label="Procedures" size="small" />
+                    <Chip label="Diagnoses" size="small" />
+                    <Chip label="Treatment plans" size="small" />
+                  </Box>
+
+                  {!selectedConversation ? (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Add />}
+                      onClick={() => {
+                        setDialogMode('create');
+                        setDialogOpen(true);
+                      }}
+                      size="large"
+                      fullWidth
+                    >
+                      New Conversation
+                    </Button>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mt: 2 }}
+                    >
+                      Your conversation is ready. Type your question below to begin.
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             )}
 
@@ -811,7 +1011,6 @@ const Dashboard = () => {
             bottom: 0,
             p: 2,
             zIndex: 10,
-            // backgroundColor: theme.palette.background.paper,
             backgroundColor: 'transparent',
             borderTop: `1px solid ${theme.palette.divider}`,
           }}

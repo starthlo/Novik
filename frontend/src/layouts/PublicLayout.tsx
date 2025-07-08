@@ -14,7 +14,6 @@ const PublicLayout = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        width: '100vw',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
