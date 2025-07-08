@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Literal
 
 from django.contrib.auth.models import AbstractUser
@@ -78,7 +79,11 @@ class Conversation(models.Model):
 
     def add_message(self, role: Literal["user", "assistant"], content: str):
         """Add a new message to the conversation."""
-        message = {"role": role, "content": content}
+        message = {
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+        }
 
         if not isinstance(self.messages, list):
             self.messages = []

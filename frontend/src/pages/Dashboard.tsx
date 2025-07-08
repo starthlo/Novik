@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkHeaderId from 'remark-heading-id';
+import remarkGfm from 'remark-gfm';
 import { v4 as uuidv4 } from 'uuid';
 import { patientService } from '../services/patientService';
-import type { Conversation } from '../types';
+import type { Message, Conversation } from '../types';
 import {
   Box,
   Container,
@@ -24,7 +25,6 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemText,
   ListItemButton,
   TextField,
   Dialog,
@@ -48,15 +48,6 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useConverstaions } from '../hooks/useConversations';
-
-type ChatMessage = {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp?: Date;
-  hasPdf?: boolean;
-  pdfName?: string;
-};
 
 type AlertType = {
   open: boolean;
@@ -199,77 +190,40 @@ const Dashboard = () => {
       return;
     }
 
-    // const messageText = selectedFile ? `${input}` : input.trim();
-    // const messageId = uuidv4();
-    // const hasPdf = !!selectedFile;
-    // const pdfName = selectedFile?.name;
+    const messageText = selectedFile ? `${input}` : input.trim();
 
-    // setPendingQuestion(messageText);
-    // setLoading(true);
-    // setInput('');
-    // scrollToBottom();
+    setPendingQuestion(messageText);
+    setLoading(true);
+    setInput('');
+    scrollToBottom();
 
     try {
-      // First, add the user message to the conversation
-      // const userMessage: ChatMessage = {
-      //   id: messageId,
-      //   role: 'user',
-      //   content: messageText,
-      //   timestamp: new Date(),
-      //   hasPdf,
-      //   pdfName,
-      // };
+      const response = await patientService.ask(messageText, selectedFile);
 
-      // // Process through the AI (using existing patientService)
-      // // In a production app, you'd refactor this to use the conversation API directly
-      // const sessionId = selectedConversation.id;
-      // const response = await patientService.sendQuery(sessionId, input, selectedFile);
+      // Update the UI immediately for better UX
+      const updatedConversation: Conversation = {
+        ...selectedConversation,
+        messages: [
+          ...selectedConversation.messages,
+          {
+            id: uuidv4(),
+            role: 'user',
+            content: messageText,
+          },
+          {
+            id: uuidv4(),
+            role: 'assistant',
+            content: response.message,
+          },
+        ],
+      };
 
-      // // Add the assistant response to the conversation
-      // const assistantMessage: ChatMessage = {
-      //   id: uuidv4(),
-      //   role: 'assistant',
-      //   content: response.message,
-      //   timestamp: new Date(),
-      // };
+      setSelectedConversation(updatedConversation);
 
-      // // Update the UI immediately for better UX
-      // const updatedConversation = {
-      //   ...selectedConversation,
-      //   messages: [
-      //     ...selectedConversation.messages,
-      //     {
-      //       role: 'user' as const,
-      //       content: messageText,
-      //     },
-      //     {
-      //       role: 'assistant' as const,
-      //       content: response.message,
-      //     },
-      //   ],
-      // };
-
-      // setSelectedConversation(updatedConversation);
-
-      // // Update the conversations list to reflect the change
-      // setConversations(prevConversations =>
-      //   prevConversations.map(conv =>
-      //     conv.id === selectedConversation.id ? updatedConversation : conv
-      //   )
-      // );
-
-      // In a real implementation, you would call the backend to save these messages
-      // try {
-      //   await patientService.addMessage(selectedConversation.id, 'user', messageText);
-      //   await patientService.addMessage(
-      //     selectedConversation.id,
-      //     'assistant',
-      //     response.message
-      //   );
-      // } catch (err) {
-      //   console.error('Failed to save messages to conversation:', err);
-      //   // Don't show an error to the user since the conversation still worked
-      // }
+      // Update the conversations list to reflect the change
+      mutate(convs =>
+        convs?.map(conv => (conv.id === selectedConversation.id ? updatedConversation : conv))
+      );
 
       setSelectedFile(undefined);
       scrollToBottom();
@@ -596,7 +550,7 @@ const Dashboard = () => {
     </Box>
   );
 
-  const getMessages = (): ChatMessage[] => {
+  const getMessages = (): Message[] => {
     if (!selectedConversation) return [];
 
     return selectedConversation.messages.map((msg, index) => ({
@@ -807,7 +761,7 @@ const Dashboard = () => {
                       : 'Welcome to AI Dental Assistant'}
                   </Typography>
 
-                  <Typography variant="body1" color="text.secondary" paragraph>
+                  <Typography variant="body1" color="text.secondary">
                     {selectedConversation
                       ? 'Start by asking a question or uploading a patient document to analyze.'
                       : 'Select an existing conversation from the sidebar or create a new one to begin.'}
@@ -928,9 +882,81 @@ const Dashboard = () => {
                                 borderRadius: 1,
                                 fontFamily: 'monospace',
                               },
+                              '& sup a': {
+                                textDecoration: 'none',
+                                padding: '0 2px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                borderRadius: '3px',
+                                fontWeight: 'bold',
+                                marginLeft: '2px',
+                                cursor: 'pointer',
+                              },
+                              '& [id^="eWzv"]': {
+                                display: 'block',
+                                margin: '10px 0',
+                                padding: '5px 10px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                borderLeft: '3px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '3px',
+                                fontSize: '0.9em',
+                              },
                             }}
                           >
-                            <ReactMarkdown remarkPlugins={[remarkHeaderId]}>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkHeaderId, remarkGfm]}
+                              components={{
+                                a: ({ node, ...props }) => {
+                                  // Special handling for footnote links
+                                  if (props.href && props.href.startsWith('#') && props.children) {
+                                    // Safely handle various types of children
+                                    const childText = Array.isArray(props.children)
+                                      ? String(props.children[0] || '')
+                                      : String(props.children || '');
+                                    if (childText.startsWith('^') && childText.endsWith('^')) {
+                                      // Extract the number between the carets
+                                      const footnoteNumber = childText.substring(
+                                        1,
+                                        childText.length - 1
+                                      );
+                                      return (
+                                        <sup>
+                                          <a
+                                            {...props}
+                                            style={{
+                                              textDecoration: 'none',
+                                              color: 'inherit',
+                                              cursor: 'pointer',
+                                              fontSize: '0.75em',
+                                            }}
+                                          >
+                                            {footnoteNumber}
+                                          </a>
+                                        </sup>
+                                      );
+                                    }
+                                  }
+                                  return <a {...props} />;
+                                },
+                                h6: ({ node, ...props }) => {
+                                  // Special handling for footnote section headings
+                                  if (props.id && props.id.endsWith('eWzv')) {
+                                    return (
+                                      <h6
+                                        {...props}
+                                        style={{
+                                          fontSize: '0.8em',
+                                          marginTop: '1.5em',
+                                          marginBottom: '0.3em',
+                                          opacity: 0.8,
+                                          fontWeight: 'normal',
+                                        }}
+                                      />
+                                    );
+                                  }
+                                  return <h6 {...props} />;
+                                },
+                              }}
+                            >
                               {msg.content}
                             </ReactMarkdown>
                           </Box>

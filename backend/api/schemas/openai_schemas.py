@@ -34,12 +34,6 @@ class OpenAIPDFRequestSerializer(serializers.Serializer):
     message = serializers.CharField(
         required=True, help_text="Additional message/query about the PDF"
     )
-    sessionId = serializers.CharField(
-        required=True, help_text="Session ID for context tracking"
-    )
-    createdBy = serializers.IntegerField(
-        required=False, default=0, help_text="User ID of the creator"
-    )
 
 
 class ErrorResponseSerializer(serializers.Serializer):
