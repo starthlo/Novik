@@ -1,28 +1,46 @@
 import apiClient from '../lib/apiClient';
 import { useAuthStore } from '../stores/auth';
+import { Conversation } from '../types';
 
 export const patientService = {
-  /**
-   * Send a query to the Novik assistant (with or without PDF)
-   * @param sessionId - The session ID for conversation context
-   * @param message - The text message to send (optional if PDF is provided)
-   * @param pdf - Optional PDF file to process
-   * @param createdBy - Optional user ID of the creator
-   * @returns The AI response
-   */
-  sendQuery: async (sessionId: string, message?: string, pdf?: File, createdBy?: number) => {
+  getConversations: async (): Promise<Conversation[]> => {
+    const response = await apiClient.get('conversations/');
+    return response.data;
+  },
+
+  getConversation: async (id: string): Promise<Conversation> => {
+    const response = await apiClient.get(`conversations/${id}/`);
+    return response.data;
+  },
+
+  createConversation: async (title: string = 'New Conversation'): Promise<Conversation> => {
+    const response = await apiClient.post('conversations/', { title });
+    return response.data;
+  },
+
+  updateConversationTitle: async (id: string, title: string): Promise<Conversation> => {
+    const response = await apiClient.patch(`conversations/${id}/`, { title });
+    return response.data;
+  },
+
+  deleteConversation: async (id: string): Promise<void> => {
+    await apiClient.delete(`conversations/${id}/`);
+  },
+
+  clearConversation: async (id: string): Promise<Conversation> => {
+    const response = await apiClient.post(`conversations/${id}/clear/`);
+    return response.data;
+  },
+
+  ask: async (message?: string, pdf?: File) => {
     if (pdf) {
       const formData = new FormData();
-      formData.append('session_id', sessionId);
       formData.append('pdf', pdf);
 
       if (message) {
         formData.append('message', message);
       }
 
-      if (createdBy !== undefined) {
-        formData.append('createdBy', createdBy.toString());
-      }
       const accessToken = useAuthStore.getState().accessToken;
       const response = await fetch('/api/patient/assistant/', {
         method: 'POST',
@@ -42,9 +60,7 @@ export const patientService = {
       };
     } else {
       const res = await apiClient.post('patient/assistant/', {
-        sessionId,
         message,
-        createdBy,
       });
       return res.data;
     }

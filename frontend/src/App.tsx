@@ -22,7 +22,7 @@ export default function App() {
     <BrowserRouter>
       <SWRConfig
         value={{
-          revalidateOnFocus: true,
+          revalidateOnFocus: false,
           shouldRetryOnError: false,
         }}
       >

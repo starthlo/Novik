@@ -171,6 +171,22 @@ class ConversationViewSet(viewsets.ModelViewSet):
         """
         return Conversation.objects.filter(user=self.request.user)
 
+    @extend_schema(
+        description="Clear all messages from a conversation",
+        responses={200: ConversationSerializer},
+    )
+    @action(detail=True, methods=["post"])
+    def clear(self, request, pk=None):
+        """Clear all messages from the conversation."""
+        conversation = self.get_object()
+
+        conversation.messages = []
+        conversation.save()
+
+        # Return the updated conversation
+        serializer = self.get_serializer(conversation)
+        return Response(serializer.data)
+
 
 @extend_schema(
     tags=["Patients"],

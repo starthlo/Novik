@@ -40,7 +40,7 @@ const Header = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const navItems: NavItem[] = [
-    { text: 'New Patient', to: '/dashboard', requiresAuth: true },
+    { text: 'Dashboard', to: '/dashboard', requiresAuth: true },
     { text: 'Home', to: '/', requiresAuth: false },
     { text: 'Contact', to: '/contact', requiresAuth: false },
     { text: 'Partners', to: '/partners', requiresAuth: false },

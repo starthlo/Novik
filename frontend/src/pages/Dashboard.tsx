@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkHeaderId from 'remark-heading-id';
 import { v4 as uuidv4 } from 'uuid';
-import { patientService } from '../services';
+import { patientService } from '../services/patientService';
+import type { Conversation } from '../types';
 import {
   Box,
   Container,
@@ -20,6 +21,19 @@ import {
   Card,
   CardContent,
   Chip,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  AppBar,
+  Toolbar,
 } from '@mui/material';
 import {
   AttachFile,
@@ -29,13 +43,17 @@ import {
   FileDownload,
   PictureAsPdf,
   Clear,
+  Add,
+  Edit,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
+import { useConverstaions } from '../hooks/useConversations';
 
 type ChatMessage = {
   id: string;
-  question: string;
-  answer: string;
-  timestamp: Date;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
   hasPdf?: boolean;
   pdfName?: string;
 };
@@ -46,16 +64,16 @@ type AlertType = {
   severity: 'error' | 'warning' | 'info' | 'success';
 };
 
+const drawerWidth = 280;
+
 const Dashboard = () => {
   const theme = useTheme();
   const [input, setInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [sessionId, setSessionId] = useState('');
   const [alert, setAlert] = useState<AlertType>({
     open: false,
     message: '',
@@ -63,9 +81,13 @@ const Dashboard = () => {
   });
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSessionId(uuidv4());
-  }, []);
+  const { conversations, mutate } = useConverstaions();
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogMode, setDialogMode] = useState<'create' | 'rename'>('create');
+  const [dialogConversationId, setDialogConversationId] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (copiedMessageId) {
@@ -101,12 +123,10 @@ const Dashboard = () => {
   };
 
   const clearChat = () => {
-    if (chatHistory.length === 0) return;
+    if (!selectedConversation || selectedConversation.messages.length === 0) return;
 
     if (confirm('Are you sure you want to clear the conversation history?')) {
-      setChatHistory([]);
-      setPendingQuestion(null);
-      showAlert('Conversation cleared', 'success');
+      handleClearConversation(selectedConversation.id);
     }
   };
 
@@ -146,7 +166,7 @@ const Dashboard = () => {
   };
 
   const exportChat = () => {
-    if (chatHistory.length === 0) {
+    if (!selectedConversation || selectedConversation.messages.length === 0) {
       showAlert('No conversation to export', 'warning');
       return;
     }
@@ -154,11 +174,12 @@ const Dashboard = () => {
     const exportDate = new Date().toISOString().slice(0, 10);
     const fileName = `dental-ai-chat_${exportDate}.txt`;
 
-    const content = chatHistory
-      .map(chat => {
-        return `Q: ${chat.question}\n${chat.hasPdf ? `[Attached PDF: ${chat.pdfName}]\n` : ''}${chat.timestamp.toLocaleString()}\n\nA: ${chat.answer}\n${chat.timestamp.toLocaleString()}\n\n${'='.repeat(40)}\n\n`;
+    const content = selectedConversation.messages
+      .map(msg => {
+        const prefix = msg.role === 'user' ? 'Q: ' : 'A: ';
+        return `${prefix}${msg.content}\n\n`;
       })
-      .join('');
+      .join('${"=".repeat(40)}\n\n');
 
     const element = document.createElement('a');
     const file = new Blob([content], { type: 'text/plain' });
@@ -172,54 +193,88 @@ const Dashboard = () => {
 
   const handleSubmit = async () => {
     if (!input.trim() && !selectedFile) return;
+    if (!selectedConversation) {
+      // Create a new conversation if none is selected
+      await handleCreateNewConversation(true);
+      return;
+    }
 
-    const messageText = selectedFile ? `${input}` : input.trim();
-    const timestamp = new Date();
-    const messageId = uuidv4();
-    const hasPdf = !!selectedFile;
-    const pdfName = selectedFile?.name;
+    // const messageText = selectedFile ? `${input}` : input.trim();
+    // const messageId = uuidv4();
+    // const hasPdf = !!selectedFile;
+    // const pdfName = selectedFile?.name;
 
-    setPendingQuestion(messageText);
-    setLoading(true);
-    setInput('');
-    scrollToBottom();
+    // setPendingQuestion(messageText);
+    // setLoading(true);
+    // setInput('');
+    // scrollToBottom();
 
     try {
-      const response = await patientService.sendQuery(
-        sessionId,
-        input,
-        selectedFile // Optional PDF file
-      );
+      // First, add the user message to the conversation
+      // const userMessage: ChatMessage = {
+      //   id: messageId,
+      //   role: 'user',
+      //   content: messageText,
+      //   timestamp: new Date(),
+      //   hasPdf,
+      //   pdfName,
+      // };
 
-      setChatHistory(h => [
-        ...h,
-        {
-          id: messageId,
-          question: messageText,
-          answer: response.message,
-          timestamp,
-          hasPdf,
-          pdfName,
-        },
-      ]);
+      // // Process through the AI (using existing patientService)
+      // // In a production app, you'd refactor this to use the conversation API directly
+      // const sessionId = selectedConversation.id;
+      // const response = await patientService.sendQuery(sessionId, input, selectedFile);
+
+      // // Add the assistant response to the conversation
+      // const assistantMessage: ChatMessage = {
+      //   id: uuidv4(),
+      //   role: 'assistant',
+      //   content: response.message,
+      //   timestamp: new Date(),
+      // };
+
+      // // Update the UI immediately for better UX
+      // const updatedConversation = {
+      //   ...selectedConversation,
+      //   messages: [
+      //     ...selectedConversation.messages,
+      //     {
+      //       role: 'user' as const,
+      //       content: messageText,
+      //     },
+      //     {
+      //       role: 'assistant' as const,
+      //       content: response.message,
+      //     },
+      //   ],
+      // };
+
+      // setSelectedConversation(updatedConversation);
+
+      // // Update the conversations list to reflect the change
+      // setConversations(prevConversations =>
+      //   prevConversations.map(conv =>
+      //     conv.id === selectedConversation.id ? updatedConversation : conv
+      //   )
+      // );
+
+      // In a real implementation, you would call the backend to save these messages
+      // try {
+      //   await patientService.addMessage(selectedConversation.id, 'user', messageText);
+      //   await patientService.addMessage(
+      //     selectedConversation.id,
+      //     'assistant',
+      //     response.message
+      //   );
+      // } catch (err) {
+      //   console.error('Failed to save messages to conversation:', err);
+      //   // Don't show an error to the user since the conversation still worked
+      // }
 
       setSelectedFile(undefined);
       scrollToBottom();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Network error. Please try again.';
-
-      setChatHistory(h => [
-        ...h,
-        {
-          id: messageId,
-          question: messageText,
-          answer: errorMessage,
-          timestamp,
-          hasPdf,
-          pdfName,
-        },
-      ]);
-
       showAlert('Error: ' + errorMessage, 'error');
     } finally {
       setPendingQuestion(null);
@@ -234,334 +289,665 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        maxHeight: 'calc(100vh - 64px)',
-      }}
-    >
-      <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          p: 2,
-        }}
-      >
-        <Container maxWidth="md">
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+  const handleCreateNewConversation = async (selectAfterCreate = false) => {
+    try {
+      const title = dialogTitle || 'New Conversation';
+      const newConversation = await patientService.createConversation(title);
+
+      mutate(data => [...(data || []), newConversation], false);
+
+      if (selectAfterCreate) {
+        setSelectedConversation(newConversation);
+      }
+
+      setDialogOpen(false);
+      setDialogTitle('');
+      showAlert('Conversation created', 'success');
+    } catch (err) {
+      showAlert('Failed to create conversation', 'error');
+      console.error('Error creating conversation:', err);
+    }
+  };
+
+  const handleRenameConversation = async () => {
+    if (!dialogConversationId) return;
+
+    try {
+      const updatedConversation = await patientService.updateConversationTitle(
+        dialogConversationId,
+        dialogTitle
+      );
+
+      mutate(
+        convs =>
+          convs?.map(conv =>
+            conv.id === dialogConversationId ? { ...conv, title: updatedConversation.title } : conv
+          ),
+        false
+      );
+
+      if (selectedConversation?.id === dialogConversationId) {
+        setSelectedConversation({ ...selectedConversation, title: updatedConversation.title });
+      }
+
+      setDialogOpen(false);
+      setDialogTitle('');
+      setDialogConversationId(null);
+      showAlert('Conversation renamed', 'success');
+    } catch (err) {
+      showAlert('Failed to rename conversation', 'error');
+      console.error('Error renaming conversation:', err);
+    }
+  };
+
+  const handleDeleteConversation = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this conversation?')) return;
+
+    try {
+      await patientService.deleteConversation(id);
+
+      mutate(convs => convs?.filter(conv => conv.id !== id), false);
+
+      // If the deleted conversation was selected, select another one
+      if (selectedConversation?.id === id) {
+        const remaining = conversations.filter(conv => conv.id !== id);
+        setSelectedConversation(remaining.length > 0 ? remaining[0] : null);
+      }
+
+      showAlert('Conversation deleted', 'success');
+    } catch (err) {
+      showAlert('Failed to delete conversation', 'error');
+      console.error('Error deleting conversation:', err);
+    }
+  };
+
+  const handleClearConversation = async (id: string) => {
+    try {
+      await patientService.clearConversation(id);
+
+      mutate(
+        convs => convs?.map(conv => (conv.id === id ? { ...conv, messages: [] } : conv)),
+        false
+      );
+
+      if (selectedConversation?.id === id) {
+        setSelectedConversation(prev => (prev ? { ...prev, messages: [] } : null));
+      }
+
+      showAlert('Conversation cleared', 'success');
+    } catch (err) {
+      showAlert('Failed to clear conversation', 'error');
+      console.error('Error clearing conversation:', err);
+    }
+  };
+
+  const handleOpenRenameDialog = (conversation: Conversation) => {
+    setDialogMode('rename');
+    setDialogTitle(conversation.title);
+    setDialogConversationId(conversation.id);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setDialogTitle('');
+    setDialogConversationId(null);
+  };
+
+  const handleDialogSubmit = () => {
+    if (dialogMode === 'create') {
+      handleCreateNewConversation(true);
+    } else {
+      handleRenameConversation();
+    }
+  };
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  // Drawer content - conversation list
+  const drawer = (
+    <Box sx={{ overflow: 'auto' }}>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6">Conversations</Typography>
+        <Tooltip title="New conversation">
+          <IconButton
+            onClick={() => {
+              setDialogMode('create');
+              setDialogOpen(true);
             }}
           >
-            <Typography variant="h5" color="primary">
-              AI Dental Assistant
-            </Typography>
-            <Box>
-              <Tooltip title="Clear conversation">
-                <Button
-                  startIcon={<DeleteOutline />}
-                  onClick={clearChat}
-                  disabled={chatHistory.length === 0}
-                  size="small"
-                  sx={{ mr: 1 }}
-                >
-                  Clear
-                </Button>
-              </Tooltip>
-              <Tooltip title="Export conversation">
-                <Button
-                  startIcon={<FileDownload />}
-                  onClick={exportChat}
-                  disabled={chatHistory.length === 0}
-                  variant="outlined"
-                  size="small"
-                >
-                  Export
-                </Button>
-              </Tooltip>
-            </Box>
-          </Box>
-          <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-            Ask questions about patient treatments, medications, and procedures
+            <Add />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <Divider />
+      <List>
+        {conversations.length === 0 ? (
+          <ListItem>
+            <ListItemText
+              primary="No conversations"
+              secondary="Create a new conversation to get started"
+            />
+          </ListItem>
+        ) : (
+          conversations.map(conversation => (
+            <ListItem
+              key={conversation.id}
+              disablePadding
+              secondaryAction={
+                <Box>
+                  <Tooltip title="Rename">
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleOpenRenameDialog(conversation);
+                      }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDeleteConversation(conversation.id);
+                      }}
+                    >
+                      <DeleteOutline fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              }
+            >
+              <ListItemButton
+                selected={selectedConversation?.id === conversation.id}
+                onClick={() => {
+                  setSelectedConversation(conversation);
+                  if (mobileOpen) setMobileOpen(false);
+                }}
+              >
+                <ListItemText
+                  primary={conversation.title || 'Untitled'}
+                  secondary={new Date(conversation.updatedAt).toLocaleDateString()}
+                  slotProps={{
+                    primary: { noWrap: true, style: { maxWidth: '150px' } },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))
+        )}
+      </List>
+    </Box>
+  );
+
+  const getMessages = (): ChatMessage[] => {
+    if (!selectedConversation) return [];
+
+    return selectedConversation.messages.map((msg, index) => ({
+      id: String(index),
+      role: msg.role,
+      content: msg.content,
+      timestamp: new Date(selectedConversation.updatedAt),
+    }));
+  };
+
+  const messages = getMessages();
+
+  return (
+    <Box sx={{ display: 'flex', height: '100vh' }}>
+      {/* AppBar for mobile */}
+      <AppBar
+        position="fixed"
+        sx={{
+          display: { sm: 'none' },
+          zIndex: theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar>
+          <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div">
+            AI Dental Assistant
           </Typography>
-        </Container>
+        </Toolbar>
+      </AppBar>
+
+      {/* Drawer for conversation list */}
+      <Box
+        component="nav"
+        sx={{
+          width: { sm: drawerWidth },
+          flexShrink: { sm: 0 },
+        }}
+      >
+        {/* Mobile drawer */}
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+        >
+          {drawer}
+        </Drawer>
+
+        {/* Desktop drawer */}
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
       </Box>
 
-      {/* Main chat area */}
+      {/* Main content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          overflowY: 'auto',
-          p: 2,
+          p: 0,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          mt: { xs: 7, sm: 0 },
         }}
       >
-        <Container maxWidth="md">
-          {chatHistory.length === 0 && !loading && !pendingQuestion && (
-            <Box
-              sx={{
-                textAlign: 'center',
-                py: 8,
-                opacity: 0.7,
-              }}
-            >
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Your conversation with AI Dental Assistant
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Start by asking a question or uploading a patient document
-              </Typography>
-            </Box>
-          )}
-
-          {chatHistory.map(chat => (
-            <Box key={chat.id} sx={{ mb: 4 }}>
-              {/* User message */}
-              <Card variant="outlined" sx={{ mb: 2 }}>
-                <CardContent sx={{ pb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {chat.question}
-                      </Typography>
-
-                      {chat.hasPdf && (
-                        <Chip
-                          icon={<PictureAsPdf />}
-                          label={chat.pdfName}
-                          size="small"
-                          variant="outlined"
-                          color="primary"
-                          sx={{ mt: 1 }}
-                        />
-                      )}
-                    </Box>
-                    <Tooltip title="Copy to clipboard">
-                      <IconButton
-                        size="small"
-                        onClick={() => copyToClipboard(chat.question, `q-${chat.id}`)}
-                        sx={{ ml: 1 }}
-                      >
-                        {copiedMessageId === `q-${chat.id}` ? (
-                          <Typography variant="caption">Copied!</Typography>
-                        ) : (
-                          <ContentCopy fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  <Typography variant="caption" color="text.secondary">
-                    {chat.timestamp.toLocaleString()}
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              {/* AI response */}
-              <Card
-                sx={{
-                  ml: { xs: 2, sm: 4 },
-                  mb: 2,
-                  bgcolor: theme.palette.primary.light,
-                  color: theme.palette.primary.contrastText,
-                }}
-              >
-                <CardContent sx={{ pb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Box
-                        sx={{
-                          '& p': { mb: 1 },
-                          '& h1, & h2, & h3, & h4, & h5, & h6': { mt: 2, mb: 1 },
-                          '& ul, & ol': { pl: 2 },
-                          '& code': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            p: 0.5,
-                            borderRadius: 1,
-                            fontFamily: 'monospace',
-                          },
-                        }}
-                      >
-                        <ReactMarkdown remarkPlugins={[remarkHeaderId]}>
-                          {chat.answer}
-                        </ReactMarkdown>
-                      </Box>
-                    </Box>
-                    <Tooltip title="Copy to clipboard">
-                      <IconButton
-                        size="small"
-                        onClick={() => copyToClipboard(chat.answer, `a-${chat.id}`)}
-                        sx={{ ml: 1, color: 'inherit', opacity: 0.7 }}
-                      >
-                        {copiedMessageId === `a-${chat.id}` ? (
-                          <Typography variant="caption">Copied!</Typography>
-                        ) : (
-                          <ContentCopy fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.1)' }} />
-                  <Typography variant="caption" sx={{ display: 'block', textAlign: 'right' }}>
-                    AI Assistant • {chat.timestamp.toLocaleString()}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-          ))}
-
-          {/* Pending question */}
-          {pendingQuestion && (
-            <Card variant="outlined" sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {pendingQuestion}
-                </Typography>
-                {selectedFile && (
-                  <Chip
-                    icon={<PictureAsPdf />}
-                    label={selectedFile.name}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    sx={{ mt: 1 }}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Loading indicator */}
-          {loading && (
+        {/* Header */}
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            p: 2,
+          }}
+        >
+          <Container maxWidth="md">
             <Box
               sx={{
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'center',
-                my: 3,
-                px: 2,
-                py: 3,
               }}
             >
-              <CircularProgress size={24} />
-              <Typography sx={{ ml: 2 }} color="text.secondary">
-                Processing your request...
+              <Typography variant="h5" color="primary">
+                {selectedConversation ? selectedConversation.title : 'AI Dental Assistant'}
               </Typography>
+              <Box>
+                <Tooltip title="Clear conversation">
+                  <Button
+                    startIcon={<DeleteOutline />}
+                    onClick={clearChat}
+                    disabled={!selectedConversation || selectedConversation.messages.length === 0}
+                    size="small"
+                    sx={{ mr: 1 }}
+                  >
+                    Clear
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Export conversation">
+                  <Button
+                    startIcon={<FileDownload />}
+                    onClick={exportChat}
+                    disabled={!selectedConversation || selectedConversation.messages.length === 0}
+                    variant="outlined"
+                    size="small"
+                  >
+                    Export
+                  </Button>
+                </Tooltip>
+              </Box>
             </Box>
-          )}
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
+              Ask questions about patient treatments, medications, and procedures
+            </Typography>
+          </Container>
+        </Box>
 
-          <div ref={bottomRef} />
-        </Container>
-      </Box>
-
-      {/* Input area */}
-      <Box
-        component="footer"
-        sx={{
-          position: 'sticky',
-          bottom: 0,
-          p: 2,
-          zIndex: 10,
-        }}
-      >
-        <Container maxWidth="md">
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title="Attach PDF document">
-              <IconButton
-                component="label"
-                color={selectedFile ? 'primary' : 'default'}
-                sx={{ mr: 1 }}
-              >
-                <AttachFile />
-                <input hidden type="file" accept="application/pdf" onChange={handleFileSelect} />
-              </IconButton>
-            </Tooltip>
-
-            {selectedFile && (
-              <Chip
-                icon={<PictureAsPdf />}
-                label={selectedFile.name}
-                onDelete={() => setSelectedFile(undefined)}
-                variant="outlined"
-                color="primary"
-                sx={{ mr: 1, maxWidth: { xs: 150, sm: 200, md: 300 } }}
-              />
-            )}
-
-            <TextareaAutosize
-              ref={textAreaRef}
-              minRows={1}
-              maxRows={5}
-              placeholder={
-                selectedFile
-                  ? 'Ask about the uploaded PDF...'
-                  : 'Enter patient details, clinical questions, or treatment concerns...'
-              }
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              style={{
-                flexGrow: 1,
-                marginRight: 8,
-                padding: 12,
-                borderRadius: 8,
-                border: `1px solid ${theme.palette.divider}`,
-                fontFamily: theme.typography.fontFamily,
-                fontSize: '1rem',
-                resize: 'none',
-              }}
-            />
-
-            {input.trim() && (
-              <Tooltip title="Clear input">
-                <IconButton size="small" onClick={() => setInput('')} sx={{ mr: 1 }}>
-                  <Clear />
-                </IconButton>
-              </Tooltip>
-            )}
-
-            <Tooltip title="Send message">
-              <Fab
-                size="medium"
-                onClick={handleSubmit}
-                disabled={loading || (!input.trim() && !selectedFile)}
+        {/* Chat area */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            p: 2,
+          }}
+        >
+          <Container maxWidth="md">
+            {(!selectedConversation || messages.length === 0) && !loading && !pendingQuestion && (
+              <Box
                 sx={{
-                  bgcolor: '#EA580C',
-                  color: 'common.white',
-                  '&:hover': {
-                    bgcolor: '#DC4E0B',
-                  },
-                  display: 'flex',
-                  alignItems: 'left',
-                  justifyContent: 'center',
+                  textAlign: 'center',
+                  py: 8,
+                  opacity: 0.7,
                 }}
               >
-                <Send />
-              </Fab>
-            </Tooltip>
-          </Box>
-        </Container>
-      </Box>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  Your conversation with AI Dental Assistant
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {selectedConversation
+                    ? 'Start by asking a question or uploading a patient document'
+                    : 'Select a conversation or create a new one to begin'}
+                </Typography>
+                {!selectedConversation && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Add />}
+                    onClick={() => {
+                      setDialogMode('create');
+                      setDialogOpen(true);
+                    }}
+                    sx={{ mt: 2 }}
+                  >
+                    New Conversation
+                  </Button>
+                )}
+              </Box>
+            )}
 
-      <Snackbar
-        open={alert.open}
-        autoHideDuration={6000}
-        onClose={handleAlertClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleAlertClose}
-          severity={alert.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
+            {messages.map(msg => (
+              <Box key={msg.id} sx={{ mb: 4 }}>
+                {/* User message */}
+                {msg.role === 'user' && (
+                  <Card variant="outlined" sx={{ mb: 2 }}>
+                    <CardContent sx={{ pb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {msg.content}
+                          </Typography>
+
+                          {msg.hasPdf && (
+                            <Chip
+                              icon={<PictureAsPdf />}
+                              label={msg.pdfName}
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+                        </Box>
+                        <Tooltip title="Copy to clipboard">
+                          <IconButton
+                            size="small"
+                            onClick={() => copyToClipboard(msg.content, `q-${msg.id}`)}
+                            sx={{ ml: 1 }}
+                          >
+                            {copiedMessageId === `q-${msg.id}` ? (
+                              <Typography variant="caption">Copied!</Typography>
+                            ) : (
+                              <ContentCopy fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Typography variant="caption" color="text.secondary">
+                        {msg.timestamp?.toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* AI response */}
+                {msg.role === 'assistant' && (
+                  <Card
+                    sx={{
+                      ml: { xs: 2, sm: 4 },
+                      mb: 2,
+                      bgcolor: theme.palette.primary.light,
+                      color: theme.palette.primary.contrastText,
+                    }}
+                  >
+                    <CardContent sx={{ pb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Box
+                            sx={{
+                              '& p': { mb: 1 },
+                              '& h1, & h2, & h3, & h4, & h5, & h6': { mt: 2, mb: 1 },
+                              '& ul, & ol': { pl: 2 },
+                              '& code': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                p: 0.5,
+                                borderRadius: 1,
+                                fontFamily: 'monospace',
+                              },
+                            }}
+                          >
+                            <ReactMarkdown remarkPlugins={[remarkHeaderId]}>
+                              {msg.content}
+                            </ReactMarkdown>
+                          </Box>
+                        </Box>
+                        <Tooltip title="Copy to clipboard">
+                          <IconButton
+                            size="small"
+                            onClick={() => copyToClipboard(msg.content, `a-${msg.id}`)}
+                            sx={{ ml: 1, color: 'inherit', opacity: 0.7 }}
+                          >
+                            {copiedMessageId === `a-${msg.id}` ? (
+                              <Typography variant="caption">Copied!</Typography>
+                            ) : (
+                              <ContentCopy fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.1)' }} />
+                      <Typography variant="caption" sx={{ display: 'block', textAlign: 'right' }}>
+                        AI Assistant • {msg.timestamp?.toLocaleString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                )}
+              </Box>
+            ))}
+
+            {/* Pending question */}
+            {pendingQuestion && (
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {pendingQuestion}
+                  </Typography>
+                  {selectedFile && (
+                    <Chip
+                      icon={<PictureAsPdf />}
+                      label={selectedFile.name}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      sx={{ mt: 1 }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loading indicator */}
+            {loading && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  my: 3,
+                  px: 2,
+                  py: 3,
+                }}
+              >
+                <CircularProgress size={24} />
+                <Typography sx={{ ml: 2 }} color="text.secondary">
+                  Processing your request...
+                </Typography>
+              </Box>
+            )}
+
+            <div ref={bottomRef} />
+          </Container>
+        </Box>
+
+        {/* Input area */}
+        <Box
+          component="footer"
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            p: 2,
+            zIndex: 10,
+            // backgroundColor: theme.palette.background.paper,
+            backgroundColor: 'transparent',
+            borderTop: `1px solid ${theme.palette.divider}`,
+          }}
         >
-          {alert.message}
-        </Alert>
-      </Snackbar>
+          <Container maxWidth="md">
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Tooltip title="Attach PDF document">
+                <IconButton
+                  component="label"
+                  color={selectedFile ? 'primary' : 'default'}
+                  sx={{ mr: 1 }}
+                  disabled={!selectedConversation}
+                >
+                  <AttachFile />
+                  <input hidden type="file" accept="application/pdf" onChange={handleFileSelect} />
+                </IconButton>
+              </Tooltip>
+
+              {selectedFile && (
+                <Chip
+                  icon={<PictureAsPdf />}
+                  label={selectedFile.name}
+                  onDelete={() => setSelectedFile(undefined)}
+                  variant="outlined"
+                  color="primary"
+                  sx={{ mr: 1, maxWidth: { xs: 150, sm: 200, md: 300 } }}
+                />
+              )}
+
+              <TextareaAutosize
+                ref={textAreaRef}
+                minRows={1}
+                maxRows={5}
+                placeholder={
+                  !selectedConversation
+                    ? 'Select or create a conversation to begin'
+                    : selectedFile
+                      ? 'Ask about the uploaded PDF...'
+                      : 'Enter patient details, clinical questions, or treatment concerns...'
+                }
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={!selectedConversation}
+                style={{
+                  flexGrow: 1,
+                  marginRight: 8,
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.palette.divider}`,
+                  fontFamily: theme.typography.fontFamily,
+                  fontSize: '1rem',
+                  resize: 'none',
+                }}
+              />
+
+              {input.trim() && (
+                <Tooltip title="Clear input">
+                  <IconButton size="small" onClick={() => setInput('')} sx={{ mr: 1 }}>
+                    <Clear />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              <Tooltip
+                title={selectedConversation ? 'Send message' : 'Select a conversation first'}
+              >
+                <span>
+                  <Fab
+                    size="medium"
+                    onClick={handleSubmit}
+                    disabled={loading || (!input.trim() && !selectedFile) || !selectedConversation}
+                    sx={{
+                      bgcolor: '#EA580C',
+                      color: 'common.white',
+                      '&:hover': {
+                        bgcolor: '#DC4E0B',
+                      },
+                      display: 'flex',
+                      alignItems: 'left',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Send />
+                  </Fab>
+                </span>
+              </Tooltip>
+            </Box>
+          </Container>
+        </Box>
+
+        <Dialog open={dialogOpen} onClose={handleDialogClose}>
+          <DialogTitle>
+            {dialogMode === 'create' ? 'Create New Conversation' : 'Rename Conversation'}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {dialogMode === 'create'
+                ? 'Enter a title for your new conversation.'
+                : 'Enter a new title for this conversation.'}
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Title"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={dialogTitle}
+              onChange={e => setDialogTitle(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose}>Cancel</Button>
+            <Button onClick={handleDialogSubmit}>
+              {dialogMode === 'create' ? 'Create' : 'Rename'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={alert.open}
+          autoHideDuration={6000}
+          onClose={handleAlertClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={handleAlertClose}
+            severity={alert.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Box>
   );
 };
