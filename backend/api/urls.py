@@ -7,6 +7,7 @@ from . import auth_views, views
 router = DefaultRouter()
 router.register("banners", views.BannerViewSet, basename="banner")
 router.register("banner-stats", views.BannerStatViewSet, basename="bannerstat")
+router.register("conversations", views.ConversationViewSet, basename="conversation")
 
 urlpatterns = [
     # Authentication URLs

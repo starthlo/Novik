@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import Banner, BannerStat
+from .models import Banner, BannerStat, Conversation
 
 User = get_user_model()
 
@@ -143,3 +143,33 @@ class BannerStatSerializer(serializers.ModelSerializer):
             "clicks",
         ]
         read_only_fields = fields
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Conversation model.
+
+    Provides fields for creating, retrieving, and updating conversations.
+    Messages field is read-only as it should be modified using the model's add_message method.
+    """
+
+    user = serializers.PrimaryKeyRelatedField(
+        read_only=True, default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Conversation
+        fields = [
+            "id",
+            "user",
+            "title",
+            "messages",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "messages", "created_at", "updated_at"]
+
+    def create(self, validated_data):
+        # Set the user to the current authenticated user
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)

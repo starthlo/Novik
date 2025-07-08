@@ -1,3 +1,6 @@
+import uuid
+from typing import Literal
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -56,14 +59,31 @@ class BannerStat(models.Model):
         unique_together = ("banner", "date", "country")
 
     def __str__(self):
-        return f"{self.banner.title} – {self.country or 'Unknown'} – {self.date}"
+        return f"{self.banner.title} - {self.country or 'Unknown'} - {self.date}"
 
 
-class PatientContext(models.Model):
-    session_id = models.CharField(max_length=36)
-    content = models.TextField(blank=True, null=True)
-    created_by = models.IntegerField(default=0)
+class Conversation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, blank=True)
+    messages = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
 
     def __str__(self):
-        return f"{self.session_id} @ {self.created_at} – {self.content}"
+        return f"{self.title} - {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
+
+    def add_message(self, role: Literal["user", "assistant"], content: str):
+        """Add a new message to the conversation."""
+        message = {"role": role, "content": content}
+
+        if not isinstance(self.messages, list):
+            self.messages = []
+
+        self.messages.append(message)
+        self.save()
+
+        return message
