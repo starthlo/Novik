@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Any, Dict, Literal
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -77,11 +77,18 @@ class Conversation(models.Model):
     def __str__(self):
         return f"{self.title} - {self.user.username} ({self.created_at.strftime('%Y-%m-%d')})"
 
-    def add_message(self, role: Literal["user", "assistant"], content: str):
+    def add_message(
+        self,
+        role: Literal["user", "assistant"],
+        content: str,
+        file: Dict[str, Any] = None,
+    ):
         """Add a new message to the conversation."""
+
         message = {
             "role": role,
             "content": content,
+            "file": file,
             "timestamp": datetime.now().isoformat(),
         }
 

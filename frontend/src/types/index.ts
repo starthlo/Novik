@@ -3,8 +3,10 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: Date;
-  hasPdf?: boolean;
-  pdfName?: string;
+  file?: {
+    fileName: string;
+    text: string;
+  };
 };
 
 export type Conversation = {

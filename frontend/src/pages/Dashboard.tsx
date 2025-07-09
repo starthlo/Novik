@@ -558,6 +558,7 @@ const Dashboard = () => {
       role: msg.role,
       content: msg.content,
       timestamp: new Date(selectedConversation.updatedAt),
+      file: msg.file,
     }));
   };
 
@@ -824,10 +825,10 @@ const Dashboard = () => {
                             {msg.content}
                           </Typography>
 
-                          {msg.hasPdf && (
+                          {msg.file && (
                             <Chip
                               icon={<PictureAsPdf />}
-                              label={msg.pdfName}
+                              label={msg.file.fileName}
                               size="small"
                               variant="outlined"
                               color="primary"

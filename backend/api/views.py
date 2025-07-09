@@ -232,6 +232,7 @@ def patient_assistant_view(request):
             )
 
         # If PDF is provided, process it and combine with message content
+        file = None
         if pdf_file:
             import PyPDF2
 
@@ -247,25 +248,25 @@ def patient_assistant_view(request):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if content:
-                content_to_process = text + "\r\n" + content
-            else:
-                content_to_process = text
+            if text:
+                file = {"file_name": pdf_file.name, "text": text}
         else:
             if not content:
                 return Response(
                     {"error": "Message content is required when no PDF is provided"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            content_to_process = content
 
         conversation = Conversation.objects.filter(user=request.user).first()
-        conversation.add_message("user", content_to_process)
+        conversation.add_message("user", content, file=file)
 
         thread = client.beta.threads.create()
         for message in conversation.messages:
+            content_to_process = message["content"]
+            if message["file"]:
+                content_to_process += f"\n\n{message['file']['text']}"
             client.beta.threads.messages.create(
-                thread_id=thread.id, role=message["role"], content=message["content"]
+                thread_id=thread.id, role=message["role"], content=content_to_process
             )
 
         run = client.beta.threads.runs.create(
