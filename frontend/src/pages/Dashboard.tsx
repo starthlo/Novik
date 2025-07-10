@@ -209,6 +209,7 @@ const Dashboard = () => {
             id: uuidv4(),
             role: 'user',
             content: messageText,
+            file: selectedFile && { fileName: selectedFile.name, text: '' },
           },
           {
             id: uuidv4(),
@@ -935,7 +936,7 @@ const Dashboard = () => {
                                       );
                                     }
                                   }
-                                  return <a {...props} />;
+                                  return <a {...props} target="_blank" />;
                                 },
                                 h6: ({ node, ...props }) => {
                                   // Special handling for footnote section headings
