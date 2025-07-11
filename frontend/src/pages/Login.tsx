@@ -147,10 +147,10 @@ function Login() {
           </Box>
 
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-            <Link href="/register" variant="body2">
+            <Link href="/register" variant="body2" color="warning">
               Sign Up
             </Link>
-            <Link href="/forgot-password" variant="body2">
+            <Link href="/forgot-password" variant="body2" color="warning">
               Forgot Your Password?
             </Link>
           </Box>
