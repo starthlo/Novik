@@ -426,6 +426,7 @@ const Dashboard = () => {
                 setDialogOpen(true);
               }}
               size="small"
+              color="warning"
             >
               New Conversation
             </Button>
@@ -519,7 +520,7 @@ const Dashboard = () => {
                           fontWeight: 500,
                           bgcolor:
                             selectedConversation?.id === conversation.id
-                              ? theme.palette.primary.main
+                              ? '#f97316'
                               : 'rgba(0, 0, 0, 0.08)',
                           color:
                             selectedConversation?.id === conversation.id ? 'white' : 'text.primary',
@@ -666,7 +667,7 @@ const Dashboard = () => {
               }}
             >
               {selectedConversation ? (
-                <Typography variant="h5" color="primary">
+                <Typography variant="h5" color="#f97316">
                   {selectedConversation.title}
                 </Typography>
               ) : (
@@ -676,10 +677,9 @@ const Dashboard = () => {
                   </Typography>
                   <Chip
                     label="Select a conversation"
-                    color="primary"
                     size="small"
                     variant="outlined"
-                    sx={{ ml: 2 }}
+                    sx={{ ml: 2, color: '#f97316', borderColor: '#f97316' }}
                   />
                 </Box>
               )}
@@ -693,7 +693,7 @@ const Dashboard = () => {
                       onClick={clearChat}
                       disabled={!selectedConversation || selectedConversation.messages.length === 0}
                       size="small"
-                      sx={{ mr: 1 }}
+                      sx={{ mr: 1, color: '#f97316' }}
                     >
                       Clear
                     </Button>
@@ -706,8 +706,8 @@ const Dashboard = () => {
                       startIcon={<FileDownload />}
                       onClick={exportChat}
                       disabled={!selectedConversation || selectedConversation.messages.length === 0}
-                      variant="outlined"
                       size="small"
+                      sx={{ color: '#f97316' }}
                     >
                       Export
                     </Button>
@@ -755,7 +755,7 @@ const Dashboard = () => {
                     borderColor: theme.palette.divider,
                   }}
                 >
-                  <Typography variant="h5" color="primary" gutterBottom>
+                  <Typography variant="h5" color="#f97316" gutterBottom>
                     {selectedConversation
                       ? 'Start a new conversation'
                       : 'Welcome to AI Dental Assistant'}
@@ -790,7 +790,6 @@ const Dashboard = () => {
                   {!selectedConversation ? (
                     <Button
                       variant="contained"
-                      color="primary"
                       startIcon={<Add />}
                       onClick={() => {
                         setDialogMode('create');
@@ -798,6 +797,9 @@ const Dashboard = () => {
                       }}
                       size="large"
                       fullWidth
+                      style={{
+                        backgroundColor: '#f97316',
+                      }}
                     >
                       New Conversation
                     </Button>
@@ -832,7 +834,7 @@ const Dashboard = () => {
                               label={msg.file.fileName}
                               size="small"
                               variant="outlined"
-                              color="primary"
+                              color="warning"
                               sx={{ mt: 1 }}
                             />
                           )}
@@ -999,7 +1001,7 @@ const Dashboard = () => {
                       label={selectedFile.name}
                       size="small"
                       variant="outlined"
-                      color="primary"
+                      color="warning"
                       sx={{ mt: 1 }}
                     />
                   )}
@@ -1047,7 +1049,7 @@ const Dashboard = () => {
               <Tooltip title="Attach PDF document">
                 <IconButton
                   component="label"
-                  color={selectedFile ? 'primary' : 'default'}
+                  color={selectedFile ? 'warning' : 'default'}
                   sx={{ mr: 1 }}
                   disabled={!selectedConversation}
                 >
@@ -1062,7 +1064,7 @@ const Dashboard = () => {
                   label={selectedFile.name}
                   onDelete={() => setSelectedFile(undefined)}
                   variant="outlined"
-                  color="primary"
+                  color="warning"
                   sx={{ mr: 1, maxWidth: { xs: 150, sm: 200, md: 300 } }}
                 />
               )}
@@ -1148,11 +1150,14 @@ const Dashboard = () => {
               variant="outlined"
               value={dialogTitle}
               onChange={e => setDialogTitle(e.target.value)}
+              color="warning"
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button onClick={handleDialogSubmit}>
+            <Button onClick={handleDialogClose} color="warning">
+              Cancel
+            </Button>
+            <Button onClick={handleDialogSubmit} color="warning">
               {dialogMode === 'create' ? 'Create' : 'Rename'}
             </Button>
           </DialogActions>

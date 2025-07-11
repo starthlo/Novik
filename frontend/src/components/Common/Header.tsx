@@ -129,7 +129,12 @@ const Header = () => {
                     key={i}
                     component={RouterLink}
                     to={item.to}
-                    sx={{ mx: 1, fontSize: '1rem', color: 'text.primary' }}
+                    sx={{
+                      mx: 1,
+                      fontSize: '1rem',
+                      color: 'text.primary',
+                      textTransform: 'capitalize',
+                    }}
                   >
                     {item.text}
                   </Button>
@@ -214,7 +219,7 @@ const Header = () => {
               item.requiresAuth && !isAuthorized ? null : (
                 <ListItem key={i} disablePadding>
                   <ListItemButton component={RouterLink} to={item.to}>
-                    <ListItemText primary={item.text} />
+                    <ListItemText primary={item.text} sx={{ textTransform: 'capitalize' }} />
                   </ListItemButton>
                 </ListItem>
               )

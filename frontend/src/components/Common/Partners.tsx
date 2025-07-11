@@ -59,7 +59,7 @@ const Partners = () => {
             </Grid>
           ))}
         </Grid>
-        <Typography align="center" sx={{ fontSize: 12, color: '#666', mt: 3 }}>
+        <Typography align="center" sx={{ fontSize: 12, color: '#666', mt: 3, display: 'none' }}>
           Clicks: {clicks}
         </Typography>
       </Container>
