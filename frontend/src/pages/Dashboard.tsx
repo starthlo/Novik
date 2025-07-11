@@ -1010,7 +1010,7 @@ const Dashboard = () => {
             )}
 
             {/* Loading indicator */}
-            {!loading && (
+            {loading && (
               <Box
                 sx={{
                   display: 'flex',
