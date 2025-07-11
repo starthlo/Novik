@@ -1010,7 +1010,7 @@ const Dashboard = () => {
             )}
 
             {/* Loading indicator */}
-            {loading && (
+            {!loading && (
               <Box
                 sx={{
                   display: 'flex',
@@ -1021,9 +1021,9 @@ const Dashboard = () => {
                   py: 3,
                 }}
               >
-                <CircularProgress size={24} />
-                <Typography sx={{ ml: 2 }} color="text.secondary">
-                  Processing your request...
+                <CircularProgress size={24} color="warning" />
+                <Typography sx={{ ml: 2 }} color="warning">
+                  Processing...
                 </Typography>
               </Box>
             )}
