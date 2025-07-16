@@ -38,7 +38,14 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 # Convert comma-separated string to list, or use default if not provided
-ALLOWED_HOSTS = ["novik.ai", "95.85.93.198", "82.29.174.61", "127.0.0.1", "localhost"]
+ALLOWED_HOSTS = [
+    "novik.ai",
+    "95.85.93.198",
+    "82.29.174.61",
+    "127.0.0.1",
+    "localhost",
+    "0.0.0.0",
+]
 STATIC_ROOT = BASE_DIR / "static"
 
 INSTALLED_APPS = [

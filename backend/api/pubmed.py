@@ -5,19 +5,12 @@ from Bio import Entrez
 from django.utils import timezone
 from dotenv import load_dotenv
 
-from .utils import get_nouns
-
 load_dotenv()
 
 Entrez.email = os.environ.get("ENTREZ_EMAIL")
 
 
-def get_articles(query: str, count: int = 2) -> List[Dict[str, str]]:
-    nouns = get_nouns(query)
-    nouns_joined = " OR ".join(nouns)
-
-    term = f"{nouns_joined} AND (dental[mh] OR dentistry[mh] OR endodontics[mh] OR periodontics[mh] OR maxillofacial[mh])"
-
+def get_articles(term: str, count: int = 3) -> List[Dict[str, str]]:
     ymax = timezone.now().date().year
     ymin = ymax - 5
 

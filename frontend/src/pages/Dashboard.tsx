@@ -888,7 +888,6 @@ const Dashboard = () => {
                               '& sup a': {
                                 textDecoration: 'none',
                                 padding: '0 2px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.15)',
                                 borderRadius: '3px',
                                 fontWeight: 'bold',
                                 marginLeft: '2px',
@@ -927,9 +926,10 @@ const Dashboard = () => {
                                             {...props}
                                             style={{
                                               textDecoration: 'none',
-                                              color: 'inherit',
+                                              color: 'blue',
                                               cursor: 'pointer',
                                               fontSize: '0.75em',
+                                              opacity: '0.6',
                                             }}
                                           >
                                             {footnoteNumber}
@@ -938,20 +938,23 @@ const Dashboard = () => {
                                       );
                                     }
                                   }
-                                  return <a {...props} target="_blank" />;
+                                  return (
+                                    <a
+                                      {...props}
+                                      target="_blank"
+                                      style={{ color: 'blue', opacity: '0.8' }}
+                                    />
+                                  );
                                 },
                                 h6: ({ node, ...props }) => {
                                   // Special handling for footnote section headings
-                                  if (props.id && props.id.endsWith('eWzv')) {
+                                  if (props.id) {
                                     return (
                                       <h6
                                         {...props}
                                         style={{
-                                          fontSize: '0.8em',
-                                          marginTop: '1.5em',
-                                          marginBottom: '0.3em',
+                                          color: 'blue',
                                           opacity: 0.8,
-                                          fontWeight: 'normal',
                                         }}
                                       />
                                     );

@@ -285,14 +285,12 @@ def patient_assistant_view(request):
         text = messages.data[0].content[0].text.value
         annotations = messages.data[0].content[0].text.annotations
 
-        anchor_random_string = "".join(
-            random.choices(string.ascii_letters + string.digits, k=5)
-        )
+        anchor = "".join(random.choices(string.ascii_letters + string.digits, k=5))
 
         # Iterate over the annotations and add footnotes
         citations = []
         for index, annotation in enumerate(annotations):
-            anchor_id = f"{index + 1}{anchor_random_string}"
+            anchor_id = f"{index + 1}{anchor}"
             ## Replace the text with a footnote
             text = text.replace(
                 annotation.text,
@@ -309,30 +307,15 @@ def patient_assistant_view(request):
                 )
 
         if citations:
-            ref_index = text.find("### References")
-            if ref_index != -1:
-                text = text[:ref_index]
-            else:
-                ref_index = text.find("**References")
+            for ref_marker in ["### References", "**References"]:
+                ref_index = text.find(ref_marker)
                 if ref_index != -1:
                     text = text[:ref_index]
+                    break
 
-            text += (
-                "\r\n"
-                + "### References:  "
-                + "\r\n"
-                + "  \r\n".join(citations)
-                + "\r\n"
-            )
+            text = f"{text}\r\n### References:  \r\n{chr(10).join(f'  {citation}' for citation in citations)}\r\n"
 
-        text = re.sub(
-            r"^.*https?:\/\/(?:www\.|go\.)?drugbank\.(?:com|ca)\/drugs\/DB\d+.*\n?",
-            "",
-            text,
-            flags=re.MULTILINE,
-        )
-
-        enriched_response = enrich_response(text, anchor_random_string)
+        enriched_response = enrich_response(text + "\n", anchor)
 
         conversation.add_message("assistant", enriched_response)
         return Response({"message": enriched_response}, status=status.HTTP_200_OK)
@@ -342,20 +325,20 @@ def patient_assistant_view(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def enrich_response(text: str, anchor_random_string: str) -> str:
+def enrich_response(text: str, anchor: str) -> str:
     """
     Enrich the response text with medication links and PubMed references.
 
     This function:
     1. Adds drugbank.com links to medication names
-    2. Extracts reference titles from the AI response
-    3. Fetches PubMed articles for those references
-    4. Looks for preoperative/postoperative guidelines and enhances them with references
+    2. Extracts PubMed search terms from the AI response
+    3. Fetches PubMed articles for those search terms
+    4. Adds numbered superscript references to medical statements
     5. Reformats the references section with proper formatting
 
     Args:
         text: The AI response text to enrich
-        anchor_random_string: A random string used for creating unique anchor IDs
+        anchor: A random string used for creating unique anchor IDs
 
     Returns:
         The enriched text with medication links and PubMed references
@@ -377,6 +360,7 @@ def enrich_response(text: str, anchor_random_string: str) -> str:
         "Vancomycin": "DB00512",
         "Rifampicin": "DB01045",
         "Paracetamol": "DB00316",
+        "Acetaminophen": "DB00316",
         "Ibuprofen": "DB01050",
         "Naproxen": "DB00788",
         "Ketorolac": "DB00465",
@@ -393,6 +377,7 @@ def enrich_response(text: str, anchor_random_string: str) -> str:
         "Indomethacin": "DB00328",
         "Flurbiprofen": "DB00712",
         "Ketoprofen": "DB01009",
+        "Dexketoprofen": "DB01009",
         "Prednisone": "DB00635",
         "Dexamethasone": "DB01234",
         "Hydrocortisone": "DB00741",
@@ -403,6 +388,10 @@ def enrich_response(text: str, anchor_random_string: str) -> str:
         "Lidocaine": "DB00281",
         "Mepivacaine": "DB00961",
         "Bupivacaine": "DB00297",
+        "Zoledronic acid": "DB01077",
+        "Zometa": "DB01077",
+        "Letrozole": "DB01006",
+        "Chlorhexidine": "DB00878",
     }
 
     # Add drugbank links to medication names
@@ -413,103 +402,81 @@ def enrich_response(text: str, anchor_random_string: str) -> str:
             text,
         )
 
-    # Extract reference titles from the AI response
-    ref_block_match = re.search(r"### References:?(.*\n){1,9}", text)
-    raw_titles = []
-    if ref_block_match:
-        ref_block = ref_block_match.group()
-        raw_titles = re.findall(r"\[\d+\]\s*(.*)\n", ref_block)
-
-    # Clean up the titles
-    strip_titles = list(filter(str.strip, raw_titles))
-    non_empty_titles = list(filter(None, strip_titles))
-    titles = list(set(non_empty_titles))
-
-    # Get PubMed articles for the reference titles
-    result_limit = 2
-    match_found = False
+    # Initialize variables
     all_refs = []
+    match_found = False
 
-    for title in titles:
-        title = title.strip()
-        if not title:
-            continue
+    # Extract PubMed search terms from the text
+    pubmed_search_pattern = (
+        r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n((?:\d+\.\s+.*?\n)*)"
+    )
+    pubmed_matches = re.findall(pubmed_search_pattern, text, re.MULTILINE | re.DOTALL)
+    # Extract only the search terms part (third capture group)
+    pubmed_matches = [match[2] for match in pubmed_matches]
 
-        articles = get_articles(title, count=result_limit)
-        if articles:
-            match_found = True
-            all_refs.extend(articles)
-        else:
-            all_refs.append({"title": title})
+    anchor_index = 0
 
-    # Process preoperative/postoperative sections
-    refmes = ["Preoperative Precautions", "Postoperative Guidelines"]
-    anchor_index = len(all_refs)
-    t_w_r_s = []
+    for pubmed_block in pubmed_matches:
+        # Extract individual search terms with their ordering numbers
+        search_items = re.findall(
+            r"(\d+)\.\s+(.+?)(?=\n\d+\.|\Z)", pubmed_block, re.DOTALL
+        )
 
-    for refme in refmes:
-        # Find bulleted lists under these headings
-        pattern = re.compile(rf"{re.escape(refme)}.*\n?([-\s+|\d\.\s+].*\n){{1,4}}")
-        ref_block_match = pattern.search(text)
+        for order_num, search_term in search_items:
+            # Clean up the search term
+            search_term = search_term.strip().replace("\n", " ")
+            search_term = re.sub(r"\s+", " ", search_term)
 
-        if ref_block_match:
-            ref_block = ref_block_match.group()
-            # Extract bullet points
-            pps = re.findall(r"[-|\d\.]\s+(.*)\n", ref_block)
+            # Fetch PubMed articles for this search term
+            articles = get_articles(search_term, count=1)
+            time.sleep(1)
 
-            result_limit = 3
+            if articles:
+                match_found = True
+                # Add ordering number to each article for reference
+                for article in articles:
+                    anchor_index += 1
+                    text = re.sub(
+                        rf"\[\^{order_num}\]",
+                        f"[^{anchor_index}^](#{anchor_index}{anchor}) [^{order_num}]",
+                        text,
+                    )
+                all_refs.extend(articles)
 
-            for eye, pp_content in enumerate(pps):
-                t_strip = pp_content.strip()
-
-                # Skip empty items or known problematic patterns
-                if not t_strip or t_strip == "Anesthetics":
-                    continue
-
-                # Clean up the content
-                t_strip = t_strip.replace("**", "")
-
-                # Fetch PubMed articles for this content
-                articles = get_articles(t_strip, count=result_limit)
-
-                if articles:
-                    match_found = True
-                    all_refs.extend(articles)
-
-                    for article in articles:
-                        anchor_index += 1
-                        t_w_r_s.append(
-                            {
-                                "refme": refme,
-                                "eye": eye,
-                                "content": pp_content,
-                                "anchor_index": anchor_index,
-                            }
-                        )
-
-    # Add superscripts to referenced content
-    for t_w_r in t_w_r_s:
-        a_c = t_w_r["content"]
-        a_i = t_w_r["anchor_index"]
-        a_f = f"{a_i}{anchor_random_string}"
-        a_c_a_f = f"{a_c} [^{a_i}^](#{a_f})"
-        text = text.replace(a_c, a_c_a_f)
+            superscript_pattern = rf"\[\^{order_num}\]"
+            text = re.sub(superscript_pattern, "", text)
 
     # Format and add references to the output
-    if match_found:
+    if match_found and all_refs:
+        # Remove existing references section
+        text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
+        text = re.sub(
+            r"(\*\*)?PubMed Search Terms(\*\*)?:[\s\S]*?(?=\n[A-Z]\.|\Z)", "", text
+        )
+
+        # Create new references section
         ref_block = "\n\n".join(
             [
-                f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{i + 1}{anchor_random_string}}}  \n{ref['authors']}.  \n{ref['journal']}. {ref['year']};{ref.get('volume', '')}({ref.get('issue', '')}):{ref.get('pages', '')}. {ref.get('doi', '')}"
+                f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{i + 1}{anchor}}}  \n"
+                f"{ref['authors']}.  \n"
+                f"{ref['journal']}. {ref['year']}"
+                f"{';' + ref.get('volume', '') if ref.get('volume') else ''}"
+                f"({ref.get('issue', '')})"
+                if ref.get("issue")
+                else f":{ref.get('pages', '')}. "
+                if ref.get("pages")
+                else f". {ref.get('doi', '')}"
                 for i, ref in enumerate(all_refs)
             ]
         )
 
-        # Replace original references with our enhanced ones
-        text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
-
         # Add new PubMed references
-        text = f"{text}  \r\n\r\n-------\n### PubMed References\r\n{ref_block}  \r\n"
+        text = f"{text.rstrip()}\n\n---\n\n### PubMed References\n\n{ref_block}\n"
     else:
-        text = f"{text}  \r\n\r\n**No recent PubMed references were found that specifically relate to these factors.**\r\n"
+        # Clean up PubMed search terms sections even if no articles found
+        text = re.sub(
+            r"(\*\*)?PubMed Search Terms(\*\*)?:[\s\S]*?(?=\n[A-Z]\.|\Z)", "", text
+        )
+        text = f"{text.rstrip()}\n\n**No recent PubMed references were found that specifically relate to these factors.**\n"
 
     return text
