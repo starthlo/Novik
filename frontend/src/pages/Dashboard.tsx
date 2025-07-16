@@ -925,7 +925,7 @@ const Dashboard = () => {
                                           <a
                                             {...props}
                                             style={{
-                                              textDecoration: 'none',
+                                              textDecoration: 'underline',
                                               color: 'blue',
                                               cursor: 'pointer',
                                               fontSize: '0.75em',
@@ -942,7 +942,11 @@ const Dashboard = () => {
                                     <a
                                       {...props}
                                       target="_blank"
-                                      style={{ color: 'blue', opacity: '0.8' }}
+                                      style={{
+                                        color: 'blue',
+                                        opacity: '0.8',
+                                        textDecoration: 'underline',
+                                      }}
                                     />
                                   );
                                 },

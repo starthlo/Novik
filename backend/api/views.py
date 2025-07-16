@@ -428,7 +428,7 @@ def enrich_response(text: str, anchor: str) -> str:
             search_term = re.sub(r"\s+", " ", search_term)
 
             # Fetch PubMed articles for this search term
-            articles = get_articles(search_term, count=1)
+            articles = get_articles(search_term, count=3)
             time.sleep(1)
 
             if articles:
