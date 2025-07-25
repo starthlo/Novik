@@ -4,7 +4,6 @@ import random
 import re
 import string
 import time
-
 import openai
 from django.contrib.gis.geoip2 import GeoIP2
 from django.db.models import F
@@ -340,60 +339,29 @@ def enrich_response(text: str, anchor: str) -> str:
         The enriched text with medication links and PubMed references
     """
     # Dictionary of medications and their DrugBank IDs
-    medications = {
-        "Amoxicillin": "DB01060",
-        "Clindamycin": "DB01190",
-        "Metronidazole": "DB00916",
-        "Azithromycin": "DB00207",
-        "Erythromycin": "DB00199",
-        "Cephalexin": "DB00567",
-        "Cefuroxime": "DB01112",
-        "Doxycycline": "DB00254",
-        "Tetracycline": "DB00759",
-        "Ciprofloxacin": "DB00537",
-        "Levofloxacin": "DB01137",
-        "Spiramycin": "DB06145",
-        "Vancomycin": "DB00512",
-        "Rifampicin": "DB01045",
-        "Paracetamol": "DB00316",
-        "Acetaminophen": "DB00316",
-        "Ibuprofen": "DB01050",
-        "Naproxen": "DB00788",
-        "Ketorolac": "DB00465",
-        "Diclofenac": "DB00586",
-        "Metamizole": "DB04817",
-        "Celecoxib": "DB00482",
-        "Etoricoxib": "DB01628",
-        "Tramadol": "DB00193",
-        "Codeine": "DB00318",
-        "Morphine": "DB00295",
-        "Acetylsalicylic acid": "DB00945",
-        "Meloxicam": "DB00814",
-        "Piroxicam": "DB00554",
-        "Indomethacin": "DB00328",
-        "Flurbiprofen": "DB00712",
-        "Ketoprofen": "DB01009",
-        "Dexketoprofen": "DB01009",
-        "Prednisone": "DB00635",
-        "Dexamethasone": "DB01234",
-        "Hydrocortisone": "DB00741",
-        "Lornoxicam": "DB06725",
-        "Aceclofenac": "DB06736",
-        "Articaine": "DB09009",
-        "Epinephrine": "DB00668",
-        "Lidocaine": "DB00281",
-        "Mepivacaine": "DB00961",
-        "Bupivacaine": "DB00297",
-        "Zoledronic acid": "DB01077",
-        "Zometa": "DB01077",
-        "Letrozole": "DB01006",
-        "Chlorhexidine": "DB00878",
-    }
+
+    medications = {}
+    file_path = os.path.join(os.path.dirname(__file__), "drugs/molecules.txt")
+
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line == ",":
+                    continue
+                match = re.match(r'"(.+?)"\s*:\s*"(.+?)",?', line)
+                if match:
+                    name, dbid = match.groups()
+                    medications[name] = dbid
+    else:
+        # Optionally log a warning or raise an exception
+        medications = {}
 
     # Add drugbank links to medication names
     for med, dbid in medications.items():
+        escaped_med = re.escape(med)
         text = re.sub(
-            rf"(?<!\[)({med})(?![\w\s]*\])",
+            rf"(?<!\[)({escaped_med})(?![\w\s]*\])",
             rf"[{med}](https://go.drugbank.com/drugs/{dbid})",
             text,
         )
