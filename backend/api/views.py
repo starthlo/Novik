@@ -290,12 +290,8 @@ def patient_assistant_view(request):
         # Iterate over the annotations and add footnotes
         citations = []
         for index, annotation in enumerate(annotations):
-            anchor_id = f"{index + 1}{anchor}"
             ## Replace the text with a footnote
-            text = text.replace(
-                annotation.text,
-                f" [^{index + 1}^](#{anchor_id})",
-            )
+            text = text.replace(annotation.text, "", 1)
             # Gather citations based on annotation attributes
             if file_citation := getattr(annotation, "file_citation", None):
                 cited_file = client.files.retrieve(file_citation.file_id)
@@ -313,7 +309,7 @@ def patient_assistant_view(request):
                     text = text[:ref_index]
                     break
 
-            text = f"{text}\r\n### References:  \r\n{chr(10).join(f'  {citation}' for citation in citations)}\r\n"
+            text = f"{text}\r\n\n### References:  \r\n{chr(10).join(f'  {citation}' for citation in citations)}\r\n"
 
         enriched_response = enrich_response(text + "\n", anchor)
 
@@ -426,7 +422,7 @@ def enrich_response(text: str, anchor: str) -> str:
             # Clean up the search term
             search_term = search_term.strip().replace("\n", " ")
             search_term = re.sub(r"\s+", " ", search_term)
-
+            
             # Fetch PubMed articles for this search term
             articles = get_articles(search_term, count=3)
             time.sleep(1)
@@ -451,23 +447,15 @@ def enrich_response(text: str, anchor: str) -> str:
         # Remove existing references section
         text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
         text = re.sub(
-            r"(\*\*)?PubMed Search Terms(\*\*)?:[\s\S]*?(?=\n[A-Z]\.|\Z)", "", text
+            r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n(?:\d+\.\s+\([^)]+\)\s*\n)*(?:\n(?=\*\*[A-Z]\.)|(?=\n###)|$)",
+            "",
+            text,
+            flags=re.MULTILINE,
         )
 
         # Create new references section
         ref_block = "\n\n".join(
-            [
-                f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{i + 1}{anchor}}}  \n"
-                f"{ref['authors']}.  \n"
-                f"{ref['journal']}. {ref['year']}"
-                f"{';' + ref.get('volume', '') if ref.get('volume') else ''}"
-                f"({ref.get('issue', '')})"
-                if ref.get("issue")
-                else f":{ref.get('pages', '')}. "
-                if ref.get("pages")
-                else f". {ref.get('doi', '')}"
-                for i, ref in enumerate(all_refs)
-            ]
+            [format_reference(i, ref, anchor) for i, ref in enumerate(all_refs)]
         )
 
         # Add new PubMed references
@@ -475,8 +463,39 @@ def enrich_response(text: str, anchor: str) -> str:
     else:
         # Clean up PubMed search terms sections even if no articles found
         text = re.sub(
-            r"(\*\*)?PubMed Search Terms(\*\*)?:[\s\S]*?(?=\n[A-Z]\.|\Z)", "", text
+            r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n(?:\d+\.\s+\([^)]+\)\s*\n)*(?:\n(?=\*\*[A-Z]\.)|(?=\n###)|$)",
+            "",
+            text,
+            flags=re.MULTILINE,
         )
         text = f"{text.rstrip()}\n\n**No recent PubMed references were found that specifically relate to these factors.**\n"
 
     return text
+
+
+def format_reference(i, ref, anchor):
+    """Format a single reference entry"""
+    # Basic info
+    title_line = (
+        f"###### {i + 1}. [{ref['title']}]({ref['url']}) {{#{i + 1}{anchor}}}  \n"
+    )
+    authors_line = f"{ref['authors']}.  \n"
+
+    # Journal and year
+    journal_year = f"{ref['journal']}. {ref['year']}"
+
+    # Volume, issue, pages
+    citation_parts = []
+    if ref.get("volume"):
+        citation_parts.append(f";{ref['volume']}")
+    if ref.get("issue"):
+        citation_parts.append(f"({ref['issue']})")
+    if ref.get("pages"):
+        citation_parts.append(f":{ref['pages']}")
+
+    citation_info = "".join(citation_parts) + ". "
+
+    # DOI
+    doi_info = f"{ref['doi']}" if ref.get("doi") else ""
+
+    return title_line + authors_line + journal_year + citation_info + doi_info

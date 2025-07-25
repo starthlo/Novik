@@ -946,6 +946,7 @@ const Dashboard = () => {
                                         color: 'blue',
                                         opacity: '0.8',
                                         textDecoration: 'underline',
+                                        fontWeight: 500,
                                       }}
                                     />
                                   );
