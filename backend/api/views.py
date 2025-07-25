@@ -4,6 +4,7 @@ import random
 import re
 import string
 import time
+
 import openai
 from django.contrib.gis.geoip2 import GeoIP2
 from django.db.models import F
@@ -390,7 +391,7 @@ def enrich_response(text: str, anchor: str) -> str:
             # Clean up the search term
             search_term = search_term.strip().replace("\n", " ")
             search_term = re.sub(r"\s+", " ", search_term)
-            
+
             # Fetch PubMed articles for this search term
             articles = get_articles(search_term, count=3)
             time.sleep(1)
