@@ -22,10 +22,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
   TextField,
   Dialog,
   DialogActions,
@@ -44,7 +40,6 @@ import {
   PictureAsPdf,
   Clear,
   Add,
-  Edit,
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useConverstaions } from '../hooks/useConversations';
@@ -72,7 +67,7 @@ const Dashboard = () => {
   });
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
-  const { conversations, mutate } = useConverstaions();
+  const { mutate } = useConverstaions();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
@@ -295,27 +290,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteConversation = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this conversation?')) return;
-
-    try {
-      await patientService.deleteConversation(id);
-
-      mutate(convs => convs?.filter(conv => conv.id !== id), false);
-
-      // If the deleted conversation was selected, select another one
-      if (selectedConversation?.id === id) {
-        const remaining = conversations.filter(conv => conv.id !== id);
-        setSelectedConversation(remaining.length > 0 ? remaining[0] : null);
-      }
-
-      showAlert('Conversation deleted', 'success');
-    } catch (err) {
-      showAlert('Failed to delete conversation', 'error');
-      console.error('Error deleting conversation:', err);
-    }
-  };
-
   const handleClearConversation = async (id: string) => {
     try {
       await patientService.clearConversation(id);
@@ -336,13 +310,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleOpenRenameDialog = (conversation: Conversation) => {
-    setDialogMode('rename');
-    setDialogTitle(conversation.title);
-    setDialogConversationId(conversation.id);
-    setDialogOpen(true);
-  };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
     setDialogTitle('');
@@ -360,197 +327,6 @@ const Dashboard = () => {
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-      return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (diffDays === 1) {
-      return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString([], { weekday: 'long' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
-
-  const getLastMessagePreview = (conversation: Conversation) => {
-    if (!conversation.messages || conversation.messages.length === 0) {
-      return 'No messages';
-    }
-
-    const lastMessage = conversation.messages[conversation.messages.length - 1];
-    const prefix = lastMessage.role === 'user' ? 'You: ' : 'AI: ';
-    const content =
-      lastMessage.content.length > 30
-        ? `${lastMessage.content.substring(0, 30)}...`
-        : lastMessage.content;
-
-    return `${prefix}${content}`;
-  };
-
-  // Drawer content - conversation list
-  const drawer = (
-    <Box sx={{ overflow: 'auto' }}>
-      <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Conversations</Typography>
-        <Tooltip title="New conversation">
-          <IconButton
-            onClick={() => {
-              setDialogMode('create');
-              setDialogOpen(true);
-            }}
-          >
-            <Add />
-          </IconButton>
-        </Tooltip>
-      </Box>
-      <Divider />
-      <List>
-        {conversations.length === 0 ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              No conversations yet
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Start a new conversation to chat with the AI Dental Assistant
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => {
-                setDialogMode('create');
-                setDialogOpen(true);
-              }}
-              size="small"
-              color="warning"
-            >
-              New Conversation
-            </Button>
-          </Box>
-        ) : (
-          conversations.map(conversation => (
-            <ListItem
-              key={conversation.id}
-              disablePadding
-              secondaryAction={
-                <Box>
-                  <Tooltip title="Rename">
-                    <IconButton
-                      edge="end"
-                      size="small"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleOpenRenameDialog(conversation);
-                      }}
-                    >
-                      <Edit fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton
-                      edge="end"
-                      size="small"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDeleteConversation(conversation.id);
-                      }}
-                    >
-                      <DeleteOutline fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              }
-              sx={{
-                borderLeft:
-                  selectedConversation?.id === conversation.id
-                    ? `4px solid ${theme.palette.primary.main}`
-                    : '4px solid transparent',
-                bgcolor:
-                  selectedConversation?.id === conversation.id
-                    ? 'rgba(0, 0, 0, 0.04)'
-                    : 'transparent',
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.04)',
-                },
-              }}
-            >
-              <ListItemButton
-                selected={selectedConversation?.id === conversation.id}
-                onClick={() => {
-                  setSelectedConversation(conversation);
-                  if (mobileOpen) setMobileOpen(false);
-                }}
-                sx={{
-                  py: 1.5,
-                  '&.Mui-selected': {
-                    bgcolor: 'transparent',
-                  },
-                }}
-              >
-                <Box sx={{ width: '100%', pr: 8 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 0.5,
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      noWrap
-                      sx={{
-                        fontWeight: selectedConversation?.id === conversation.id ? 700 : 500,
-                        maxWidth: '70%',
-                      }}
-                    >
-                      {conversation.title || 'Untitled'}
-                    </Typography>
-                    {conversation.messages.length > 0 && (
-                      <Chip
-                        size="small"
-                        label={conversation.messages.length}
-                        sx={{
-                          height: 20,
-                          fontSize: '0.7rem',
-                          fontWeight: 500,
-                          bgcolor:
-                            selectedConversation?.id === conversation.id
-                              ? '#f97316'
-                              : 'rgba(0, 0, 0, 0.08)',
-                          color:
-                            selectedConversation?.id === conversation.id ? 'white' : 'text.primary',
-                        }}
-                      />
-                    )}
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    noWrap
-                    sx={{ fontSize: '0.75rem', opacity: 0.8 }}
-                  >
-                    {getLastMessagePreview(conversation)}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: '0.7rem', opacity: 0.6 }}
-                  >
-                    {formatDate(conversation.updatedAt)}
-                  </Typography>
-                </Box>
-              </ListItemButton>
-            </ListItem>
-          ))
-        )}
-      </List>
-    </Box>
-  );
 
   const getMessages = (): Message[] => {
     if (!selectedConversation) return [];
@@ -585,57 +361,6 @@ const Dashboard = () => {
           </Typography>
         </Toolbar>
       </AppBar>
-
-      {/* Drawer for conversation list */}
-      <Box
-        component="nav"
-        sx={{
-          width: { sm: drawerWidth },
-          flexShrink: { sm: 0 },
-        }}
-      >
-        {/* Mobile drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              top: '64px',
-              boxShadow: 3,
-              bgcolor: theme.palette.background.paper,
-              borderRight: `1px solid ${theme.palette.divider}`,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-
-        {/* Desktop drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              top: '64px',
-              bgcolor: theme.palette.background.paper,
-              borderRight: `1px solid ${theme.palette.divider}`,
-              boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-              height: 'calc(100% - 64px)',
-              overflowY: 'auto',
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
 
       {/* Main content */}
       <Box
@@ -675,12 +400,12 @@ const Dashboard = () => {
                   <Typography variant="h5" color="text.secondary">
                     AI Dental Assistant
                   </Typography>
-                  <Chip
+                  {/* <Chip
                     label="Select a conversation"
                     size="small"
                     variant="outlined"
                     sx={{ ml: 2, color: '#f97316', borderColor: '#f97316' }}
-                  />
+                  /> */}
                 </Box>
               )}
 
