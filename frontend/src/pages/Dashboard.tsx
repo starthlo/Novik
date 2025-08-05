@@ -22,18 +22,11 @@ import {
   Card,
   CardContent,
   Chip,
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   AppBar,
   Toolbar,
 } from '@mui/material';
 import {
   AttachFile,
-  Send,
   DeleteOutline,
   ContentCopy,
   FileDownload,
@@ -41,8 +34,10 @@ import {
   Clear,
   Add,
   Menu as MenuIcon,
+  KeyboardArrowDown,
 } from '@mui/icons-material';
 import { useConverstaions } from '../hooks/useConversations';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 type AlertType = {
   open: boolean;
@@ -66,13 +61,10 @@ const Dashboard = () => {
     severity: 'info',
   });
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const { mutate } = useConverstaions();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogMode, setDialogMode] = useState<'create' | 'rename'>('create');
-  const [dialogConversationId, setDialogConversationId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -85,7 +77,13 @@ const Dashboard = () => {
   }, [copiedMessageId]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    bottomRef.current?.scrollIntoView({ behavior });
+    const chatContainer = document.querySelector('[data-chat-container]');
+    if (chatContainer) {
+      chatContainer.scrollTo({
+        top: chatContainer.scrollHeight,
+        behavior,
+      });
+    }
   };
 
   const handleAlertClose = () => {
@@ -113,6 +111,23 @@ const Dashboard = () => {
 
     if (confirm('Are you sure you want to clear the conversation history?')) {
       handleClearConversation(selectedConversation.id);
+    }
+  };
+
+  const switchPatient = () => {
+    if (
+      confirm(
+        'Are you sure you want to switch to a new patient? This will clear the current conversation.'
+      )
+    ) {
+      if (selectedConversation) {
+        handleClearConversation(selectedConversation.id);
+      } else {
+        // If no conversation is selected, just clear any pending state
+        setInput('');
+        setSelectedFile(undefined);
+      }
+      showAlert('Ready for new patient case', 'success');
     }
   };
 
@@ -179,14 +194,26 @@ const Dashboard = () => {
 
   const handleSubmit = async () => {
     if (!input.trim() && !selectedFile) return;
+
+    // Auto-create a conversation if none is selected
     if (!selectedConversation) {
-      // Create a new conversation if none is selected
-      await handleCreateNewConversation(true);
-      return;
+      try {
+        const newConversation = await patientService.createConversation('New Patient Case');
+        mutate(data => [...(data || []), newConversation], false);
+        setSelectedConversation(newConversation);
+
+        // Now proceed with the message
+        await submitMessage(newConversation, selectedFile ? `${input}` : input.trim());
+      } catch (err) {
+        showAlert('Failed to create conversation', 'error');
+        return;
+      }
+    } else {
+      await submitMessage(selectedConversation, selectedFile ? `${input}` : input.trim());
     }
+  };
 
-    const messageText = selectedFile ? `${input}` : input.trim();
-
+  const submitMessage = async (conversation: Conversation, messageText: string) => {
     setPendingQuestion(messageText);
     setLoading(true);
     setInput('');
@@ -197,9 +224,9 @@ const Dashboard = () => {
 
       // Update the UI immediately for better UX
       const updatedConversation: Conversation = {
-        ...selectedConversation,
+        ...conversation,
         messages: [
-          ...selectedConversation.messages,
+          ...conversation.messages,
           {
             id: uuidv4(),
             role: 'user',
@@ -218,7 +245,7 @@ const Dashboard = () => {
 
       // Update the conversations list to reflect the change
       mutate(convs =>
-        convs?.map(conv => (conv.id === selectedConversation.id ? updatedConversation : conv))
+        convs?.map(conv => (conv.id === conversation.id ? updatedConversation : conv))
       );
 
       setSelectedFile(undefined);
@@ -236,57 +263,6 @@ const Dashboard = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
-    }
-  };
-
-  const handleCreateNewConversation = async (selectAfterCreate = false) => {
-    try {
-      const title = dialogTitle || 'New Conversation';
-      const newConversation = await patientService.createConversation(title);
-
-      mutate(data => [...(data || []), newConversation], false);
-
-      if (selectAfterCreate) {
-        setSelectedConversation(newConversation);
-      }
-
-      setDialogOpen(false);
-      setDialogTitle('');
-      showAlert('Conversation created', 'success');
-    } catch (err) {
-      showAlert('Failed to create conversation', 'error');
-      console.error('Error creating conversation:', err);
-    }
-  };
-
-  const handleRenameConversation = async () => {
-    if (!dialogConversationId) return;
-
-    try {
-      const updatedConversation = await patientService.updateConversationTitle(
-        dialogConversationId,
-        dialogTitle
-      );
-
-      mutate(
-        convs =>
-          convs?.map(conv =>
-            conv.id === dialogConversationId ? { ...conv, title: updatedConversation.title } : conv
-          ),
-        false
-      );
-
-      if (selectedConversation?.id === dialogConversationId) {
-        setSelectedConversation({ ...selectedConversation, title: updatedConversation.title });
-      }
-
-      setDialogOpen(false);
-      setDialogTitle('');
-      setDialogConversationId(null);
-      showAlert('Conversation renamed', 'success');
-    } catch (err) {
-      showAlert('Failed to rename conversation', 'error');
-      console.error('Error renaming conversation:', err);
     }
   };
 
@@ -310,20 +286,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setDialogTitle('');
-    setDialogConversationId(null);
-  };
-
-  const handleDialogSubmit = () => {
-    if (dialogMode === 'create') {
-      handleCreateNewConversation(true);
-    } else {
-      handleRenameConversation();
-    }
-  };
-
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -341,6 +303,28 @@ const Dashboard = () => {
   };
 
   const messages = getMessages();
+
+  // Auto-scroll when new messages are added
+  useEffect(() => {
+    if (messages.length > 0 || loading || pendingQuestion) {
+      scrollToBottom();
+    }
+  }, [messages.length, loading, pendingQuestion]);
+
+  // Handle scroll detection for floating button
+  useEffect(() => {
+    const chatContainer = document.querySelector('[data-chat-container]');
+    if (!chatContainer) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainer;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom && messages.length > 0);
+    };
+
+    chatContainer.addEventListener('scroll', handleScroll);
+    return () => chatContainer.removeEventListener('scroll', handleScroll);
+  }, [messages.length]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -410,6 +394,21 @@ const Dashboard = () => {
               )}
 
               <Box>
+                <Tooltip title="Switch to new patient (clears current conversation)">
+                  <Button
+                    startIcon={<Add />}
+                    onClick={switchPatient}
+                    size="small"
+                    variant="contained"
+                    sx={{
+                      mr: 1,
+                      bgcolor: '#f97316',
+                      '&:hover': { bgcolor: '#ea580c' },
+                    }}
+                  >
+                    Switch Patient
+                  </Button>
+                </Tooltip>
                 <Tooltip title="Clear conversation">
                   <span>
                     {/* Wrap in span to allow tooltip on disabled button */}
@@ -443,100 +442,229 @@ const Dashboard = () => {
             <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
               {selectedConversation
                 ? `This conversation has ${selectedConversation.messages.length} messages. Ask questions about patient treatments, medications, and procedures.`
-                : 'Select a conversation from the sidebar or create a new one to get started.'}
+                : 'Start typing below to begin a new patient case. Ask questions about treatments, medications, and procedures.'}
             </Typography>
           </Container>
         </Box>
 
         {/* Chat area */}
         <Box
+          data-chat-container
           sx={{
             flexGrow: 1,
             overflowY: 'auto',
             p: 2,
+            position: 'relative',
           }}
         >
           <Container maxWidth="md">
-            {(!selectedConversation || messages.length === 0) && !loading && !pendingQuestion && (
+            {messages.length === 0 && !loading && !pendingQuestion && (
               <Box
                 sx={{
-                  textAlign: 'center',
-                  py: 8,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  height: '60vh',
+                  minHeight: '60vh',
+                  textAlign: 'center',
+                  px: 2,
                 }}
               >
-                <Box
+                <Typography
+                  variant="h4"
+                  color="#f97316"
+                  gutterBottom
+                  sx={{ fontWeight: 600, mb: 3 }}
+                >
+                  Welcome to Novik!
+                </Typography>
+
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
                   sx={{
-                    bgcolor: theme.palette.background.paper,
-                    borderRadius: 2,
-                    p: 4,
-                    maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                    border: '1px solid',
-                    borderColor: theme.palette.divider,
+                    maxWidth: 600,
+                    mb: 6,
+                    lineHeight: 1.6,
+                    fontSize: '1.1rem',
                   }}
                 >
-                  <Typography variant="h5" color="#f97316" gutterBottom>
-                    {selectedConversation
-                      ? 'Start a new conversation'
-                      : 'Welcome to AI Dental Assistant'}
-                  </Typography>
+                  Please enter your patient's case, including their age, weight, medications, and
+                  medical history, or upload a PDF with the patient's medical history, making sure
+                  to anonymize any personal data.
+                </Typography>
 
-                  <Typography variant="body1" color="text.secondary">
-                    {selectedConversation
-                      ? 'Start by asking a question or uploading a patient document to analyze.'
-                      : 'Select an existing conversation from the sidebar or create a new one to begin.'}
-                  </Typography>
-
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
-                    You can ask about:
-                  </Typography>
-
+                {/* ChatGPT-style input box */}
+                <Box
+                  sx={{
+                    maxWidth: 700,
+                    width: '100%',
+                  }}
+                >
                   <Box
                     sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      justifyContent: 'center',
-                      gap: 1,
-                      mb: 3,
+                      bgcolor: theme.palette.mode === 'dark' ? '#2f2f2f' : '#f7f7f8',
+                      borderRadius: '24px',
+                      border: `1px solid ${theme.palette.divider}`,
+                      overflow: 'hidden',
+                      '&:focus-within': {
+                        borderColor: '#f97316',
+                        boxShadow: '0 0 0 1px #f97316',
+                      },
                     }}
                   >
-                    <Chip label="Patient treatments" size="small" />
-                    <Chip label="Medications" size="small" />
-                    <Chip label="Procedures" size="small" />
-                    <Chip label="Diagnoses" size="small" />
-                    <Chip label="Treatment plans" size="small" />
-                  </Box>
-
-                  {!selectedConversation ? (
-                    <Button
-                      variant="contained"
-                      startIcon={<Add />}
-                      onClick={() => {
-                        setDialogMode('create');
-                        setDialogOpen(true);
-                      }}
-                      size="large"
-                      fullWidth
+                    {/* Input area */}
+                    <TextareaAutosize
+                      ref={textAreaRef}
+                      minRows={1}
+                      maxRows={8}
+                      placeholder={
+                        selectedFile ? 'Ask about the uploaded PDF...' : 'Ask anything...'
+                      }
+                      value={input}
+                      onChange={e => setInput(e.target.value)}
+                      onKeyDown={handleKeyPress}
                       style={{
-                        backgroundColor: '#f97316',
+                        width: '100%',
+                        padding: '12px 16px 8px 16px',
+                        border: 'none',
+                        outline: 'none',
+                        resize: 'none',
+                        backgroundColor: 'transparent',
+                        fontFamily: theme.typography.fontFamily,
+                        fontSize: '16px',
+                        lineHeight: '1.5',
+                        color: theme.palette.text.primary,
+                      }}
+                    />
+
+                    {/* Bottom toolbar */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        px: 2,
+                        py: 1,
                       }}
                     >
-                      New Conversation
-                    </Button>
-                  ) : (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: 'block', mt: 2 }}
-                    >
-                      Your conversation is ready. Type your question below to begin.
-                    </Typography>
-                  )}
+                      {/* Left side buttons and file chip */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, mr: 2 }}>
+                        <Tooltip title="Attach PDF document">
+                          <Box
+                            component="label"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: '16px',
+                              border: `1px solid ${theme.palette.divider}`,
+                              cursor: 'pointer',
+                              color: selectedFile ? '#f97316' : theme.palette.text.secondary,
+                              bgcolor: 'transparent',
+                              '&:hover': {
+                                bgcolor: 'rgba(249, 115, 22, 0.04)',
+                                borderColor: '#f97316',
+                                color: '#f97316',
+                              },
+                            }}
+                          >
+                            <AttachFile fontSize="small" />
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                color: 'inherit',
+                              }}
+                            >
+                              Attach
+                            </Typography>
+                            <input
+                              hidden
+                              type="file"
+                              accept="application/pdf"
+                              onChange={handleFileSelect}
+                            />
+                          </Box>
+                        </Tooltip>
+
+                        {selectedFile && (
+                          <Chip
+                            icon={<PictureAsPdf />}
+                            label={selectedFile.name}
+                            onDelete={() => setSelectedFile(undefined)}
+                            size="small"
+                            variant="outlined"
+                            color="warning"
+                            sx={{
+                              maxWidth: { xs: 120, sm: 200 },
+                              height: 28,
+                              '& .MuiChip-label': {
+                                fontSize: '0.75rem',
+                                px: 1,
+                              },
+                            }}
+                          />
+                        )}
+
+                        {input.trim() && (
+                          <Tooltip title="Clear input">
+                            <IconButton
+                              size="small"
+                              onClick={() => setInput('')}
+                              sx={{
+                                color: theme.palette.text.secondary,
+                                '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
+                              }}
+                            >
+                              <Clear fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+
+                      {/* Right side send button */}
+                      <Tooltip title="Send message">
+                        <IconButton
+                          onClick={handleSubmit}
+                          disabled={loading || (!input.trim() && !selectedFile)}
+                          size="small"
+                          sx={{
+                            bgcolor:
+                              loading || (!input.trim() && !selectedFile)
+                                ? theme.palette.mode === 'dark'
+                                  ? '#404040'
+                                  : '#e0e0e0'
+                                : '#EA580C',
+                            color:
+                              loading || (!input.trim() && !selectedFile)
+                                ? theme.palette.mode === 'dark'
+                                  ? '#666666'
+                                  : '#999999'
+                                : 'white',
+                            width: 32,
+                            height: 32,
+                            '&:hover': {
+                              bgcolor:
+                                loading || (!input.trim() && !selectedFile)
+                                  ? theme.palette.mode === 'dark'
+                                    ? '#404040'
+                                    : '#e0e0e0'
+                                  : '#DC4E0B',
+                            },
+                            '&:disabled': {
+                              color: theme.palette.mode === 'dark' ? '#666666' : '#999999',
+                            },
+                          }}
+                        >
+                          <ArrowUpwardIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             )}
@@ -763,138 +891,209 @@ const Dashboard = () => {
 
             <div ref={bottomRef} />
           </Container>
+
+          {/* Floating scroll to bottom button */}
+          {showScrollButton && (
+            <Fab
+              size="small"
+              onClick={() => scrollToBottom()}
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                right: 16,
+                bgcolor: '#f97316',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#ea580c',
+                },
+                zIndex: 1000,
+              }}
+            >
+              <KeyboardArrowDown />
+            </Fab>
+          )}
         </Box>
 
-        {/* Input area */}
-        <Box
-          component="footer"
-          sx={{
-            position: 'sticky',
-            bottom: 0,
-            p: 2,
-            zIndex: 10,
-            backgroundColor: 'transparent',
-            borderTop: `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <Container maxWidth="md">
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title="Attach PDF document">
-                <IconButton
-                  component="label"
-                  color={selectedFile ? 'warning' : 'default'}
-                  sx={{ mr: 1 }}
-                  disabled={!selectedConversation}
+        {/* Input area - only show at bottom when there are messages */}
+        {messages.length > 0 && (
+          <Box
+            component="footer"
+            sx={{
+              position: 'sticky',
+              bottom: 0,
+              p: 2,
+              zIndex: 10,
+              backgroundColor: 'transparent',
+            }}
+          >
+            <Container maxWidth="md">
+              <Box sx={{ maxWidth: 700, mx: 'auto' }}>
+                <Box
+                  sx={{
+                    bgcolor: theme.palette.mode === 'dark' ? '#2f2f2f' : '#f7f7f8',
+                    borderRadius: '24px',
+                    border: `1px solid ${theme.palette.divider}`,
+                    overflow: 'hidden',
+                    '&:focus-within': {
+                      borderColor: '#f97316',
+                      boxShadow: '0 0 0 1px #f97316',
+                    },
+                  }}
                 >
-                  <AttachFile />
-                  <input hidden type="file" accept="application/pdf" onChange={handleFileSelect} />
-                </IconButton>
-              </Tooltip>
+                  {/* Input area */}
+                  <TextareaAutosize
+                    ref={textAreaRef}
+                    minRows={1}
+                    maxRows={5}
+                    placeholder={selectedFile ? 'Ask about the uploaded PDF...' : 'Ask anything...'}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px 8px 16px',
+                      border: 'none',
+                      outline: 'none',
+                      resize: 'none',
+                      backgroundColor: 'transparent',
+                      fontFamily: theme.typography.fontFamily,
+                      fontSize: '16px',
+                      lineHeight: '1.5',
+                      color: theme.palette.text.primary,
+                    }}
+                  />
 
-              {selectedFile && (
-                <Chip
-                  icon={<PictureAsPdf />}
-                  label={selectedFile.name}
-                  onDelete={() => setSelectedFile(undefined)}
-                  variant="outlined"
-                  color="warning"
-                  sx={{ mr: 1, maxWidth: { xs: 150, sm: 200, md: 300 } }}
-                />
-              )}
-
-              <TextareaAutosize
-                ref={textAreaRef}
-                minRows={1}
-                maxRows={5}
-                placeholder={
-                  !selectedConversation
-                    ? 'Select or create a conversation to begin'
-                    : selectedFile
-                      ? 'Ask about the uploaded PDF...'
-                      : 'Enter patient details, clinical questions, or treatment concerns...'
-                }
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyPress}
-                disabled={!selectedConversation}
-                style={{
-                  flexGrow: 1,
-                  marginRight: 8,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: `1px solid ${theme.palette.divider}`,
-                  fontFamily: theme.typography.fontFamily,
-                  fontSize: '1rem',
-                  resize: 'none',
-                }}
-              />
-
-              {input.trim() && (
-                <Tooltip title="Clear input">
-                  <IconButton size="small" onClick={() => setInput('')} sx={{ mr: 1 }}>
-                    <Clear />
-                  </IconButton>
-                </Tooltip>
-              )}
-
-              <Tooltip
-                title={selectedConversation ? 'Send message' : 'Select a conversation first'}
-              >
-                <span>
-                  <Fab
-                    size="medium"
-                    onClick={handleSubmit}
-                    disabled={loading || (!input.trim() && !selectedFile) || !selectedConversation}
+                  {/* Bottom toolbar */}
+                  <Box
                     sx={{
-                      bgcolor: '#EA580C',
-                      color: 'common.white',
-                      '&:hover': {
-                        bgcolor: '#DC4E0B',
-                      },
                       display: 'flex',
-                      alignItems: 'left',
-                      justifyContent: 'center',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      px: 2,
+                      py: 1,
                     }}
                   >
-                    <Send />
-                  </Fab>
-                </span>
-              </Tooltip>
-            </Box>
-          </Container>
-        </Box>
+                    {/* Left side buttons and file chip */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, mr: 2 }}>
+                      <Tooltip title="Attach PDF document">
+                        <Box
+                          component="label"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: '16px',
+                            border: `1px solid ${theme.palette.divider}`,
+                            cursor: 'pointer',
+                            color: selectedFile ? '#f97316' : theme.palette.text.secondary,
+                            bgcolor: 'transparent',
+                            '&:hover': {
+                              bgcolor: 'rgba(249, 115, 22, 0.04)',
+                              borderColor: '#f97316',
+                              color: '#f97316',
+                            },
+                          }}
+                        >
+                          <AttachFile fontSize="small" />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              color: 'inherit',
+                            }}
+                          >
+                            Attach
+                          </Typography>
+                          <input
+                            hidden
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleFileSelect}
+                          />
+                        </Box>
+                      </Tooltip>
 
-        <Dialog open={dialogOpen} onClose={handleDialogClose}>
-          <DialogTitle>
-            {dialogMode === 'create' ? 'Create New Conversation' : 'Rename Conversation'}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {dialogMode === 'create'
-                ? 'Enter a title for your new conversation.'
-                : 'Enter a new title for this conversation.'}
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Title"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={dialogTitle}
-              onChange={e => setDialogTitle(e.target.value)}
-              color="warning"
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDialogClose} color="warning">
-              Cancel
-            </Button>
-            <Button onClick={handleDialogSubmit} color="warning">
-              {dialogMode === 'create' ? 'Create' : 'Rename'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+                      {selectedFile && (
+                        <Chip
+                          icon={<PictureAsPdf />}
+                          label={selectedFile.name}
+                          onDelete={() => setSelectedFile(undefined)}
+                          size="small"
+                          variant="outlined"
+                          color="warning"
+                          sx={{
+                            maxWidth: { xs: 120, sm: 200 },
+                            height: 28,
+                            '& .MuiChip-label': {
+                              fontSize: '0.75rem',
+                              px: 1,
+                            },
+                          }}
+                        />
+                      )}
+
+                      {input.trim() && (
+                        <Tooltip title="Clear input">
+                          <IconButton
+                            size="small"
+                            onClick={() => setInput('')}
+                            sx={{
+                              color: theme.palette.text.secondary,
+                              '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
+                            }}
+                          >
+                            <Clear fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
+
+                    {/* Right side send button */}
+                    <Tooltip title="Send message">
+                      <IconButton
+                        onClick={handleSubmit}
+                        disabled={loading || (!input.trim() && !selectedFile)}
+                        size="small"
+                        sx={{
+                          bgcolor:
+                            loading || (!input.trim() && !selectedFile)
+                              ? theme.palette.mode === 'dark'
+                                ? '#404040'
+                                : '#e0e0e0'
+                              : '#EA580C',
+                          color:
+                            loading || (!input.trim() && !selectedFile)
+                              ? theme.palette.mode === 'dark'
+                                ? '#666666'
+                                : '#999999'
+                              : 'white',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            bgcolor:
+                              loading || (!input.trim() && !selectedFile)
+                                ? theme.palette.mode === 'dark'
+                                  ? '#404040'
+                                  : '#e0e0e0'
+                                : '#DC4E0B',
+                          },
+                          '&:disabled': {
+                            color: theme.palette.mode === 'dark' ? '#666666' : '#999999',
+                          },
+                        }}
+                      >
+                        <ArrowUpwardIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </Box>
+            </Container>
+          </Box>
+        )}
 
         <Snackbar
           open={alert.open}
