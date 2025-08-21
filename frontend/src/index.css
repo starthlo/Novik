@@ -197,3 +197,197 @@ pre {
 .overlay-scrollbar::-webkit-scrollbar-thumb:active {
   background: rgba(136, 169, 78, 0.9);
 }
+
+/* Markdown Content Styles */
+.markdown-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Better list styling for markdown */
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content ul ul,
+.markdown-content ol ol,
+.markdown-content ul ol,
+.markdown-content ol ul {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+/* Nested list indentation */
+.markdown-content li > ul,
+.markdown-content li > ol {
+  margin-left: 1em;
+}
+
+/* Code blocks with syntax highlighting support */
+.markdown-content pre {
+  position: relative;
+  tab-size: 2;
+}
+
+.markdown-content pre code {
+  display: block;
+  overflow-x: auto;
+  padding: 1em !important;
+}
+
+/* Table styles for better readability */
+.markdown-content table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.markdown-content table th {
+  font-weight: 600;
+  text-align: left;
+  background-color: rgba(136, 169, 78, 0.1);
+}
+
+.markdown-content table tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Blockquote styling */
+.markdown-content blockquote {
+  position: relative;
+  padding-left: 1.5em;
+  font-style: italic;
+}
+
+.markdown-content blockquote::before {
+  content: '"';
+  position: absolute;
+  left: 0;
+  top: -0.5em;
+  font-size: 2em;
+  color: rgba(136, 169, 78, 0.3);
+  font-weight: bold;
+}
+
+/* Heading anchors for navigation */
+.markdown-content h1[id],
+.markdown-content h2[id],
+.markdown-content h3[id],
+.markdown-content h4[id],
+.markdown-content h5[id],
+.markdown-content h6[id] {
+  position: relative;
+  scroll-margin-top: 80px;
+}
+
+/* Hover effect for headings with IDs */
+.markdown-content h1[id]:hover::before,
+.markdown-content h2[id]:hover::before,
+.markdown-content h3[id]:hover::before {
+  content: '#';
+  position: absolute;
+  left: -1.25em;
+  color: rgba(136, 169, 78, 0.5);
+  font-weight: normal;
+}
+
+/* Task list styling (GitHub-style checkboxes) */
+.markdown-content input[type='checkbox'] {
+  margin-right: 0.5em;
+  cursor: default;
+}
+
+.markdown-content input[type='checkbox']:checked + label,
+.markdown-content li:has(input[type='checkbox']:checked) {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Footnote styling */
+.markdown-content .footnotes {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
+}
+
+.markdown-content .footnote-backref {
+  margin-left: 0.25em;
+  text-decoration: none;
+}
+
+/* Definition list styling */
+.markdown-content dl {
+  margin: 1em 0;
+}
+
+.markdown-content dt {
+  font-weight: 600;
+  margin-top: 0.5em;
+}
+
+.markdown-content dd {
+  margin-left: 2em;
+  margin-bottom: 0.5em;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Keyboard key styling */
+.markdown-content kbd {
+  display: inline-block;
+  padding: 0.2em 0.4em;
+  font-size: 0.85em;
+  line-height: 1;
+  color: #444;
+  vertical-align: middle;
+  background-color: #fafafa;
+  border: 1px solid #d1d5da;
+  border-bottom-color: #c6cbd1;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #c6cbd1;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Mark/highlight styling */
+.markdown-content mark {
+  background-color: rgba(136, 169, 78, 0.2);
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
+
+/* Image caption styling */
+.markdown-content img + em {
+  display: block;
+  text-align: center;
+  font-size: 0.9em;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 0.5em;
+}
+
+/* Responsive table wrapper */
+.markdown-table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Print styles for markdown content */
+@media print {
+  .markdown-content {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  .markdown-content pre {
+    page-break-inside: avoid;
+  }
+
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3 {
+    page-break-after: avoid;
+  }
+}

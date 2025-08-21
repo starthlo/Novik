@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkHeaderId from 'remark-heading-id';
-import remarkGfm from 'remark-gfm';
 import { v4 as uuidv4 } from 'uuid';
 import { patientService } from '../services/patientService';
 import type { Message, Conversation } from '../types';
+import MarkdownContent from '../components/MarkdownContent';
 import {
   Box,
   Container,
@@ -203,7 +201,7 @@ const MessageRow = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
 const MessageBubble = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
   display: 'inline-block',
   textAlign: 'left',
-  padding: '10px 14px',
+  padding: '12px 16px',
   margin: '6px 0',
   borderRadius: '14px',
   lineHeight: 1.45,
@@ -214,6 +212,17 @@ const MessageBubble = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
   fontFamily: novikTheme.typography.fontFamily,
   fontSize: '0.95rem',
   wordBreak: 'break-word',
+  overflowX: 'auto',
+  '& > *:first-child': {
+    marginTop: 0,
+  },
+  '& > *:last-child': {
+    marginBottom: 0,
+  },
+  // Better shadow for assistant messages
+  ...(!isUser && {
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  }),
 }));
 
 const LoadingContainer = styled(Box)({
@@ -516,20 +525,7 @@ const Dashboard = () => {
                 <MessageRow key={msg.id} isUser={msg.role === 'user'}>
                   <MessageBubble isUser={msg.role === 'user'}>
                     {msg.role === 'assistant' ? (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkHeaderId, remarkGfm]}
-                        components={{
-                          a: ({ ...props }) => (
-                            <a
-                              {...props}
-                              target="_blank"
-                              style={{ color: '#ffffff', textDecoration: 'underline' }}
-                            />
-                          ),
-                        }}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
+                      <MarkdownContent content={msg.content} isUser={false} />
                     ) : (
                       <>
                         {msg.content}
