@@ -59,7 +59,7 @@ export default function Register() {
       setStates(sel ? State.getStatesOfCountry(sel.isoCode) : []);
       if (!sel) setFormData(f => ({ ...f, state: '', city: '' }));
     }
-  }, [formData.country]);
+  }, [formData.country, countries]);
 
   useEffect(() => {
     const countryObj = countries.find(c => c.name === formData.country);
@@ -68,7 +68,7 @@ export default function Register() {
       countryObj && stateObj ? City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode) : []
     );
     if (!stateObj) setFormData(f => ({ ...f, city: '' }));
-  }, [formData.state, countries, states]);
+  }, [formData.state, formData.country, countries, states]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>

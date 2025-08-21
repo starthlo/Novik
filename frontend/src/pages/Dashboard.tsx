@@ -205,6 +205,7 @@ const Dashboard = () => {
         // Now proceed with the message
         await submitMessage(newConversation, selectedFile ? `${input}` : input.trim());
       } catch (err) {
+        console.log(err);
         showAlert('Failed to create conversation', 'error');
         return;
       }

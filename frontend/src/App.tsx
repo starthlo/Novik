@@ -9,13 +9,16 @@ import Register from './pages/Register';
 import HomePage from './pages/HomePage';
 import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
-import PartnersPage from './pages/PartnersPage';
 import LegalPage from './pages/LegalPage';
+import FAQs from './pages/FAQs';
+import WhyFree from './pages/WhyFree';
+import Partners from './pages/Partners';
 
 import { PublicRoute } from './routes/PublicRoute';
 import { PrivateRoute } from './routes/PrivateRoute';
 import PublicLayout from './layouts/PublicLayout';
 import AppLayout from './layouts/AppLayout';
+import ApiPage from './pages/Api';
 
 export default function App() {
   return (
@@ -41,8 +44,11 @@ export default function App() {
           <Route path="/legal" element={<LegalPage />}></Route>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />}></Route>
+            <Route path="/faqs" element={<FAQs />}></Route>
+            <Route path="/why-free" element={<WhyFree />}></Route>
+            <Route path="/partners" element={<Partners />}></Route>
+            <Route path="/api-novik" element={<ApiPage />}></Route>
             <Route path="/contact" element={<ContactUs />}></Route>
-            <Route path="/partners" element={<PartnersPage />}></Route>
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

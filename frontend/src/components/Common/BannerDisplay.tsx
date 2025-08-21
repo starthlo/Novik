@@ -67,7 +67,9 @@ export default function BannerDisplay() {
         credentials: 'include',
       });
       window.open(b.link, '_blank');
-    } catch {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // record views once on load

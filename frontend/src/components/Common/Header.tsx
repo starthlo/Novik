@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -15,18 +15,109 @@ import {
   ListItemText,
   useTheme,
   useMediaQuery,
+  styled,
+  Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import NovikLogo from '../../assets/Novik.png';
+import NovikLogo from '../../assets/novik-logo.png';
 import { useAuthStore } from '../../stores/auth';
+import { novikTheme } from '../../styles/theme';
 
 type NavItem = {
   text: string;
   to: string;
   requiresAuth?: boolean;
 };
+
+// Styled components matching HTML mockup design
+const StyledAppBar = styled(AppBar)({
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: '#ffffff',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+  zIndex: 1000,
+});
+
+const StyledToolbar = styled(Toolbar)({
+  maxWidth: '1200px',
+  width: '100%',
+  margin: '0 auto',
+  padding: '0.6rem 1rem',
+  justifyContent: 'space-between',
+  minHeight: '64px',
+});
+
+const LogoContainer = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+});
+
+const BrandName = styled(Typography)({
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  color: novikTheme.colors.text,
+  fontSize: '1.2rem',
+  fontFamily: novikTheme.typography.fontFamily,
+});
+
+const NavButton = styled(Button)<any>({
+  fontWeight: 500,
+  fontSize: '0.95rem',
+  color: novikTheme.colors.text,
+  textTransform: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  padding: '0.4rem 0.8rem',
+  borderRadius: '8px',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    color: novikTheme.colors.primary,
+    backgroundColor: 'transparent',
+  },
+});
+
+const LoginButton = styled(Button)<any>({
+  backgroundColor: novikTheme.colors.primary,
+  color: '#ffffff',
+  padding: '0.4rem 1rem',
+  borderRadius: '20px',
+  fontWeight: 600,
+  fontSize: '0.95rem',
+  textTransform: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  transition: 'background 0.2s ease',
+  '&:hover': {
+    backgroundColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const StyledDrawer = styled(Drawer)({
+  '& .MuiDrawer-paper': {
+    top: '64px',
+    height: 'calc(100% - 64px)',
+    width: '280px',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+});
+
+const DrawerListItem = styled(ListItemButton)<any>({
+  fontFamily: novikTheme.typography.fontFamily,
+  '& .MuiListItemText-primary': {
+    fontWeight: 500,
+    color: novikTheme.colors.text,
+  },
+  '&:hover': {
+    backgroundColor: novikTheme.colors.section,
+    '& .MuiListItemText-primary': {
+      color: novikTheme.colors.primary,
+    },
+  },
+});
 
 const Header = () => {
   const { isAuthorized, user, logout } = useAuthStore();
@@ -36,14 +127,15 @@ const Header = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminAnchorEl, setAdminAnchorEl] = useState<null | HTMLElement>(null);
-  const [showHeader, setShowHeader] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const navItems: NavItem[] = [
-    { text: 'Dashboard', to: '/dashboard', requiresAuth: true },
     { text: 'Home', to: '/', requiresAuth: false },
-    { text: 'Contact', to: '/contact', requiresAuth: false },
+    { text: 'FAQs', to: '/faqs', requiresAuth: false },
+    { text: 'Why free', to: '/why-free', requiresAuth: false },
     { text: 'Partners', to: '/partners', requiresAuth: false },
+    { text: 'API', to: '/api-novik', requiresAuth: false },
+    { text: 'Contact', to: '/contact', requiresAuth: false },
+    { text: 'Dashboard', to: '/dashboard', requiresAuth: true },
   ];
 
   const adminItems = [
@@ -70,89 +162,70 @@ const Header = () => {
     setAdminAnchorEl(null);
   };
 
-  const handleScroll = useCallback(() => {
-    const currentY = window.scrollY;
-    if (currentY < 100) {
-      setShowHeader(true);
-    } else {
-      setShowHeader(currentY < lastScrollY);
-    }
-    setLastScrollY(currentY);
-  }, [lastScrollY]);
-
-  useEffect(() => {
-    let timeout: number;
-    const onScroll = () => {
-      if (!timeout) {
-        timeout = window.setTimeout(() => {
-          handleScroll();
-          timeout = 0;
-        }, 100);
-      }
-    };
-    const onMouseMove = (e: MouseEvent) => {
-      if (e.clientY < 40) setShowHeader(true);
-    };
-
-    window.addEventListener('scroll', onScroll);
-    window.addEventListener('mousemove', onMouseMove);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('mousemove', onMouseMove);
-      clearTimeout(timeout);
-    };
-  }, [handleScroll]);
+  const visibleNavItems = navItems.filter(item => !item.requiresAuth || isAuthorized);
 
   return (
     <>
-      <AppBar
-        position="sticky"
-        elevation={2}
-        sx={{
-          backgroundColor: 'rgba(255,255,255,0.5)',
-          backdropFilter: 'blur(6px)',
-          transform: showHeader ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'transform 0.3s',
-          zIndex: theme.zIndex.drawer + 1, // Ensure AppBar is above drawer
-        }}
-      >
-        <Toolbar>
-          <Box component={RouterLink} to="/" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-            <Box component="img" src={NovikLogo} alt="Novik Logo" sx={{ height: 40 }} />
-          </Box>
+      <StyledAppBar elevation={0}>
+        <StyledToolbar>
+          {/* Logo and Brand */}
+          <LogoContainer>
+            <Box
+              component={RouterLink}
+              to="/"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                gap: 1,
+              }}
+            >
+              <Box
+                component="img"
+                src={NovikLogo}
+                alt="Novik Logo"
+                sx={{
+                  height: { xs: 36, md: 42 },
+                  width: 'auto',
+                }}
+              />
+              <BrandName variant="h6">NOVIK</BrandName>
+            </Box>
+          </LogoContainer>
 
+          {/* Desktop Navigation */}
           {isMdUp && (
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-              {navItems.map((item, i) =>
-                item.requiresAuth && !isAuthorized ? null : (
-                  <Button
-                    key={i}
-                    component={RouterLink}
-                    to={item.to}
-                    sx={{
-                      mx: 1,
-                      fontSize: '1rem',
-                      color: 'text.primary',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {item.text}
-                  </Button>
-                )
-              )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {visibleNavItems.map((item, i) => (
+                <NavButton
+                  key={i}
+                  component={RouterLink}
+                  to={item.to}
+                >
+                  {item.text}
+                </NavButton>
+              ))}
+
+              {/* Admin Portal Dropdown */}
               {isAuthorized && user?.isSuperuser && (
                 <>
-                  <Button
+                  <NavButton
                     onClick={openAdminMenu}
                     endIcon={<ExpandMoreIcon />}
-                    sx={{ mx: 1, fontSize: '1rem', color: 'text.primary' }}
                   >
                     Admin Portal
-                  </Button>
+                  </NavButton>
                   <Menu
                     anchorEl={adminAnchorEl}
                     open={Boolean(adminAnchorEl)}
                     onClose={closeAdminMenu}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        borderRadius: '8px',
+                      },
+                    }}
                   >
                     {adminItems.map((it, idx) => (
                       <MenuItem
@@ -160,6 +233,12 @@ const Header = () => {
                         component={RouterLink}
                         to={it.to}
                         onClick={closeAdminMenu}
+                        sx={{
+                          fontFamily: novikTheme.typography.fontFamily,
+                          '&:hover': {
+                            backgroundColor: novikTheme.colors.section,
+                          },
+                        }}
                       >
                         {it.text}
                       </MenuItem>
@@ -167,91 +246,151 @@ const Header = () => {
                   </Menu>
                 </>
               )}
-            </Box>
-          )}
 
-          {isMdUp && (
-            <Box>
+              {/* Login/Logout Button */}
               {!isAuthorized ? (
-                <Button
+                <LoginButton
                   component={RouterLink}
                   to="/login"
                   variant="contained"
-                  style={{ backgroundColor: '#F97316' }}
+                  disableElevation
                 >
                   Login
-                </Button>
+                </LoginButton>
               ) : (
-                <Button
+                <LoginButton
                   onClick={handleLogout}
                   variant="contained"
-                  style={{ backgroundColor: '#F97316' }}
+                  disableElevation
                 >
                   Logout
-                </Button>
+                </LoginButton>
               )}
             </Box>
           )}
 
+          {/* Mobile Menu Button */}
           {!isMdUp && (
-            <IconButton onClick={toggleMobile} edge="end" color="inherit">
+            <IconButton
+              onClick={toggleMobile}
+              edge="end"
+              sx={{
+                color: novikTheme.colors.text,
+              }}
+            >
               {mobileOpen ? <CloseIcon /> : <MenuIcon />}
             </IconButton>
           )}
-        </Toolbar>
-      </AppBar>
+        </StyledToolbar>
+      </StyledAppBar>
 
-      <Drawer
+      {/* Mobile Drawer */}
+      <StyledDrawer
         anchor="right"
         open={mobileOpen}
         onClose={toggleMobile}
-        sx={{
-          '& .MuiDrawer-paper': {
-            top: '64px', // Position below AppBar
-            height: 'calc(100% - 64px)', // Adjust height to exclude AppBar
-            boxShadow: 1,
-          },
-        }}
       >
-        <Box sx={{ width: 240 }} role="presentation" onClick={toggleMobile}>
-          <List>
-            {navItems.map((item, i) =>
-              item.requiresAuth && !isAuthorized ? null : (
-                <ListItem key={i} disablePadding>
-                  <ListItemButton component={RouterLink} to={item.to}>
-                    <ListItemText primary={item.text} sx={{ textTransform: 'capitalize' }} />
-                  </ListItemButton>
-                </ListItem>
-              )
-            )}
+        <Box role="presentation">
+          <List sx={{ pt: 2 }}>
+            {visibleNavItems.map((item, i) => (
+              <ListItem key={i} disablePadding>
+                <DrawerListItem
+                  component={RouterLink}
+                  to={item.to}
+                  onClick={toggleMobile}
+                >
+                  <ListItemText primary={item.text} />
+                </DrawerListItem>
+              </ListItem>
+            ))}
+
+            {/* Admin Portal Section in Mobile */}
             {isAuthorized && user?.isSuperuser && (
               <>
-                <ListItem>
-                  <ListItemText primary="Admin Portal" />
+                <ListItem sx={{ mt: 2, mb: 1 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.primaryDark,
+                      fontSize: '0.9rem',
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Admin Portal
+                  </Typography>
                 </ListItem>
                 {adminItems.map((it, idx) => (
                   <ListItem key={idx} disablePadding>
-                    <ListItemButton component={RouterLink} to={it.to}>
+                    <DrawerListItem
+                      component={RouterLink}
+                      to={it.to}
+                      onClick={toggleMobile}
+                      sx={{ pl: 4 }}
+                    >
                       <ListItemText primary={it.text} />
-                    </ListItemButton>
+                    </DrawerListItem>
                   </ListItem>
                 ))}
               </>
             )}
-            <ListItem disablePadding>
+
+            {/* Login/Logout in Mobile */}
+            <ListItem disablePadding sx={{ mt: 3 }}>
               {!isAuthorized ? (
-                <ListItemButton component={RouterLink} to="/login">
+                <DrawerListItem
+                  component={RouterLink}
+                  to="/login"
+                  onClick={toggleMobile}
+                  sx={{
+                    mx: 2,
+                    borderRadius: '20px',
+                    backgroundColor: novikTheme.colors.primary,
+                    color: '#ffffff',
+                    textAlign: 'center',
+                    '&:hover': {
+                      backgroundColor: novikTheme.colors.primaryDark,
+                      color: '#ffffff',
+                    },
+                    '& .MuiListItemText-primary': {
+                      fontWeight: 600,
+                      color: '#ffffff',
+                    },
+                  }}
+                >
                   <ListItemText primary="Login" />
-                </ListItemButton>
+                </DrawerListItem>
               ) : (
-                <ListItemButton onClick={handleLogout}>
+                <DrawerListItem
+                  onClick={() => {
+                    handleLogout();
+                    toggleMobile();
+                  }}
+                  sx={{
+                    mx: 2,
+                    borderRadius: '20px',
+                    backgroundColor: novikTheme.colors.primary,
+                    color: '#ffffff',
+                    textAlign: 'center',
+                    '&:hover': {
+                      backgroundColor: novikTheme.colors.primaryDark,
+                      color: '#ffffff',
+                    },
+                    '& .MuiListItemText-primary': {
+                      fontWeight: 600,
+                      color: '#ffffff',
+                    },
+                  }}
+                >
                   <ListItemText primary="Logout" />
-                </ListItemButton>
+                </DrawerListItem>
               )}
             </ListItem>
           </List>
         </Box>
-      </Drawer>
+      </StyledDrawer>
+
+      {/* Spacer to push content below fixed header */}
+      <Box sx={{ height: '64px' }} />
     </>
   );
 };
