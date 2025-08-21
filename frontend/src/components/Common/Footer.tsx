@@ -91,10 +91,10 @@ const Footer = () => {
   ];
 
   const legalLinks = [
-    { text: 'Legal Notice', to: '/legal#notice' },
-    { text: 'Terms of Service', to: '/legal#terms' },
-    { text: 'Privacy Policy', to: '/legal#privacy' },
-    { text: 'Cookie Policy', to: '/legal#cookies' },
+    { text: 'Legal Notice', to: '/legal-notice' },
+    { text: 'Terms of Service', to: '/terms-of-use' },
+    { text: 'Privacy Policy', to: '/privacy-policy' },
+    { text: 'Cookie Policy', to: '/cookie-policy' },
   ];
 
   const socialLinks = [

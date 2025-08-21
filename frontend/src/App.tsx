@@ -9,7 +9,7 @@ import Register from './pages/Register';
 import HomePage from './pages/HomePage';
 import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
-import LegalPage from './pages/LegalPage';
+import LegalNotice from './pages/LegalNotice';
 import FAQs from './pages/FAQs';
 import WhyFree from './pages/WhyFree';
 import Partners from './pages/Partners';
@@ -19,6 +19,9 @@ import { PrivateRoute } from './routes/PrivateRoute';
 import PublicLayout from './layouts/PublicLayout';
 import AppLayout from './layouts/AppLayout';
 import ApiPage from './pages/Api';
+import CookiePolicy from './pages/CookiePolicy';
+import TermsOfUse from './pages/TermsOfUse';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 export default function App() {
   return (
@@ -41,7 +44,10 @@ export default function App() {
               <Route path="/users" element={<UserManagement />}></Route>
             </Route>
           </Route>
-          <Route path="/legal" element={<LegalPage />}></Route>
+          <Route path="/legal-notice" element={<LegalNotice />}></Route>
+          <Route path="/cookie-policy" element={<CookiePolicy />}></Route>
+          <Route path="/privacy-policy" element={<PrivacyPolicy />}></Route>
+          <Route path="/terms-of-use" element={<TermsOfUse />}></Route>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />}></Route>
             <Route path="/faqs" element={<FAQs />}></Route>
