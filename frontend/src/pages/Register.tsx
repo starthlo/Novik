@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -16,10 +16,12 @@ import {
   styled,
   List,
   ListItem,
+  Autocomplete,
 } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Country, State, City } from 'country-state-city';
 import { useAuthStore } from '../stores/auth';
 import { authService } from '../services';
 import { novikTheme } from '../styles/theme';
@@ -223,7 +225,45 @@ function Register() {
     confirmPassword: '',
     attestProfessional: false,
     agreeToTerms: false,
+    dob: '',
+    country: '',
+    state: '',
+    city: '',
   });
+
+  // Location data states
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedCity, setSelectedCity] = useState<any>(null);
+
+  // Load countries on component mount
+  useEffect(() => {
+    const allCountries = Country.getAllCountries();
+    setCountries(allCountries);
+  }, []);
+
+  // Load states when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
+      setStates(countryStates);
+      setSelectedState(null);
+      setSelectedCity(null);
+      setCities([]);
+    }
+  }, [selectedCountry]);
+
+  // Load cities when state changes
+  useEffect(() => {
+    if (selectedCountry && selectedState) {
+      const stateCities = City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode);
+      setCities(stateCities);
+      setSelectedCity(null);
+    }
+  }, [selectedState, selectedCountry]);
 
   const [passwordValid, setPasswordValid] = useState({
     length: false,
@@ -270,10 +310,31 @@ function Register() {
   };
 
   const handleStep2Continue = () => {
+    // Validate age (must be at least 18)
+    if (formData.dob) {
+      const birthDate = new Date(formData.dob);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (
+        age < 18 ||
+        (age === 18 && monthDiff < 0) ||
+        (age === 18 && monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        setError('You must be at least 18 years old to register');
+        return;
+      }
+    }
+
     if (
       formData.fullName &&
       formData.occupation &&
       formData.licenseId &&
+      formData.dob &&
+      formData.country &&
+      formData.state &&
+      formData.city &&
       formData.attestProfessional &&
       formData.agreeToTerms
     ) {
@@ -298,19 +359,26 @@ function Register() {
     setError(null);
 
     try {
+      // Split full name into first and last name
+      const nameParts = formData.fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       const registerData = {
         email: formData.email,
         username: formData.email.split('@')[0],
         password: formData.password,
         password2: formData.confirmPassword,
+        firstName: firstName,
+        lastName: lastName,
         occupation: formData.occupation,
         agreeToTerms: formData.agreeToTerms,
         receiveInfo: false,
-        dob: '',
+        dob: formData.dob,
         phone: '',
-        country: '',
-        state: '',
-        city: '',
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
       };
 
       const { accessToken, user } = await authService.register(registerData);
@@ -408,11 +476,30 @@ function Register() {
                 fullWidth
                 name="fullName"
                 type="text"
-                label="Full name"
+                label="Full name*"
                 value={formData.fullName}
                 onChange={handleChange}
                 required
                 autoFocus
+              />
+
+              <StyledTextField
+                fullWidth
+                name="dob"
+                type="date"
+                label="Date of Birth*"
+                value={formData.dob}
+                onChange={handleChange}
+                required
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                inputProps={{
+                  max: new Date().toISOString().split('T')[0], // Prevent future dates
+                  min: new Date(new Date().setFullYear(new Date().getFullYear() - 100))
+                    .toISOString()
+                    .split('T')[0], // Max age 100
+                }}
               />
 
               <StyledFormControl fullWidth>
@@ -438,10 +525,50 @@ function Register() {
                 fullWidth
                 name="licenseId"
                 type="text"
-                label="Professional ID"
+                label="Professional ID*"
                 value={formData.licenseId}
                 onChange={handleChange}
                 required
+              />
+
+              <Autocomplete
+                value={selectedCountry}
+                onChange={(_, newValue) => {
+                  setSelectedCountry(newValue);
+                  setFormData(prev => ({ ...prev, country: newValue?.name || '' }));
+                }}
+                options={countries}
+                getOptionLabel={option => option.name}
+                renderInput={params => <StyledTextField {...params} label="Country*" required />}
+                sx={{ mb: '14px' }}
+              />
+
+              <Autocomplete
+                value={selectedState}
+                onChange={(_, newValue) => {
+                  setSelectedState(newValue);
+                  setFormData(prev => ({ ...prev, state: newValue?.name || '' }));
+                }}
+                options={states}
+                getOptionLabel={option => option.name}
+                renderInput={params => (
+                  <StyledTextField {...params} label="State/Province*" required />
+                )}
+                disabled={!selectedCountry}
+                sx={{ mb: '14px' }}
+              />
+
+              <Autocomplete
+                value={selectedCity}
+                onChange={(_, newValue) => {
+                  setSelectedCity(newValue);
+                  setFormData(prev => ({ ...prev, city: newValue?.name || '' }));
+                }}
+                options={cities}
+                getOptionLabel={option => option.name}
+                renderInput={params => <StyledTextField {...params} label="City*" required />}
+                disabled={!selectedState}
+                sx={{ mb: '14px' }}
               />
 
               <CheckboxGroup>

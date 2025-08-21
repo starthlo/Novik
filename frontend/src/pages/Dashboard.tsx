@@ -29,7 +29,6 @@ type AlertType = {
   severity: 'error' | 'warning' | 'info' | 'success';
 };
 
-// Styled components matching WorkingNovik.html design
 const PageHero = styled(Box)({
   paddingTop: '22px',
   paddingBottom: '20px',
@@ -38,7 +37,7 @@ const PageHero = styled(Box)({
   borderBottom: `1px solid ${novikTheme.colors.border}`,
   boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
   position: 'fixed',
-  top: '64px', // Below header
+  top: '64px',
   left: 0,
   right: 0,
   zIndex: 100,
@@ -512,7 +511,7 @@ const Dashboard = () => {
               </AskWrapper>
             </Box>
           ) : (
-            <Box sx={{ py: 2 }}>
+            <Box sx={{ py: 2 }} className="thin-scrollbar">
               {messages.map(msg => (
                 <MessageRow key={msg.id} isUser={msg.role === 'user'}>
                   <MessageBubble isUser={msg.role === 'user'}>

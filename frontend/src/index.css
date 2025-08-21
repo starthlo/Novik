@@ -83,3 +83,117 @@ pre {
     align-items: flex-start;
   }
 }
+
+/* Custom Scrollbar Styles */
+/* For Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px; /* Width of vertical scrollbar */
+  height: 12px; /* Height of horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+  border-radius: 10px;
+  margin: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #88a94e; /* Thumb color - using Novik primary green */
+  border-radius: 10px;
+  border: 2px solid #f1f1f1; /* Creates padding around thumb */
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6d8a3e; /* Darker green on hover */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #5a7333; /* Even darker when clicking */
+}
+
+/* Thin scrollbar variant for specific containers */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(136, 169, 78, 0.5);
+  border-radius: 4px;
+  border: none;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(136, 169, 78, 0.8);
+}
+
+/* Firefox scrollbar styles */
+* {
+  scrollbar-width: thin; /* Options: auto, thin, none */
+  scrollbar-color: #88a94e #f1f1f1; /* thumb and track color */
+}
+
+/* For Firefox - custom thin scrollbar */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(136, 169, 78, 0.5) rgba(0, 0, 0, 0.05);
+}
+
+/* Hide scrollbar for specific elements while maintaining scroll functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Custom scrollbar for dark theme sections (if needed) */
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #88a94e;
+  border: 2px solid #2a2a2a;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ab85f;
+}
+
+/* Overlay scrollbar (appears only when scrolling) */
+.overlay-scrollbar {
+  overflow: overlay;
+}
+
+.overlay-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+.overlay-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overlay-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(136, 169, 78, 0.3);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.overlay-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(136, 169, 78, 0.6);
+}
+
+.overlay-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(136, 169, 78, 0.9);
+}
