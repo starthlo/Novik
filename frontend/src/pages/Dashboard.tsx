@@ -10,34 +10,18 @@ import {
   Container,
   Typography,
   IconButton,
-  TextareaAutosize,
-  Fab,
   CircularProgress,
-  useTheme,
   Button,
   Alert,
   Snackbar,
-  Tooltip,
-  Divider,
-  Card,
-  CardContent,
+  styled,
+  TextareaAutosize,
   Chip,
-  AppBar,
-  Toolbar,
 } from '@mui/material';
-import {
-  AttachFile,
-  DeleteOutline,
-  ContentCopy,
-  FileDownload,
-  PictureAsPdf,
-  Clear,
-  Add,
-  Menu as MenuIcon,
-  KeyboardArrowDown,
-} from '@mui/icons-material';
+import { AttachFile, Send, PictureAsPdf, Add, FileDownload } from '@mui/icons-material';
 import { useConverstaions } from '../hooks/useConversations';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import { novikTheme } from '../styles/theme';
+import NovikLogo from '../assets/novik-logo.png';
 
 type AlertType = {
   open: boolean;
@@ -45,46 +29,224 @@ type AlertType = {
   severity: 'error' | 'warning' | 'info' | 'success';
 };
 
-const drawerWidth = 280;
+// Styled components matching WorkingNovik.html design
+const PageHero = styled(Box)({
+  paddingTop: '22px',
+  paddingBottom: '20px',
+  textAlign: 'center',
+  backgroundColor: '#ffffff',
+  borderBottom: `1px solid ${novikTheme.colors.border}`,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  position: 'fixed',
+  top: '64px', // Below header
+  left: 0,
+  right: 0,
+  zIndex: 100,
+});
+
+const PageTitle = styled(Box)({
+  fontSize: '1.6rem',
+  margin: '10px 0 0',
+  fontWeight: 700,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: novikTheme.typography.fontFamily,
+});
+
+const LogoImage = styled('img')({
+  height: '120px',
+  marginBottom: '0px',
+});
+
+const HeaderButtons = styled(Box)({
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  width: '100%',
+  backgroundColor: '#ffffff',
+  padding: '10px',
+  display: 'flex',
+  justifyContent: 'center',
+  gap: '12px',
+  boxShadow: '0 -2px 6px rgba(0,0,0,0.1)',
+  zIndex: 1000,
+});
+
+const AccentButton = styled(Button)({
+  padding: '0.55rem 1rem',
+  borderRadius: '8px',
+  fontWeight: 600,
+  fontSize: '0.85rem',
+  textTransform: 'none',
+  backgroundColor: novikTheme.colors.primary,
+  color: '#ffffff',
+  fontFamily: novikTheme.typography.fontFamily,
+  '&:hover': {
+    backgroundColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const GhostButton = styled(Button)({
+  padding: '0.55rem 1rem',
+  borderRadius: '8px',
+  fontWeight: 600,
+  fontSize: '0.85rem',
+  textTransform: 'none',
+  backgroundColor: '#ffffff',
+  border: `1px solid ${novikTheme.colors.primary}`,
+  color: novikTheme.colors.primary,
+  fontFamily: novikTheme.typography.fontFamily,
+  '&:hover': {
+    backgroundColor: 'rgba(136, 169, 78, 0.05)',
+  },
+});
+
+const WelcomeTitle = styled(Typography)({
+  color: novikTheme.colors.primary,
+  fontSize: '1.8rem',
+  margin: '0.4rem 0 0.6rem',
+  fontWeight: 600,
+  fontFamily: novikTheme.typography.fontFamily,
+});
+
+const SubText = styled(Typography)({
+  maxWidth: '820px',
+  color: novikTheme.colors.textMuted,
+  lineHeight: 1.6,
+  margin: '0 auto 1.5rem',
+  fontFamily: novikTheme.typography.fontFamily,
+});
+
+const InputContainer = styled(Box)({
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: '#f7f7f8',
+  padding: '16px',
+  borderTop: `1px solid ${novikTheme.colors.border}`,
+  boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+  zIndex: 100,
+});
+
+const AskWrapper = styled(Box)({
+  width: '100%',
+  maxWidth: '820px',
+  margin: '0 auto',
+});
+
+const AskBox = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  border: `1px solid ${novikTheme.colors.border}`,
+  borderRadius: '24px',
+  backgroundColor: '#ffffff',
+  width: '100%',
+  padding: '12px 16px 8px 16px',
+  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+});
+
+const InputToolbar = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingTop: '8px',
+});
+
+const AttachButton = styled(Button)({
+  backgroundColor: 'transparent',
+  border: `1px solid ${novikTheme.colors.border}`,
+  borderRadius: '16px',
+  padding: '0.3rem 0.8rem',
+  fontSize: '0.85rem',
+  cursor: 'pointer',
+  textTransform: 'none',
+  color: novikTheme.colors.text,
+  fontFamily: novikTheme.typography.fontFamily,
+  minWidth: 'auto',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    backgroundColor: 'rgba(136, 169, 78, 0.04)',
+    borderColor: novikTheme.colors.primary,
+    color: novikTheme.colors.primary,
+  },
+});
+
+const SendButton = styled(IconButton)({
+  backgroundColor: novikTheme.colors.primary,
+  border: 0,
+  borderRadius: '50%',
+  width: '32px',
+  height: '32px',
+  color: '#ffffff',
+  fontSize: '0.9rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    backgroundColor: novikTheme.colors.primaryDark,
+  },
+  '&:disabled': {
+    backgroundColor: '#cccccc',
+    color: '#999999',
+  },
+});
+
+const MessageRow = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
+  display: 'flex',
+  justifyContent: isUser ? 'flex-end' : 'flex-start',
+  marginBottom: '10px',
+}));
+
+const MessageBubble = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
+  display: 'inline-block',
+  textAlign: 'left',
+  padding: '10px 14px',
+  margin: '6px 0',
+  borderRadius: '14px',
+  lineHeight: 1.45,
+  maxWidth: '78%',
+  backgroundColor: isUser ? novikTheme.colors.primary : '#ffffff',
+  color: isUser ? '#ffffff' : novikTheme.colors.text,
+  border: isUser ? 'none' : `1px solid ${novikTheme.colors.border}`,
+  fontFamily: novikTheme.typography.fontFamily,
+  fontSize: '0.95rem',
+  wordBreak: 'break-word',
+}));
+
+const LoadingContainer = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '20px',
+});
 
 const Dashboard = () => {
-  const theme = useTheme();
   const [input, setInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [loading, setLoading] = useState(false);
-  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [alert, setAlert] = useState<AlertType>({
     open: false,
     message: '',
     severity: 'info',
   });
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [showScrollButton, setShowScrollButton] = useState(false);
 
   const { mutate } = useConverstaions();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    if (copiedMessageId) {
-      const timer = setTimeout(() => {
-        setCopiedMessageId(null);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [copiedMessageId]);
-
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    const chatContainer = document.querySelector('[data-chat-container]');
-    if (chatContainer) {
-      chatContainer.scrollTo({
-        top: chatContainer.scrollHeight,
-        behavior,
-      });
-    }
-  };
+    scrollToBottom();
+  }, [messages, loading]);
 
   const handleAlertClose = () => {
     setAlert(prev => ({ ...prev, open: false }));
@@ -106,81 +268,52 @@ const Dashboard = () => {
     }
   };
 
-  const clearChat = () => {
-    if (!selectedConversation || selectedConversation.messages.length === 0) return;
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
 
-    if (confirm('Are you sure you want to clear the conversation history?')) {
-      handleClearConversation(selectedConversation.id);
+  const clearFile = () => {
+    setSelectedFile(undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  const switchPatient = () => {
-    if (
-      confirm(
-        'Are you sure you want to switch to a new patient? This will clear the current conversation.'
-      )
-    ) {
-      if (selectedConversation) {
-        handleClearConversation(selectedConversation.id);
-      } else {
-        // If no conversation is selected, just clear any pending state
+  const newPatient = () => {
+    if (messages.length > 0) {
+      if (
+        confirm(
+          'Are you sure you want to start a new patient case? This will clear the current conversation.'
+        )
+      ) {
+        setMessages([]);
         setInput('');
-        setSelectedFile(undefined);
+        clearFile();
+        setSelectedConversation(null);
+        showAlert('Ready for new patient case', 'success');
       }
-      showAlert('Ready for new patient case', 'success');
-    }
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(
-        () => {
-          setCopiedMessageId(id);
-        },
-        err => {
-          console.error('Could not copy text: ', err);
-          showAlert('Failed to copy to clipboard', 'error');
-        }
-      );
     } else {
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-
-        if (successful) {
-          setCopiedMessageId(id);
-        } else {
-          showAlert('Failed to copy to clipboard', 'error');
-        }
-      } catch (err) {
-        console.error('Fallback: Could not copy text: ', err);
-        showAlert('Failed to copy to clipboard', 'error');
-      }
+      showAlert('Ready for new patient case', 'info');
     }
   };
 
   const exportChat = () => {
-    if (!selectedConversation || selectedConversation.messages.length === 0) {
+    if (messages.length === 0) {
       showAlert('No conversation to export', 'warning');
       return;
     }
 
     const exportDate = new Date().toISOString().slice(0, 10);
-    const fileName = `dental-ai-chat_${exportDate}.txt`;
+    const fileName = `novik-conversation_${exportDate}.txt`;
 
-    const content = selectedConversation.messages
-      .map(msg => {
-        const prefix = msg.role === 'user' ? 'Q: ' : 'A: ';
-        return `${prefix}${msg.content}\n\n`;
-      })
-      .join('${"=".repeat(40)}\n\n');
+    const content =
+      `Novik Conversation - ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n` +
+      messages
+        .map(msg => {
+          const prefix = msg.role === 'user' ? 'Patient Case: ' : 'Novik Assistant: ';
+          return `${prefix}\n${msg.content}\n\n${'='.repeat(50)}\n`;
+        })
+        .join('\n');
 
     const element = document.createElement('a');
     const file = new Blob([content], { type: 'text/plain' });
@@ -195,67 +328,49 @@ const Dashboard = () => {
   const handleSubmit = async () => {
     if (!input.trim() && !selectedFile) return;
 
-    // Auto-create a conversation if none is selected
-    if (!selectedConversation) {
-      try {
-        const newConversation = await patientService.createConversation('New Patient Case');
-        mutate(data => [...(data || []), newConversation], false);
-        setSelectedConversation(newConversation);
+    const messageText = selectedFile ? `${input} [PDF: ${selectedFile.name}]` : input.trim();
 
-        // Now proceed with the message
-        await submitMessage(newConversation, selectedFile ? `${input}` : input.trim());
-      } catch (err) {
-        console.log(err);
-        showAlert('Failed to create conversation', 'error');
-        return;
-      }
-    } else {
-      await submitMessage(selectedConversation, selectedFile ? `${input}` : input.trim());
-    }
-  };
+    // Add user message to UI
+    const userMessage: Message = {
+      id: uuidv4(),
+      role: 'user',
+      content: messageText,
+      timestamp: new Date(),
+      file: selectedFile ? { fileName: selectedFile.name, text: '' } : undefined,
+    };
 
-  const submitMessage = async (conversation: Conversation, messageText: string) => {
-    setPendingQuestion(messageText);
+    setMessages(prev => [...prev, userMessage]);
     setLoading(true);
     setInput('');
-    scrollToBottom();
 
     try {
-      const response = await patientService.ask(messageText, selectedFile);
+      // Auto-create a conversation if none exists
+      if (!selectedConversation) {
+        const newConversation = await patientService.createConversation(
+          'Patient Case ' + new Date().toLocaleDateString()
+        );
+        mutate(data => [...(data || []), newConversation], false);
+        setSelectedConversation(newConversation);
+      }
 
-      // Update the UI immediately for better UX
-      const updatedConversation: Conversation = {
-        ...conversation,
-        messages: [
-          ...conversation.messages,
-          {
-            id: uuidv4(),
-            role: 'user',
-            content: messageText,
-            file: selectedFile && { fileName: selectedFile.name, text: '' },
-          },
-          {
-            id: uuidv4(),
-            role: 'assistant',
-            content: response.message,
-          },
-        ],
+      const response = await patientService.ask(input || 'Please analyze this PDF', selectedFile);
+
+      // Add AI response to UI
+      const aiMessage: Message = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: response.message,
+        timestamp: new Date(),
       };
 
-      setSelectedConversation(updatedConversation);
-
-      // Update the conversations list to reflect the change
-      mutate(convs =>
-        convs?.map(conv => (conv.id === conversation.id ? updatedConversation : conv))
-      );
-
-      setSelectedFile(undefined);
-      scrollToBottom();
+      setMessages(prev => [...prev, aiMessage]);
+      clearFile();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Network error. Please try again.';
       showAlert('Error: ' + errorMessage, 'error');
+      // Remove the pending user message on error
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
     } finally {
-      setPendingQuestion(null);
       setLoading(false);
     }
   };
@@ -267,852 +382,326 @@ const Dashboard = () => {
     }
   };
 
-  const handleClearConversation = async (id: string) => {
-    try {
-      await patientService.clearConversation(id);
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
-      mutate(
-        convs => convs?.map(conv => (conv.id === id ? { ...conv, messages: [] } : conv)),
-        false
-      );
-
-      if (selectedConversation?.id === id) {
-        setSelectedConversation(prev => (prev ? { ...prev, messages: [] } : null));
-      }
-
-      showAlert('Conversation cleared', 'success');
-    } catch (err) {
-      showAlert('Failed to clear conversation', 'error');
-      console.error('Error clearing conversation:', err);
-    }
-  };
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const getMessages = (): Message[] => {
-    if (!selectedConversation) return [];
-
-    return selectedConversation.messages.map((msg, index) => ({
-      id: String(index),
-      role: msg.role,
-      content: msg.content,
-      timestamp: new Date(selectedConversation.updatedAt),
-      file: msg.file,
-    }));
-  };
-
-  const messages = getMessages();
-
-  // Auto-scroll when new messages are added
-  useEffect(() => {
-    if (messages.length > 0 || loading || pendingQuestion) {
-      scrollToBottom();
-    }
-  }, [messages.length, loading, pendingQuestion]);
-
-  // Handle scroll detection for floating button
-  useEffect(() => {
-    const chatContainer = document.querySelector('[data-chat-container]');
-    if (!chatContainer) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainer;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isNearBottom && messages.length > 0);
-    };
-
-    chatContainer.addEventListener('scroll', handleScroll);
-    return () => chatContainer.removeEventListener('scroll', handleScroll);
-  }, [messages.length]);
+  const hasMessages = messages.length > 0;
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* AppBar for mobile */}
-      <AppBar
-        position="fixed"
-        sx={{
-          display: { sm: 'none' },
-          zIndex: theme.zIndex.drawer + 1,
-        }}
-      >
-        <Toolbar>
-          <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            AI Dental Assistant
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <>
+      {/* Page Hero Section - Only show when no messages */}
+      {!hasMessages && (
+        <PageHero>
+          <PageTitle>
+            <LogoImage src={NovikLogo} alt="Novik logo" />
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 600, fontFamily: novikTheme.typography.fontFamily }}
+            >
+              AI Dental Assistant
+            </Typography>
+          </PageTitle>
+        </PageHero>
+      )}
 
-      {/* Main content */}
+      {/* Fixed Bottom Buttons - Only show when no messages */}
+      {!hasMessages && (
+        <HeaderButtons>
+          <AccentButton startIcon={<Add />} onClick={newPatient}>
+            New Patient
+          </AccentButton>
+          <GhostButton startIcon={<FileDownload />} onClick={exportChat}>
+            Export
+          </GhostButton>
+        </HeaderButtons>
+      )}
+
+      {/* Main Content */}
       <Box
-        component="main"
         sx={{
-          flexGrow: 1,
-          p: 0,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          height: `calc(100vh - 64px)`,
+          backgroundColor: '#f7f7f8',
+          minHeight: '100vh',
+          paddingTop: hasMessages ? '64px' : '80px',
+          paddingBottom: hasMessages ? '120px' : '80px',
           display: 'flex',
           flexDirection: 'column',
-          mt: { xs: 7, sm: 0 },
+          alignItems: 'center',
+          justifyContent: !hasMessages ? 'center' : 'flex-start',
         }}
       >
-        {/* Header */}
-        <Box
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            p: 2,
-          }}
-        >
-          <Container maxWidth="md">
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              {selectedConversation ? (
-                <Typography variant="h5" color="#f97316">
-                  {selectedConversation.title}
-                </Typography>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="h5" color="text.secondary">
-                    AI Dental Assistant
-                  </Typography>
-                  {/* <Chip
-                    label="Select a conversation"
-                    size="small"
-                    variant="outlined"
-                    sx={{ ml: 2, color: '#f97316', borderColor: '#f97316' }}
-                  /> */}
-                </Box>
-              )}
+        <Container maxWidth="lg">
+          {!hasMessages && !loading ? (
+            <Box sx={{ textAlign: 'center' }}>
+              <WelcomeTitle variant="h2">Welcome to Novik</WelcomeTitle>
+              <SubText>
+                Please enter your patient's case, including their age, weight, medications, medical
+                history, and the treatment to be performed, or upload a PDF with the patient's
+                medical history, making sure to anonymize any personal data.
+              </SubText>
 
-              <Box>
-                <Tooltip title="Switch to new patient (clears current conversation)">
-                  <Button
-                    startIcon={<Add />}
-                    onClick={switchPatient}
-                    size="small"
-                    variant="contained"
-                    sx={{
-                      mr: 1,
-                      bgcolor: '#f97316',
-                      '&:hover': { bgcolor: '#ea580c' },
-                    }}
-                  >
-                    Switch Patient
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Clear conversation">
-                  <span>
-                    {/* Wrap in span to allow tooltip on disabled button */}
-                    <Button
-                      startIcon={<DeleteOutline />}
-                      onClick={clearChat}
-                      disabled={!selectedConversation || selectedConversation.messages.length === 0}
-                      size="small"
-                      sx={{ mr: 1, color: '#f97316' }}
-                    >
-                      Clear
-                    </Button>
-                  </span>
-                </Tooltip>
-                <Tooltip title="Export conversation">
-                  <span>
-                    {/* Wrap in span to allow tooltip on disabled button */}
-                    <Button
-                      startIcon={<FileDownload />}
-                      onClick={exportChat}
-                      disabled={!selectedConversation || selectedConversation.messages.length === 0}
-                      size="small"
-                      sx={{ color: '#f97316' }}
-                    >
-                      Export
-                    </Button>
-                  </span>
-                </Tooltip>
-              </Box>
-            </Box>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-              {selectedConversation
-                ? `This conversation has ${selectedConversation.messages.length} messages. Ask questions about patient treatments, medications, and procedures.`
-                : 'Start typing below to begin a new patient case. Ask questions about treatments, medications, and procedures.'}
-            </Typography>
-          </Container>
-        </Box>
+              {/* Input Box for welcome state */}
+              <AskWrapper sx={{ mt: 3 }}>
+                <AskBox>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
 
-        {/* Chat area */}
-        <Box
-          data-chat-container
-          sx={{
-            flexGrow: 1,
-            overflowY: 'auto',
-            p: 2,
-            position: 'relative',
-          }}
-        >
-          <Container maxWidth="md">
-            {messages.length === 0 && !loading && !pendingQuestion && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '60vh',
-                  textAlign: 'center',
-                  px: 2,
-                }}
-              >
-                <Typography
-                  variant="h4"
-                  color="#f97316"
-                  gutterBottom
-                  sx={{ fontWeight: 600, mb: 3 }}
-                >
-                  Welcome to Novik!
-                </Typography>
-
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{
-                    maxWidth: 600,
-                    mb: 6,
-                    lineHeight: 1.6,
-                    fontSize: '1.1rem',
-                  }}
-                >
-                  Please enter your patient's case, including their age, weight, medications, and
-                  medical history, or upload a PDF with the patient's medical history, making sure
-                  to anonymize any personal data.
-                </Typography>
-
-                {/* ChatGPT-style input box */}
-                <Box
-                  sx={{
-                    maxWidth: 700,
-                    width: '100%',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      bgcolor: theme.palette.mode === 'dark' ? '#2f2f2f' : '#f7f7f8',
-                      borderRadius: '24px',
-                      border: `1px solid ${theme.palette.divider}`,
-                      overflow: 'hidden',
-                      '&:focus-within': {
-                        borderColor: '#f97316',
-                        boxShadow: '0 0 0 1px #f97316',
-                      },
-                    }}
-                  >
-                    {/* Input area */}
-                    <TextareaAutosize
-                      ref={textAreaRef}
-                      minRows={1}
-                      maxRows={8}
-                      placeholder={
-                        selectedFile ? 'Ask about the uploaded PDF...' : 'Ask anything...'
-                      }
-                      value={input}
-                      onChange={e => setInput(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px 8px 16px',
-                        border: 'none',
-                        outline: 'none',
-                        resize: 'none',
-                        backgroundColor: 'transparent',
-                        fontFamily: theme.typography.fontFamily,
-                        fontSize: '16px',
-                        lineHeight: '1.5',
-                        color: theme.palette.text.primary,
-                      }}
-                    />
-
-                    {/* Bottom toolbar */}
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        px: 2,
-                        py: 1,
-                      }}
-                    >
-                      {/* Left side buttons and file chip */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, mr: 2 }}>
-                        <Tooltip title="Attach PDF document">
-                          <Box
-                            component="label"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: '16px',
-                              border: `1px solid ${theme.palette.divider}`,
-                              cursor: 'pointer',
-                              color: selectedFile ? '#f97316' : theme.palette.text.secondary,
-                              bgcolor: 'transparent',
-                              '&:hover': {
-                                bgcolor: 'rgba(249, 115, 22, 0.04)',
-                                borderColor: '#f97316',
-                                color: '#f97316',
-                              },
-                            }}
-                          >
-                            <AttachFile fontSize="small" />
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontSize: '0.875rem',
-                                fontWeight: 500,
-                                color: 'inherit',
-                              }}
-                            >
-                              Attach
-                            </Typography>
-                            <input
-                              hidden
-                              type="file"
-                              accept="application/pdf"
-                              onChange={handleFileSelect}
-                            />
-                          </Box>
-                        </Tooltip>
-
-                        {selectedFile && (
-                          <Chip
-                            icon={<PictureAsPdf />}
-                            label={selectedFile.name}
-                            onDelete={() => setSelectedFile(undefined)}
-                            size="small"
-                            variant="outlined"
-                            color="warning"
-                            sx={{
-                              maxWidth: { xs: 120, sm: 200 },
-                              height: 28,
-                              '& .MuiChip-label': {
-                                fontSize: '0.75rem',
-                                px: 1,
-                              },
-                            }}
-                          />
-                        )}
-
-                        {input.trim() && (
-                          <Tooltip title="Clear input">
-                            <IconButton
-                              size="small"
-                              onClick={() => setInput('')}
-                              sx={{
-                                color: theme.palette.text.secondary,
-                                '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-                              }}
-                            >
-                              <Clear fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-
-                      {/* Right side send button */}
-                      <Tooltip title="Send message">
-                        <IconButton
-                          onClick={handleSubmit}
-                          disabled={loading || (!input.trim() && !selectedFile)}
-                          size="small"
-                          sx={{
-                            bgcolor:
-                              loading || (!input.trim() && !selectedFile)
-                                ? theme.palette.mode === 'dark'
-                                  ? '#404040'
-                                  : '#e0e0e0'
-                                : '#EA580C',
-                            color:
-                              loading || (!input.trim() && !selectedFile)
-                                ? theme.palette.mode === 'dark'
-                                  ? '#666666'
-                                  : '#999999'
-                                : 'white',
-                            width: 32,
-                            height: 32,
-                            '&:hover': {
-                              bgcolor:
-                                loading || (!input.trim() && !selectedFile)
-                                  ? theme.palette.mode === 'dark'
-                                    ? '#404040'
-                                    : '#e0e0e0'
-                                  : '#DC4E0B',
-                            },
-                            '&:disabled': {
-                              color: theme.palette.mode === 'dark' ? '#666666' : '#999999',
-                            },
-                          }}
-                        >
-                          <ArrowUpwardIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            )}
-
-            {messages.map(msg => (
-              <Box key={msg.id} sx={{ mb: 4 }}>
-                {/* User message */}
-                {msg.role === 'user' && (
-                  <Card variant="outlined" sx={{ mb: 2, borderRadius: '12px' }}>
-                    <CardContent sx={{ pb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                            {msg.content}
-                          </Typography>
-
-                          {msg.file && (
-                            <Chip
-                              icon={<PictureAsPdf />}
-                              label={msg.file.fileName}
-                              size="small"
-                              variant="outlined"
-                              color="warning"
-                              sx={{ mt: 1 }}
-                            />
-                          )}
-                        </Box>
-                        <Tooltip title="Copy to clipboard">
-                          <IconButton
-                            size="small"
-                            onClick={() => copyToClipboard(msg.content, `q-${msg.id}`)}
-                            sx={{ ml: 1 }}
-                          >
-                            {copiedMessageId === `q-${msg.id}` ? (
-                              <Typography variant="caption">Copied!</Typography>
-                            ) : (
-                              <ContentCopy fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {msg.timestamp?.toLocaleString()}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* AI response */}
-                {msg.role === 'assistant' && (
-                  <Card
-                    sx={{
-                      ml: { xs: 2, sm: 4 },
-                      mb: 2,
-                      bgcolor: '#F97316',
-                      color: theme.palette.primary.contrastText,
-                      borderRadius: '12px',
-                    }}
-                  >
-                    <CardContent sx={{ pb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Box
-                            sx={{
-                              '& p': { mb: 1 },
-                              '& h1, & h2, & h3, & h4, & h5, & h6': { mt: 2, mb: 1 },
-                              '& ul, & ol': { pl: 2 },
-                              '& code': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                p: 0.5,
-                                borderRadius: 1,
-                                fontFamily: 'monospace',
-                              },
-                              '& sup a': {
-                                textDecoration: 'none',
-                                padding: '0 2px',
-                                borderRadius: '3px',
-                                fontWeight: 'bold',
-                                marginLeft: '2px',
-                                cursor: 'pointer',
-                              },
-                              '& [id^="eWzv"]': {
-                                display: 'block',
-                                margin: '10px 0',
-                                padding: '5px 10px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                                borderLeft: '3px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: '3px',
-                                fontSize: '0.9em',
-                              },
-                            }}
-                          >
-                            <ReactMarkdown
-                              remarkPlugins={[remarkHeaderId, remarkGfm]}
-                              components={{
-                                a: ({ node, ...props }) => {
-                                  // Special handling for footnote links
-                                  if (props.href && props.href.startsWith('#') && props.children) {
-                                    // Safely handle various types of children
-                                    const childText = Array.isArray(props.children)
-                                      ? String(props.children[0] || '')
-                                      : String(props.children || '');
-                                    if (childText.startsWith('^') && childText.endsWith('^')) {
-                                      // Extract the number between the carets
-                                      const footnoteNumber = childText.substring(
-                                        1,
-                                        childText.length - 1
-                                      );
-                                      return (
-                                        <sup>
-                                          <a
-                                            {...props}
-                                            style={{
-                                              textDecoration: 'underline',
-                                              color: 'blue',
-                                              cursor: 'pointer',
-                                              fontSize: '0.75em',
-                                              opacity: '0.6',
-                                            }}
-                                          >
-                                            {footnoteNumber}
-                                          </a>
-                                        </sup>
-                                      );
-                                    }
-                                  }
-                                  return (
-                                    <a
-                                      {...props}
-                                      target="_blank"
-                                      style={{
-                                        color: 'blue',
-                                        opacity: '0.8',
-                                        textDecoration: 'underline',
-                                        fontWeight: 500,
-                                      }}
-                                    />
-                                  );
-                                },
-                                h6: ({ node, ...props }) => {
-                                  // Special handling for footnote section headings
-                                  if (props.id) {
-                                    return (
-                                      <h6
-                                        {...props}
-                                        style={{
-                                          color: 'blue',
-                                          opacity: 0.8,
-                                        }}
-                                      />
-                                    );
-                                  }
-                                  return <h6 {...props} />;
-                                },
-                              }}
-                            >
-                              {msg.content}
-                            </ReactMarkdown>
-                          </Box>
-                        </Box>
-                        <Tooltip title="Copy to clipboard">
-                          <IconButton
-                            size="small"
-                            onClick={() => copyToClipboard(msg.content, `a-${msg.id}`)}
-                            sx={{ ml: 1, color: 'inherit', opacity: 0.7 }}
-                          >
-                            {copiedMessageId === `a-${msg.id}` ? (
-                              <Typography variant="caption">Copied!</Typography>
-                            ) : (
-                              <ContentCopy fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                      <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.1)' }} />
-                      <Typography variant="caption" sx={{ display: 'block', textAlign: 'right' }}>
-                        AI Assistant • {msg.timestamp?.toLocaleString()}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                )}
-              </Box>
-            ))}
-
-            {/* Pending question */}
-            {pendingQuestion && (
-              <Card variant="outlined" sx={{ mb: 3, borderRadius: '12px' }}>
-                <CardContent>
-                  <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {pendingQuestion}
-                  </Typography>
-                  {selectedFile && (
-                    <Chip
-                      icon={<PictureAsPdf />}
-                      label={selectedFile.name}
-                      size="small"
-                      variant="outlined"
-                      color="warning"
-                      sx={{ mt: 1 }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Loading indicator */}
-            {loading && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  my: 3,
-                  px: 2,
-                  py: 3,
-                }}
-              >
-                <CircularProgress size={24} color="warning" />
-                <Typography sx={{ ml: 2 }} color="warning">
-                  Processing...
-                </Typography>
-              </Box>
-            )}
-
-            <div ref={bottomRef} />
-          </Container>
-
-          {/* Floating scroll to bottom button */}
-          {showScrollButton && (
-            <Fab
-              size="small"
-              onClick={() => scrollToBottom()}
-              sx={{
-                position: 'absolute',
-                bottom: 16,
-                right: 16,
-                bgcolor: '#f97316',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: '#ea580c',
-                },
-                zIndex: 1000,
-              }}
-            >
-              <KeyboardArrowDown />
-            </Fab>
-          )}
-        </Box>
-
-        {/* Input area - only show at bottom when there are messages */}
-        {messages.length > 0 && (
-          <Box
-            component="footer"
-            sx={{
-              position: 'sticky',
-              bottom: 0,
-              p: 2,
-              zIndex: 10,
-              backgroundColor: 'transparent',
-            }}
-          >
-            <Container maxWidth="md">
-              <Box sx={{ maxWidth: 700, mx: 'auto' }}>
-                <Box
-                  sx={{
-                    bgcolor: theme.palette.mode === 'dark' ? '#2f2f2f' : '#f7f7f8',
-                    borderRadius: '24px',
-                    border: `1px solid ${theme.palette.divider}`,
-                    overflow: 'hidden',
-                    '&:focus-within': {
-                      borderColor: '#f97316',
-                      boxShadow: '0 0 0 1px #f97316',
-                    },
-                  }}
-                >
-                  {/* Input area */}
                   <TextareaAutosize
                     ref={textAreaRef}
                     minRows={1}
-                    maxRows={5}
-                    placeholder={selectedFile ? 'Ask about the uploaded PDF...' : 'Ask anything...'}
+                    maxRows={8}
+                    placeholder={
+                      selectedFile ? `Ask about ${selectedFile.name}...` : 'Ask anything...'
+                    }
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKeyPress}
+                    disabled={loading}
                     style={{
                       width: '100%',
-                      padding: '12px 16px 8px 16px',
                       border: 'none',
                       outline: 'none',
                       resize: 'none',
                       backgroundColor: 'transparent',
-                      fontFamily: theme.typography.fontFamily,
-                      fontSize: '16px',
+                      fontFamily: novikTheme.typography.fontFamily,
+                      fontSize: '1rem',
                       lineHeight: '1.5',
-                      color: theme.palette.text.primary,
+                      padding: '0',
                     }}
                   />
 
-                  {/* Bottom toolbar */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      px: 2,
-                      py: 1,
-                    }}
-                  >
-                    {/* Left side buttons and file chip */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, mr: 2 }}>
-                      <Tooltip title="Attach PDF document">
-                        <Box
-                          component="label"
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            px: 1.5,
-                            py: 0.5,
-                            borderRadius: '16px',
-                            border: `1px solid ${theme.palette.divider}`,
-                            cursor: 'pointer',
-                            color: selectedFile ? '#f97316' : theme.palette.text.secondary,
-                            bgcolor: 'transparent',
-                            '&:hover': {
-                              bgcolor: 'rgba(249, 115, 22, 0.04)',
-                              borderColor: '#f97316',
-                              color: '#f97316',
-                            },
-                          }}
-                        >
-                          <AttachFile fontSize="small" />
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: '0.875rem',
-                              fontWeight: 500,
-                              color: 'inherit',
-                            }}
-                          >
-                            Attach
-                          </Typography>
-                          <input
-                            hidden
-                            type="file"
-                            accept="application/pdf"
-                            onChange={handleFileSelect}
-                          />
-                        </Box>
-                      </Tooltip>
+                  <InputToolbar>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <AttachButton
+                        onClick={handleAttachClick}
+                        startIcon={<AttachFile sx={{ fontSize: '0.9rem' }} />}
+                        size="small"
+                      >
+                        Attach
+                      </AttachButton>
 
                       {selectedFile && (
                         <Chip
                           icon={<PictureAsPdf />}
                           label={selectedFile.name}
-                          onDelete={() => setSelectedFile(undefined)}
+                          onDelete={clearFile}
                           size="small"
                           variant="outlined"
-                          color="warning"
                           sx={{
-                            maxWidth: { xs: 120, sm: 200 },
-                            height: 28,
+                            maxWidth: { xs: 150, sm: 250 },
                             '& .MuiChip-label': {
                               fontSize: '0.75rem',
-                              px: 1,
                             },
                           }}
                         />
                       )}
-
-                      {input.trim() && (
-                        <Tooltip title="Clear input">
-                          <IconButton
-                            size="small"
-                            onClick={() => setInput('')}
-                            sx={{
-                              color: theme.palette.text.secondary,
-                              '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
-                            }}
-                          >
-                            <Clear fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
                     </Box>
 
-                    {/* Right side send button */}
-                    <Tooltip title="Send message">
-                      <IconButton
-                        onClick={handleSubmit}
-                        disabled={loading || (!input.trim() && !selectedFile)}
-                        size="small"
-                        sx={{
-                          bgcolor:
-                            loading || (!input.trim() && !selectedFile)
-                              ? theme.palette.mode === 'dark'
-                                ? '#404040'
-                                : '#e0e0e0'
-                              : '#EA580C',
-                          color:
-                            loading || (!input.trim() && !selectedFile)
-                              ? theme.palette.mode === 'dark'
-                                ? '#666666'
-                                : '#999999'
-                              : 'white',
-                          width: 32,
-                          height: 32,
-                          '&:hover': {
-                            bgcolor:
-                              loading || (!input.trim() && !selectedFile)
-                                ? theme.palette.mode === 'dark'
-                                  ? '#404040'
-                                  : '#e0e0e0'
-                                : '#DC4E0B',
-                          },
-                          '&:disabled': {
-                            color: theme.palette.mode === 'dark' ? '#666666' : '#999999',
-                          },
+                    <SendButton
+                      onClick={handleSubmit}
+                      disabled={loading || (!input.trim() && !selectedFile)}
+                      size="small"
+                    >
+                      <Send sx={{ fontSize: '18px' }} />
+                    </SendButton>
+                  </InputToolbar>
+                </AskBox>
+              </AskWrapper>
+            </Box>
+          ) : (
+            <Box sx={{ py: 2 }}>
+              {messages.map(msg => (
+                <MessageRow key={msg.id} isUser={msg.role === 'user'}>
+                  <MessageBubble isUser={msg.role === 'user'}>
+                    {msg.role === 'assistant' ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkHeaderId, remarkGfm]}
+                        components={{
+                          a: ({ ...props }) => (
+                            <a
+                              {...props}
+                              target="_blank"
+                              style={{ color: '#ffffff', textDecoration: 'underline' }}
+                            />
+                          ),
                         }}
                       >
-                        <ArrowUpwardIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              </Box>
-            </Container>
-          </Box>
-        )}
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <>
+                        {msg.content}
+                        {msg.file && (
+                          <Chip
+                            icon={<PictureAsPdf />}
+                            label={msg.file.fileName}
+                            size="small"
+                            sx={{ ml: 1, backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff' }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </MessageBubble>
+                </MessageRow>
+              ))}
 
-        <Snackbar
-          open={alert.open}
-          autoHideDuration={6000}
-          onClose={handleAlertClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert
-            onClose={handleAlertClose}
-            severity={alert.severity}
-            variant="filled"
-            sx={{ width: '100%' }}
-          >
-            {alert.message}
-          </Alert>
-        </Snackbar>
+              {loading && (
+                <MessageRow isUser={false}>
+                  <MessageBubble isUser={false}>
+                    <LoadingContainer>
+                      <CircularProgress
+                        size={20}
+                        sx={{ color: novikTheme.colors.primary, mr: 1 }}
+                      />
+                      <Typography sx={{ color: novikTheme.colors.textMuted }}>
+                        Working on it...
+                      </Typography>
+                    </LoadingContainer>
+                  </MessageBubble>
+                </MessageRow>
+              )}
+
+              <div ref={messagesEndRef} />
+            </Box>
+          )}
+        </Container>
       </Box>
-    </Box>
+
+      {/* Fixed Input Box at Bottom - Only when messages exist */}
+      {hasMessages && (
+        <InputContainer>
+          <AskWrapper>
+            <AskBox>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+
+              <TextareaAutosize
+                ref={textAreaRef}
+                minRows={1}
+                maxRows={8}
+                placeholder={selectedFile ? `Ask about ${selectedFile.name}...` : 'Ask anything...'}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  backgroundColor: 'transparent',
+                  fontFamily: novikTheme.typography.fontFamily,
+                  fontSize: '1rem',
+                  lineHeight: '1.5',
+                  padding: '0',
+                }}
+              />
+
+              <InputToolbar>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {hasMessages && (
+                    <>
+                      <Button
+                        onClick={newPatient}
+                        size="small"
+                        sx={{
+                          fontSize: '0.75rem',
+                          textTransform: 'none',
+                          color: novikTheme.colors.primary,
+                          fontFamily: novikTheme.typography.fontFamily,
+                        }}
+                      >
+                        New Patient
+                      </Button>
+                      <Button
+                        onClick={exportChat}
+                        size="small"
+                        sx={{
+                          fontSize: '0.75rem',
+                          textTransform: 'none',
+                          color: novikTheme.colors.primary,
+                          fontFamily: novikTheme.typography.fontFamily,
+                        }}
+                      >
+                        Export
+                      </Button>
+                      <Box
+                        sx={{ width: '1px', height: '20px', bgcolor: novikTheme.colors.border }}
+                      />
+                    </>
+                  )}
+
+                  <AttachButton
+                    onClick={handleAttachClick}
+                    startIcon={<AttachFile sx={{ fontSize: '0.9rem' }} />}
+                    size="small"
+                  >
+                    Attach
+                  </AttachButton>
+
+                  {selectedFile && (
+                    <Chip
+                      icon={<PictureAsPdf />}
+                      label={selectedFile.name}
+                      onDelete={clearFile}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        maxWidth: { xs: 150, sm: 250 },
+                        '& .MuiChip-label': {
+                          fontSize: '0.75rem',
+                        },
+                      }}
+                    />
+                  )}
+                </Box>
+
+                <SendButton
+                  onClick={handleSubmit}
+                  disabled={loading || (!input.trim() && !selectedFile)}
+                  size="small"
+                >
+                  <Send sx={{ fontSize: '18px' }} />
+                </SendButton>
+              </InputToolbar>
+            </AskBox>
+          </AskWrapper>
+        </InputContainer>
+      )}
+
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={4000}
+        onClose={handleAlertClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity={alert.severity}
+          variant="filled"
+          sx={{
+            width: '100%',
+            ...(alert.severity === 'success' && {
+              backgroundColor: novikTheme.colors.primary,
+              color: '#ffffff',
+              '& .MuiAlert-icon': {
+                color: '#ffffff',
+              },
+            }),
+          }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

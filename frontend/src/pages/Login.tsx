@@ -199,7 +199,6 @@ function Login() {
           </LogoWrapper>
 
           {!isLogin ? (
-            // Initial screen - Email entry
             <>
               <Title variant="h1">Welcome to Novik</Title>
               <Subtitle>Use your professional email to get started</Subtitle>
@@ -207,8 +206,7 @@ function Login() {
               <StyledTextField
                 fullWidth
                 name="email"
-                type="email"
-                label="Email"
+                label="Username or Email Address"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -244,7 +242,6 @@ function Login() {
               </Box>
             </>
           ) : (
-            // Login screen - Password entry
             <>
               <Title variant="h1">Sign in to Novik</Title>
               <Subtitle>Enter your credentials to access the dental assistant</Subtitle>
@@ -253,8 +250,7 @@ function Login() {
                 <StyledTextField
                   fullWidth
                   name="email"
-                  type="email"
-                  label="Email"
+                  label="Username or Email Address"
                   value={formData.email}
                   onChange={handleChange}
                   required
