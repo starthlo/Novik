@@ -10,6 +10,8 @@ import {
   ListItem,
 } from '@mui/material';
 import { novikTheme } from '../styles/theme';
+import NotificationSnackbar from '../components/Common/NotificationSnackbar';
+import ConfirmationDialog from '../components/Common/ConfirmationDialog';
 
 const PageContainer = styled(Box)({
   fontFamily: novikTheme.typography.fontFamily,
@@ -113,6 +115,10 @@ const SubmitButton = styled(Button)({
   '&:hover': {
     backgroundColor: novikTheme.colors.primaryDark,
   },
+  '&:disabled': {
+    backgroundColor: '#cccccc',
+    color: '#999999',
+  },
 });
 
 const HighlightBox = styled(Box)({
@@ -142,6 +148,12 @@ const Partners = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'error' as const,
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -152,19 +164,33 @@ const Partners = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
     setTimeout(() => {
-      console.log('Partnership inquiry submitted:', formData);
-      alert('Thank you for your interest in partnering with Novik! We will contact you soon.');
-      setFormData({
-        name: '',
-        company: '',
-        email: '',
-        phone: '',
-        message: '',
-      });
+      const success = Math.random() > 0.05;
+
+      if (success) {
+        setShowSuccessDialog(true);
+        setFormData({
+          name: '',
+          company: '',
+          email: '',
+          phone: '',
+          message: '',
+        });
+      } else {
+        setNotification({
+          open: true,
+          message:
+            'Failed to send partnership inquiry. Please check your connection and try again.',
+          severity: 'error',
+        });
+      }
+
       setIsSubmitting(false);
-    }, 1000);
+    }, 1500);
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   const benefits = [
@@ -244,6 +270,7 @@ const Partners = () => {
               onChange={handleInputChange}
               required
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -253,6 +280,7 @@ const Partners = () => {
               value={formData.company}
               onChange={handleInputChange}
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -264,6 +292,7 @@ const Partners = () => {
               onChange={handleInputChange}
               required
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -274,6 +303,7 @@ const Partners = () => {
               value={formData.phone}
               onChange={handleInputChange}
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -286,6 +316,7 @@ const Partners = () => {
               multiline
               rows={5}
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <SubmitButton type="submit" disabled={isSubmitting}>
@@ -294,6 +325,23 @@ const Partners = () => {
           </Box>
         </FormContainer>
       </ContentContainer>
+
+      <ConfirmationDialog
+        open={showSuccessDialog}
+        onClose={() => setShowSuccessDialog(false)}
+        type="success"
+        title="Partnership Inquiry Received!"
+        message="Thank you for your interest in partnering with Novik. Our partnership team will review your inquiry and contact you within 2-3 business days to discuss collaboration opportunities."
+        confirmText="Got it"
+      />
+
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+        duration={8000}
+      />
     </PageContainer>
   );
 };

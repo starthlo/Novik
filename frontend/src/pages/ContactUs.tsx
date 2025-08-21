@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Container, Box, Typography, TextField, Button, styled } from '@mui/material';
 import { novikTheme } from '../styles/theme';
+import NotificationSnackbar from '../components/Common/NotificationSnackbar';
 
 const PageContainer = styled(Box)({
   fontFamily: novikTheme.typography.fontFamily,
@@ -72,6 +73,10 @@ const SubmitButton = styled(Button)({
   '&:hover': {
     backgroundColor: novikTheme.colors.primaryDark,
   },
+  '&:disabled': {
+    backgroundColor: '#cccccc',
+    color: '#999999',
+  },
 });
 
 interface FormData {
@@ -90,6 +95,11 @@ const ContactUs = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -100,18 +110,36 @@ const ContactUs = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
     setTimeout(() => {
-      console.log('Form submitted:', formData);
-      alert('Thank you for your message! We will get back to you soon.');
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-      });
+      // API call
+      const success = Math.random() > 0.1;
+
+      if (success) {
+        setNotification({
+          open: true,
+          message: "Thank you for your message! We'll get back to you within 24-48 hours.",
+          severity: 'success',
+        });
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+        });
+      } else {
+        setNotification({
+          open: true,
+          message: 'Failed to send message. Please check your connection and try again.',
+          severity: 'error',
+        });
+      }
+
       setIsSubmitting(false);
-    }, 1000);
+    }, 1500);
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -148,6 +176,7 @@ const ContactUs = () => {
               onChange={handleInputChange}
               required
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -159,6 +188,7 @@ const ContactUs = () => {
               onChange={handleInputChange}
               required
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -168,6 +198,7 @@ const ContactUs = () => {
               value={formData.subject}
               onChange={handleInputChange}
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <StyledTextField
@@ -180,6 +211,7 @@ const ContactUs = () => {
               multiline
               rows={5}
               variant="outlined"
+              disabled={isSubmitting}
             />
 
             <SubmitButton type="submit" disabled={isSubmitting}>
@@ -188,6 +220,14 @@ const ContactUs = () => {
           </Box>
         </FormContainer>
       </ContentContainer>
+
+      <NotificationSnackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+        duration={notification.severity === 'success' ? 6000 : 8000}
+      />
     </PageContainer>
   );
 };
