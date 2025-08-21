@@ -40,6 +40,7 @@ DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 # Convert comma-separated string to list, or use default if not provided
 ALLOWED_HOSTS = [
     "novik.ai",
+    "www.novik.ai",
     "95.85.93.198",
     "82.29.174.61",
     "127.0.0.1",
