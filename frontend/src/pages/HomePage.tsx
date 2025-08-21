@@ -1,10 +1,19 @@
-import { Box, Container, Typography, Button, styled, Card, List, ListItem, Grid } from '@mui/material';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  styled,
+  Card,
+  List,
+  ListItem,
+  Grid,
+} from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { novikTheme } from '../styles/theme';
 import CookieConsent from '../components/Common/CookieConsent';
 import Footer from '../components/Common/Footer';
 
-// Styled components matching HTML mockup design
 const HeroSection = styled(Box)({
   minHeight: '90vh',
   display: 'flex',
@@ -106,7 +115,7 @@ const ProblemCard = styled(FeatureCard)({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  alignItems: 'center'
+  alignItems: 'center',
 });
 
 const CardNumber = styled(Box)<any>({
@@ -204,9 +213,32 @@ const HomePage = () => {
     {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style={{ width: '60px' }}>
-          <circle cx="50" cy="50" r="45" fill="none" stroke={novikTheme.colors.primary} strokeWidth="6" />
-          <line x1="50" y1="50" x2="50" y2="25" stroke={novikTheme.colors.primary} strokeWidth="6" strokeLinecap="round" />
-          <line x1="50" y1="50" x2="70" y2="60" stroke={novikTheme.colors.primary} strokeWidth="6" strokeLinecap="round" />
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke={novikTheme.colors.primary}
+            strokeWidth="6"
+          />
+          <line
+            x1="50"
+            y1="50"
+            x2="50"
+            y2="25"
+            stroke={novikTheme.colors.primary}
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <line
+            x1="50"
+            y1="50"
+            x2="70"
+            y2="60"
+            stroke={novikTheme.colors.primary}
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
         </svg>
       ),
       title: 'Time constraints',
@@ -216,8 +248,21 @@ const HomePage = () => {
     {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style={{ width: '60px' }}>
-          <polygon points="50,10 90,85 10,85" fill="none" stroke={novikTheme.colors.primary} strokeWidth="6" />
-          <line x1="50" y1="35" x2="50" y2="60" stroke={novikTheme.colors.primary} strokeWidth="6" strokeLinecap="round" />
+          <polygon
+            points="50,10 90,85 10,85"
+            fill="none"
+            stroke={novikTheme.colors.primary}
+            strokeWidth="6"
+          />
+          <line
+            x1="50"
+            y1="35"
+            x2="50"
+            y2="60"
+            stroke={novikTheme.colors.primary}
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
           <circle cx="50" cy="75" r="4" fill={novikTheme.colors.primary} />
         </svg>
       ),
@@ -265,7 +310,7 @@ const HomePage = () => {
       number: 3,
       title: 'Drug intelligence',
       description:
-        'Suggests antibiotics, analgesics and local anaesthetics with dose limits, alternatives and interactions based on each patient\'s history.',
+        "Suggests antibiotics, analgesics and local anaesthetics with dose limits, alternatives and interactions based on each patient's history.",
     },
     {
       number: 4,
@@ -324,10 +369,10 @@ const HomePage = () => {
     {
       question: 'Is my patient data secure?',
       answer:
-        'Absolutely. We comply with the EU GDPR, encrypt data in transit and at rest, and only collect anonymised usage metrics. You remain in control of your patients\' information.',
+        "Absolutely. We comply with the EU GDPR, encrypt data in transit and at rest, and only collect anonymised usage metrics. You remain in control of your patients' information.",
     },
     {
-      question: 'Does Novik replace a dentist\'s judgement?',
+      question: "Does Novik replace a dentist's judgement?",
       answer:
         'No. Novik provides decision support to help you make informed choices, but the final judgement always resides with the treating clinician.',
     },
@@ -345,7 +390,7 @@ const HomePage = () => {
         'Empower dental professionals with trustworthy AI to deliver safer, evidence-based care.',
     },
     {
-      title: 'What we\'re not',
+      title: "What we're not",
       description:
         'Novik is a decision support tool and never a substitute for clinical judgement.',
     },
@@ -368,9 +413,7 @@ const HomePage = () => {
       {/* Hero Section */}
       <HeroSection>
         <HeroContent>
-          <HeroTitle variant="h1">
-            Smarter decisions for faster, safer dentistry
-          </HeroTitle>
+          <HeroTitle variant="h1">Smarter decisions for faster, safer dentistry</HeroTitle>
           <HeroSubtitle>
             From diagnosis to treatment, Novik guides your clinical decisions with precision.
           </HeroSubtitle>
@@ -488,9 +531,7 @@ const HomePage = () => {
         <Container maxWidth="lg">
           <SectionTitle>
             <SectionHeading variant="h2">Frequently Asked Questions</SectionHeading>
-            <SectionSubheading>
-              Answers to common questions about Novik.
-            </SectionSubheading>
+            <SectionSubheading>Answers to common questions about Novik.</SectionSubheading>
           </SectionTitle>
           <Box sx={{ maxWidth: '800px', margin: '0 auto' }}>
             {faqItems.map((faq, index) => (
@@ -513,9 +554,7 @@ const HomePage = () => {
         <Container maxWidth="lg">
           <SectionTitle>
             <SectionHeading variant="h2">About Novik</SectionHeading>
-            <SectionSubheading>
-              Our mission, team and values.
-            </SectionSubheading>
+            <SectionSubheading>Our mission, team and values.</SectionSubheading>
           </SectionTitle>
           <StyledList>
             {aboutPoints.map((point, index) => (

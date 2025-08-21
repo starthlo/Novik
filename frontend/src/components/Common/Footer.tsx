@@ -1,13 +1,8 @@
 import { Box, Container, Typography, Link, styled, Grid } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { novikTheme } from '../../styles/theme';
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-} from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 
-// Styled components matching HTML mockup design
 const FooterContainer = styled(Box)<any>({
   backgroundColor: '#111111',
   color: '#cccccc',
@@ -139,11 +134,7 @@ const Footer = () => {
             <FooterColumn>
               <FooterHeading variant="h4">Navigation</FooterHeading>
               {navigationLinks.map((link, index) => (
-                <FooterLink
-                  key={index}
-                  component={RouterLink}
-                  to={link.to}
-                >
+                <FooterLink key={index} component={RouterLink} to={link.to}>
                   {link.text}
                 </FooterLink>
               ))}
@@ -155,11 +146,7 @@ const Footer = () => {
             <FooterColumn>
               <FooterHeading variant="h4">Legal</FooterHeading>
               {legalLinks.map((link, index) => (
-                <FooterLink
-                  key={index}
-                  component={RouterLink}
-                  to={link.to}
-                >
+                <FooterLink key={index} component={RouterLink} to={link.to}>
                   {link.text}
                 </FooterLink>
               ))}
@@ -192,7 +179,10 @@ const Footer = () => {
           <Typography variant="body2" sx={{ mb: 2, color: '#777777', fontSize: '0.8rem' }}>
             © 2024 Novik. All rights reserved.
           </Typography>
-          <Typography variant="body2" sx={{ color: '#777777', fontSize: '0.75rem', lineHeight: 1.6 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: '#777777', fontSize: '0.75rem', lineHeight: 1.6 }}
+          >
             Novik is an experimental technology demonstrator. Novik does not provide medical advice,
             diagnosis or treatment. User questions and other inputs on Novik are not covered by
             HIPAA. It is the responsibility of the user to ensure questions do not contain protected

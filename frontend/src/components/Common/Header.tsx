@@ -31,7 +31,6 @@ type NavItem = {
   requiresAuth?: boolean;
 };
 
-// Styled components matching HTML mockup design
 const StyledAppBar = styled(AppBar)({
   position: 'fixed',
   top: 0,
@@ -197,11 +196,7 @@ const Header = () => {
           {isMdUp && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               {visibleNavItems.map((item, i) => (
-                <NavButton
-                  key={i}
-                  component={RouterLink}
-                  to={item.to}
-                >
+                <NavButton key={i} component={RouterLink} to={item.to}>
                   {item.text}
                 </NavButton>
               ))}
@@ -209,10 +204,7 @@ const Header = () => {
               {/* Admin Portal Dropdown */}
               {isAuthorized && user?.isSuperuser && (
                 <>
-                  <NavButton
-                    onClick={openAdminMenu}
-                    endIcon={<ExpandMoreIcon />}
-                  >
+                  <NavButton onClick={openAdminMenu} endIcon={<ExpandMoreIcon />}>
                     Admin Portal
                   </NavButton>
                   <Menu
@@ -258,11 +250,7 @@ const Header = () => {
                   Login
                 </LoginButton>
               ) : (
-                <LoginButton
-                  onClick={handleLogout}
-                  variant="contained"
-                  disableElevation
-                >
+                <LoginButton onClick={handleLogout} variant="contained" disableElevation>
                   Logout
                 </LoginButton>
               )}
@@ -285,20 +273,12 @@ const Header = () => {
       </StyledAppBar>
 
       {/* Mobile Drawer */}
-      <StyledDrawer
-        anchor="right"
-        open={mobileOpen}
-        onClose={toggleMobile}
-      >
+      <StyledDrawer anchor="right" open={mobileOpen} onClose={toggleMobile}>
         <Box role="presentation">
           <List sx={{ pt: 2 }}>
             {visibleNavItems.map((item, i) => (
               <ListItem key={i} disablePadding>
-                <DrawerListItem
-                  component={RouterLink}
-                  to={item.to}
-                  onClick={toggleMobile}
-                >
+                <DrawerListItem component={RouterLink} to={item.to} onClick={toggleMobile}>
                   <ListItemText primary={item.text} />
                 </DrawerListItem>
               </ListItem>
