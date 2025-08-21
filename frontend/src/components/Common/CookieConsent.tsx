@@ -1,6 +1,97 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Typography, Link, IconButton } from '@mui/material';
+import { Box, Button, Typography, Link, IconButton, styled } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { novikTheme } from '../../styles/theme';
+
+const ConsentContainer = styled(Box)({
+  position: 'fixed',
+  bottom: '24px',
+  right: '24px',
+  zIndex: 9999,
+  '@media (max-width: 600px)': {
+    bottom: '16px',
+    right: '16px',
+    left: '16px',
+  },
+});
+
+const ConsentCard = styled(Box)({
+  position: 'relative',
+  backgroundColor: novikTheme.colors.background,
+  border: `1px solid ${novikTheme.colors.border}`,
+  borderRadius: novikTheme.borderRadius.medium,
+  boxShadow: novikTheme.shadows.large,
+  maxWidth: '600px',
+  width: '100%',
+  padding: '32px',
+  fontFamily: novikTheme.typography.fontFamily,
+  '@media (max-width: 600px)': {
+    padding: '24px',
+  },
+});
+
+const CloseButton = styled(IconButton)({
+  position: 'absolute',
+  top: '8px',
+  right: '8px',
+  color: novikTheme.colors.textMuted,
+  '&:hover': {
+    color: novikTheme.colors.text,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  },
+});
+
+const ConsentTitle = styled(Typography)({
+  marginBottom: '8px',
+  fontWeight: 600,
+  fontFamily: novikTheme.typography.fontFamily,
+  color: novikTheme.colors.text,
+});
+
+const ConsentDescription = styled(Typography)({
+  marginBottom: '24px',
+  color: novikTheme.colors.textMuted,
+  fontFamily: novikTheme.typography.fontFamily,
+  lineHeight: 1.6,
+});
+
+const AcceptButton = styled(Button)({
+  backgroundColor: novikTheme.colors.primary,
+  color: '#ffffff',
+  fontFamily: novikTheme.typography.fontFamily,
+  textTransform: 'none',
+  fontWeight: 500,
+  padding: '8px 20px',
+  borderRadius: novikTheme.borderRadius.small,
+  '&:hover': {
+    backgroundColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const SecondaryButton = styled(Button)({
+  borderColor: novikTheme.colors.border,
+  color: novikTheme.colors.text,
+  fontFamily: novikTheme.typography.fontFamily,
+  textTransform: 'none',
+  fontWeight: 500,
+  padding: '8px 20px',
+  borderRadius: novikTheme.borderRadius.small,
+  '&:hover': {
+    backgroundColor: 'rgba(136, 169, 78, 0.08)',
+    borderColor: novikTheme.colors.primary,
+    color: novikTheme.colors.primary,
+  },
+});
+
+const PolicyLink = styled(Link)({
+  color: novikTheme.colors.primary,
+  textDecoration: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  fontSize: '0.875rem',
+  '&:hover': {
+    textDecoration: 'underline',
+  },
+});
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
@@ -18,138 +109,67 @@ const CookieConsent = () => {
   if (!visible) return null;
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        bottom: theme => theme.spacing(6),
-        right: theme => theme.spacing(6),
-        zIndex: theme => theme.zIndex.modal,
-      }}
-    >
-      <Box
-        sx={{
-          position: 'relative',
-          backgroundColor: '#ffffff',
-          border: '1px solid #E5E7EB',
-          borderRadius: 2,
-          boxShadow: 24,
-          maxWidth: 600,
-          width: '100%',
-          p: 4,
-        }}
-      >
-        <IconButton
+    <ConsentContainer>
+      <ConsentCard>
+        <CloseButton
           onClick={() => setVisible(false)}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            color: '#6B7280',
-            '&:hover': { color: '#000000' },
-          }}
           size="small"
-          aria-label="Close"
+          aria-label="Close cookie consent"
         >
           <CloseIcon fontSize="small" />
-        </IconButton>
+        </CloseButton>
 
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          Manage cookie consent
-        </Typography>
+        <ConsentTitle variant="h6">Cookie Consent</ConsentTitle>
 
-        <Typography variant="body2" sx={{ mb: 3, color: '#374151' }}>
-          We use cookies to enhance your experience. You can accept all, only essential cookies, or
-          decline.
-        </Typography>
+        <ConsentDescription variant="body2">
+          We use cookies to enhance your browsing experience and analyze our traffic. By clicking
+          "Accept All", you consent to our use of cookies. You can also choose to accept only
+          essential cookies or decline optional cookies.
+        </ConsentDescription>
 
         <Box
-          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'space-between', mb: 2 }}
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1.5,
+            mb: 2,
+            '@media (max-width: 600px)': {
+              flexDirection: 'column',
+            },
+          }}
         >
-          <Button
-            variant="contained"
-            onClick={() => handleConsent('all')}
-            sx={{
-              backgroundColor: '#F97316',
-              color: '#ffffff',
-              '&:hover': { backgroundColor: '#EA580C' },
-              px: 2,
-              py: 1,
-              fontWeight: 500,
-            }}
-          >
-            Accept
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleConsent('functional')}
-            sx={{
-              borderColor: '#E5E7EB',
-              color: '#1F2937',
-              '&:hover': {
-                backgroundColor: '#EA580C',
-                color: '#ffffff',
-                borderColor: '#EA580C',
-              },
-              px: 2,
-              py: 1,
-              fontWeight: 500,
-            }}
-          >
-            Accept only functional cookies
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => handleConsent('decline')}
-            sx={{
-              borderColor: '#E5E7EB',
-              color: '#1F2937',
-              '&:hover': {
-                backgroundColor: '#EA580C',
-                color: '#ffffff',
-                borderColor: '#EA580C',
-              },
-              px: 2,
-              py: 1,
-              fontWeight: 500,
-            }}
-          >
+          <AcceptButton variant="contained" onClick={() => handleConsent('all')}>
+            Accept All
+          </AcceptButton>
+          <SecondaryButton variant="outlined" onClick={() => handleConsent('functional')}>
+            Essential Only
+          </SecondaryButton>
+          <SecondaryButton variant="outlined" onClick={() => handleConsent('decline')}>
             Decline
-          </Button>
+          </SecondaryButton>
         </Box>
 
         <Box
-          sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2, fontSize: '0.875rem' }}
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 3,
+            mt: 2,
+            flexWrap: 'wrap',
+          }}
         >
-          <Link
-            href="/legal#terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            sx={{ color: '#F97316' }}
-          >
-            Terms of service
-          </Link>
-          <Link
-            href="/legal#privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            sx={{ color: '#F97316' }}
-          >
+          <PolicyLink href="/terms-of-use" underline="hover" target="_blank">
+            Terms of Use
+          </PolicyLink>
+          <PolicyLink href="/privacy-policy" underline="hover" target="_blank">
             Privacy Policy
-          </Link>
-          <Link
-            href="/legal#cookies"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            sx={{ color: '#F97316' }}
-          >
+          </PolicyLink>
+          <PolicyLink href="/cookie-policy" underline="hover" target="_blank">
             Cookie Policy
-          </Link>
+          </PolicyLink>
         </Box>
-      </Box>
-    </Box>
+      </ConsentCard>
+    </ConsentContainer>
   );
 };
 

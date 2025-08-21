@@ -13,6 +13,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { novikTheme } from '../styles/theme';
 import CookieConsent from '../components/Common/CookieConsent';
 import Footer from '../components/Common/Footer';
+import TitleImage from '../assets/TitleImage.png';
 
 const HeroSection = styled(Box)({
   minHeight: '90vh',
@@ -23,6 +24,7 @@ const HeroSection = styled(Box)({
   textAlign: 'center',
   color: '#ffffff',
   backgroundSize: 'cover',
+  backgroundImage: `url(${TitleImage})`,
   backgroundPosition: 'center',
   '&::after': {
     content: '""',
