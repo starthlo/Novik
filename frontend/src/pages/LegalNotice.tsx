@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, styled, Divider } from '@mui/material';
 import { novikTheme } from '../styles/theme';
 
@@ -106,6 +106,10 @@ const ContactInfo = styled(Box)({
 
 const LegalNotice = () => {
   const [language, setLanguage] = useState<'en' | 'es'>('en');
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const content = {
     en: {
