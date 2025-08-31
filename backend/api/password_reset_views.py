@@ -18,10 +18,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .email_templates import (
-    add_mailgun_campaign,
     add_mailgun_tags,
     add_mailgun_tracking,
-    add_mailgun_variables,
     get_password_reset_confirmation_html,
     get_password_reset_confirmation_text,
     get_password_reset_email_html,
@@ -97,7 +95,7 @@ def forgot_password_view(request):
     reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
 
     # Prepare email content using templates
-    email_subject = "🔐 Password Reset Request - Novik"
+    email_subject = "Password Reset Request - Novik"
     user_name = user.first_name or user.username
 
     # Get email templates
@@ -124,22 +122,14 @@ def forgot_password_view(request):
         email_message.attach_alternative(html_message, "text/html")
 
         # Add Mailgun-specific features for better tracking and analytics
-        if hasattr(settings, 'EMAIL_SERVICE') and settings.EMAIL_SERVICE == 'mailgun':
+        if hasattr(settings, "EMAIL_SERVICE") and settings.EMAIL_SERVICE == "mailgun":
             # Add tags for categorization (max 3 tags)
-            add_mailgun_tags(email_message, ['password-reset', 'security', 'transactional'])
-            
+            add_mailgun_tags(
+                email_message, ["password-reset", "security", "transactional"]
+            )
+
             # Enable click and open tracking
             add_mailgun_tracking(email_message, track_opens=True, track_clicks=True)
-            
-            # Add template variables for analytics
-            add_mailgun_variables(email_message, {
-                'user_name': user_name,
-                'user_email': email,
-                'action': 'password_reset_request'
-            })
-            
-            # Add to campaign for reporting
-            add_mailgun_campaign(email_message, 'password-reset-q4-2024')
 
         # Send the email
         email_message.send(fail_silently=False)
@@ -302,22 +292,14 @@ def reset_password_view(request):
         email_message.attach_alternative(html_message, "text/html")
 
         # Add Mailgun-specific features for confirmation email
-        if hasattr(settings, 'EMAIL_SERVICE') and settings.EMAIL_SERVICE == 'mailgun':
+        if hasattr(settings, "EMAIL_SERVICE") and settings.EMAIL_SERVICE == "mailgun":
             # Add tags for categorization
-            add_mailgun_tags(email_message, ['password-reset-confirm', 'security', 'notification'])
-            
+            add_mailgun_tags(
+                email_message, ["password-reset-confirm", "security", "notification"]
+            )
+
             # Enable tracking (less important for confirmations)
             add_mailgun_tracking(email_message, track_opens=True, track_clicks=False)
-            
-            # Add template variables
-            add_mailgun_variables(email_message, {
-                'user_name': user_name,
-                'user_email': user.email,
-                'action': 'password_reset_completed'
-            })
-            
-            # Add to campaign
-            add_mailgun_campaign(email_message, 'security-notifications-2024')
 
         email_message.send(fail_silently=True)
     except Exception as e:
