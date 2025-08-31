@@ -118,14 +118,12 @@ const SubText = styled(Typography)({
 
 const InputContainer = styled(Box)({
   position: 'fixed',
-  bottom: 0,
+  bottom: 64,
   left: 0,
   right: 0,
-  backgroundColor: '#f7f7f8',
   padding: '16px',
-  borderTop: `1px solid ${novikTheme.colors.border}`,
-  boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
   zIndex: 100,
+  background: 'transparent'
 });
 
 const AskWrapper = styled(Box)({
@@ -201,12 +199,12 @@ const MessageRow = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
 const MessageBubble = styled(Box)<{ isUser?: boolean }>(({ isUser }) => ({
   display: 'inline-block',
   textAlign: 'left',
-  padding: '12px 16px',
+  padding: '8px 12px',
   margin: '6px 0',
   borderRadius: '14px',
   lineHeight: 1.45,
   maxWidth: '78%',
-  backgroundColor: isUser ? novikTheme.colors.primary : '#ffffff',
+  backgroundColor: isUser ? novikTheme.colors.primary : '#f4f4f4',
   color: isUser ? '#ffffff' : novikTheme.colors.text,
   border: isUser ? 'none' : `1px solid ${novikTheme.colors.border}`,
   fontFamily: novikTheme.typography.fontFamily,
@@ -411,17 +409,14 @@ const Dashboard = () => {
         </PageHero>
       )}
 
-      {/* Fixed Bottom Buttons - Only show when no messages */}
-      {!hasMessages && (
-        <HeaderButtons>
-          <AccentButton startIcon={<Add />} onClick={newPatient}>
-            New Patient
-          </AccentButton>
-          <GhostButton startIcon={<FileDownload />} onClick={exportChat}>
-            Export
-          </GhostButton>
-        </HeaderButtons>
-      )}
+      <HeaderButtons>
+        <AccentButton startIcon={<Add />} onClick={newPatient}>
+          New Patient
+        </AccentButton>
+        <GhostButton startIcon={<FileDownload />} onClick={exportChat}>
+          Export
+        </GhostButton>
+      </HeaderButtons>
 
       {/* Main Content */}
       <Box
@@ -602,38 +597,6 @@ const Dashboard = () => {
 
               <InputToolbar>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {hasMessages && (
-                    <>
-                      <Button
-                        onClick={newPatient}
-                        size="small"
-                        sx={{
-                          fontSize: '0.75rem',
-                          textTransform: 'none',
-                          color: novikTheme.colors.primary,
-                          fontFamily: novikTheme.typography.fontFamily,
-                        }}
-                      >
-                        New Patient
-                      </Button>
-                      <Button
-                        onClick={exportChat}
-                        size="small"
-                        sx={{
-                          fontSize: '0.75rem',
-                          textTransform: 'none',
-                          color: novikTheme.colors.primary,
-                          fontFamily: novikTheme.typography.fontFamily,
-                        }}
-                      >
-                        Export
-                      </Button>
-                      <Box
-                        sx={{ width: '1px', height: '20px', bgcolor: novikTheme.colors.border }}
-                      />
-                    </>
-                  )}
-
                   <AttachButton
                     onClick={handleAttachClick}
                     startIcon={<AttachFile sx={{ fontSize: '0.9rem' }} />}

@@ -220,11 +220,10 @@ function Login() {
               <DividerText>OR</DividerText>
 
               <GoogleOAuthProvider clientId="415749549321-2g2mhh6ugbk8fhjfdcd4jo7sk00dfa8v.apps.googleusercontent.com">
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={handleGoogleError}
-                    width="370px"
                     theme="outline"
                     size="large"
                     text="continue_with"
@@ -298,12 +297,11 @@ function Login() {
               <DividerText>OR</DividerText>
 
               <GoogleOAuthProvider clientId="415749549321-2g2mhh6ugbk8fhjfdcd4jo7sk00dfa8v.apps.googleusercontent.com">
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={handleGoogleError}
                     theme="outline"
-                    width="370px"
                     size="large"
                     text="signin_with"
                   />

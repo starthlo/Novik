@@ -13,24 +13,30 @@ import { Link as RouterLink } from 'react-router-dom';
 import { novikTheme } from '../styles/theme';
 import CookieConsent from '../components/Common/CookieConsent';
 import Footer from '../components/Common/Footer';
-import TitleImage from '../assets/TitleImage.png';
+import FrontImage from '../assets/Front Image.png';
+import NovikLogoWhite from '../assets/novik-logo-white.png';
+import PubMedWhite from '../assets/pubmed-white.png';
+import DrugBankWhite from '../assets/drugbank-white.png';
 
 const HeroSection = styled(Box)({
   minHeight: '90vh',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: 'center',
   position: 'relative',
   textAlign: 'center',
   color: '#ffffff',
   backgroundSize: 'cover',
-  backgroundImage: `url(${TitleImage})`,
+  backgroundImage: `url(${FrontImage})`,
   backgroundPosition: 'center',
-  '&::after': {
+  backgroundColor: '#777777',
+  backgroundBlendMode: 'multiply',
+  '&::before': {
     content: '""',
     position: 'absolute',
     inset: 0,
-    background: 'rgba(0, 0, 0, 0.5)',
+    background: 'rgba(50, 50, 50, 0.4)',
+    backdropFilter: 'blur(2px)',
   },
 });
 
@@ -38,7 +44,34 @@ const HeroContent = styled(Box)({
   position: 'relative',
   maxWidth: '800px',
   zIndex: 1,
-  padding: '2rem 1rem',
+});
+
+const NovikLogo = styled('img')({
+  height: '280px',
+  width: 'auto',
+  filter: 'brightness(1.1)',
+});
+
+const PartnersSection = styled(Box)({
+  width: '420px',
+  marginTop: '100px',
+  zIndex: 1,
+  position: 'relative',
+});
+
+const PartnerLogo = styled('img')({
+  height: '150px',
+  width: 'auto',
+  filter: 'brightness(1.1)',
+});
+
+const PartnerLogoSecond = styled('img')({
+  position: 'absolute',
+  right: '0',
+  bottom: '-53px',
+  height: '240px',
+  width: 'auto',
+  filter: 'brightness(1.1)',
 });
 
 const HeroTitle = styled(Typography)({
@@ -414,15 +447,22 @@ const HomePage = () => {
 
       {/* Hero Section */}
       <HeroSection>
+        <NovikLogo src={NovikLogoWhite} alt="Novik" />
         <HeroContent>
-          <HeroTitle variant="h1">Smarter decisions for faster, safer dentistry</HeroTitle>
-          <HeroSubtitle>
-            From diagnosis to treatment, Novik guides your clinical decisions with precision.
-          </HeroSubtitle>
-          <CTAButton component={RouterLink} to="/contact">
-            Start working with Novik for free
-          </CTAButton>
+          <Box>
+            <HeroTitle variant="h1">Smarter decisions for faster, safer dentistry</HeroTitle>
+            <HeroSubtitle>
+              From diagnosis to treatment, Novik guides your clinical decisions with precision.
+            </HeroSubtitle>
+            <CTAButton component={RouterLink} to="/contact">
+              Start working with Novik for free
+            </CTAButton>
+          </Box>
         </HeroContent>
+        <PartnersSection>
+          <PartnerLogo src={PubMedWhite} alt="PubMed" />
+          <PartnerLogoSecond src={DrugBankWhite} alt="DrugBank" />
+        </PartnersSection>
       </HeroSection>
 
       {/* Problem Section */}
