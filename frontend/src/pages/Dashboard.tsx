@@ -560,7 +560,6 @@ const Dashboard = () => {
         </Container>
       </Box>
 
-      {/* Fixed Input Box at Bottom - Only when messages exist */}
       {hasMessages && (
         <InputContainer>
           <AskWrapper>

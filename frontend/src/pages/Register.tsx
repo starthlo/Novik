@@ -429,7 +429,7 @@ function Register() {
                 fullWidth
                 name="email"
                 type="email"
-                label="Email*"
+                label="Email"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -443,12 +443,12 @@ function Register() {
               <DividerText>OR</DividerText>
 
               <GoogleOAuthProvider clientId="415749549321-2g2mhh6ugbk8fhjfdcd4jo7sk00dfa8v.apps.googleusercontent.com">
-                <Box sx={{ width: '100%' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={handleGoogleError}
-                    width="100%"
                     theme="outline"
+                    width={370}
                     size="large"
                     text="continue_with"
                   />
@@ -476,7 +476,7 @@ function Register() {
                 fullWidth
                 name="fullName"
                 type="text"
-                label="Full name*"
+                label="Full name"
                 value={formData.fullName}
                 onChange={handleChange}
                 required
@@ -487,19 +487,18 @@ function Register() {
                 fullWidth
                 name="dob"
                 type="date"
-                label="Date of Birth*"
+                label="Date of Birth"
                 value={formData.dob}
                 onChange={handleChange}
+                slotProps={{
+                  inputLabel: { shrink: true }, htmlInput: {
+                    max: new Date().toISOString().split('T')[0], // Prevent future dates
+                    min: new Date(new Date().setFullYear(new Date().getFullYear() - 100))
+                      .toISOString()
+                      .split('T')[0], // Max age 100
+                  }
+                }}
                 required
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                inputProps={{
-                  max: new Date().toISOString().split('T')[0], // Prevent future dates
-                  min: new Date(new Date().setFullYear(new Date().getFullYear() - 100))
-                    .toISOString()
-                    .split('T')[0], // Max age 100
-                }}
               />
 
               <StyledFormControl fullWidth>
@@ -525,7 +524,7 @@ function Register() {
                 fullWidth
                 name="licenseId"
                 type="text"
-                label="Professional ID*"
+                label="Professional ID"
                 value={formData.licenseId}
                 onChange={handleChange}
                 required
@@ -539,7 +538,7 @@ function Register() {
                 }}
                 options={countries}
                 getOptionLabel={option => option.name}
-                renderInput={params => <StyledTextField {...params} label="Country*" required />}
+                renderInput={params => <StyledTextField {...params} label="Country" required />}
                 sx={{ mb: '14px' }}
               />
 
@@ -552,7 +551,7 @@ function Register() {
                 options={states}
                 getOptionLabel={option => option.name}
                 renderInput={params => (
-                  <StyledTextField {...params} label="State/Province*" required />
+                  <StyledTextField {...params} label="State/Province" required />
                 )}
                 disabled={!selectedCountry}
                 sx={{ mb: '14px' }}
@@ -566,7 +565,7 @@ function Register() {
                 }}
                 options={cities}
                 getOptionLabel={option => option.name}
-                renderInput={params => <StyledTextField {...params} label="City*" required />}
+                renderInput={params => <StyledTextField {...params} label="City" required />}
                 disabled={!selectedState}
                 sx={{ mb: '14px' }}
               />

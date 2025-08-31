@@ -227,6 +227,7 @@ function Login() {
                     theme="outline"
                     size="large"
                     text="continue_with"
+                    width={370}
                   />
                 </Box>
               </GoogleOAuthProvider>
@@ -304,6 +305,7 @@ function Login() {
                     theme="outline"
                     size="large"
                     text="signin_with"
+                    width={370}
                   />
                 </Box>
               </GoogleOAuthProvider>
