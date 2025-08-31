@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Container, Box, Typography, styled } from '@mui/material';
 import { novikTheme } from '../styles/theme';
 
@@ -92,6 +92,10 @@ interface FAQSectionData {
 
 const FAQs = () => {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleToggle = (id: string) => {
     const newOpenItems = new Set(openItems);

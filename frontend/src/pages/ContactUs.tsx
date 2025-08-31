@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Container, Box, Typography, TextField, Button, styled } from '@mui/material';
 import { novikTheme } from '../styles/theme';
 import NotificationSnackbar from '../components/Common/NotificationSnackbar';
@@ -100,6 +100,10 @@ const ContactUs = () => {
     message: '',
     severity: 'success' as 'success' | 'error',
   });
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

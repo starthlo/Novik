@@ -1,5 +1,6 @@
 import { Container, Box, Typography, styled, List, ListItem } from '@mui/material';
 import { novikTheme } from '../styles/theme';
+import { useEffect } from 'react';
 
 const PageContainer = styled(Box)({
   fontFamily: novikTheme.typography.fontFamily,
@@ -69,6 +70,10 @@ const InfoBox = styled(Box)({
 });
 
 const WhyFree = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const reasons = [
     {
       title: 'Open beta',

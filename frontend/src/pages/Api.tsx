@@ -1,5 +1,6 @@
 import { Container, Box, Typography, styled, Chip, List, ListItem } from '@mui/material';
 import { novikTheme } from '../styles/theme';
+import { useEffect } from 'react';
 
 // Styled components following the HTML mockup design
 const PageContainer = styled(Box)({
@@ -92,6 +93,10 @@ const ContactBox = styled(Box)({
 });
 
 const ApiPage = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   return (
     <PageContainer>
       <ContentContainer>

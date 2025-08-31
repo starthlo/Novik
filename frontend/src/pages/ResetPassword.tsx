@@ -170,7 +170,7 @@ export default function ResetPasswordPage() {
       } catch (err: any) {
         setError(
           err.response?.data?.message ||
-          'Invalid or expired reset link. Please request a new password reset.'
+            'Invalid or expired reset link. Please request a new password reset.'
         );
       } finally {
         setValidating(false);

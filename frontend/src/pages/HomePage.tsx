@@ -17,6 +17,7 @@ import FrontImage from '../assets/Front Image.png';
 import NovikLogoWhite from '../assets/novik-logo-white.png';
 import PubMedWhite from '../assets/pubmed-white.png';
 import DrugBankWhite from '../assets/drugbank-white.png';
+import { useEffect } from 'react';
 
 const HeroSection = styled(Box)({
   minHeight: '90vh',
@@ -231,6 +232,10 @@ const FAQItem = styled('details')({
 });
 
 const HomePage = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const problemsData = [
     {
       icon: (
