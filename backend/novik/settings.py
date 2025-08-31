@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "social_django",
     "drf_spectacular",
+    "anymail",  # For Mailgun email service
     "api",
 ]
 
@@ -190,6 +191,32 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Email Configuration
+EMAIL_SERVICE = os.environ.get(
+    "EMAIL_SERVICE", "console"
+).lower()  # 'mailgun' or 'console'
+
+if EMAIL_SERVICE == "mailgun":
+    # Mailgun configuration using Anymail
+    EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+    ANYMAIL = {
+        "MAILGUN_API_KEY": os.environ.get("MAILGUN_API_KEY", ""),
+        "MAILGUN_SENDER_DOMAIN": os.environ.get("MAILGUN_DOMAIN", ""),
+        "MAILGUN_API_URL": os.environ.get(
+            "MAILGUN_API_URL", "https://api.mailgun.net/v3"
+        ),  # Use https://api.eu.mailgun.net/v3 for EU
+    }
+    MAILGUN_FROM_EMAIL = os.environ.get(
+        "MAILGUN_FROM_EMAIL", "Novik <noreply@novik.ai>"
+    )
+    SERVER_EMAIL = MAILGUN_FROM_EMAIL
+else:
+    # Development console backend (prints emails to console)
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    MAILGUN_FROM_EMAIL = "Novik <noreply@novik.ai>"
+
+# Frontend URL for password reset links
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

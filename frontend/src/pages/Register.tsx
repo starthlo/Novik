@@ -491,12 +491,13 @@ function Register() {
                 value={formData.dob}
                 onChange={handleChange}
                 slotProps={{
-                  inputLabel: { shrink: true }, htmlInput: {
+                  inputLabel: { shrink: true },
+                  htmlInput: {
                     max: new Date().toISOString().split('T')[0], // Prevent future dates
                     min: new Date(new Date().setFullYear(new Date().getFullYear() - 100))
                       .toISOString()
                       .split('T')[0], // Max age 100
-                  }
+                  },
                 }}
                 required
               />

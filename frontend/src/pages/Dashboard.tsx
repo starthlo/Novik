@@ -123,7 +123,7 @@ const InputContainer = styled(Box)({
   right: 0,
   padding: '16px',
   zIndex: 100,
-  background: 'transparent'
+  background: 'transparent',
 });
 
 const AskWrapper = styled(Box)({

@@ -6,6 +6,8 @@ import BannerManagement from './components/Bannermanagement';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import HomePage from './pages/HomePage';
 import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
@@ -36,6 +38,8 @@ export default function App() {
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />}></Route>
             <Route path="/register" element={<Register />}></Route>
+            <Route path="/forgot-password" element={<ForgotPassword />}></Route>
+            <Route path="/reset-password" element={<ResetPassword />}></Route>
           </Route>
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>

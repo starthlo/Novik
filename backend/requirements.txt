@@ -47,3 +47,4 @@ nltk==3.9.1
 python-dotenv==1.1.1
 drf-spectacular==0.28.0
 social-auth-app-django==5.5.1
+django-anymail==12.0
