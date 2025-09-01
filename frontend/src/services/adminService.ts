@@ -100,7 +100,7 @@ class AdminService {
   }
 
   async deleteUser(userId: number): Promise<{ message: string }> {
-    const response = await apiClient.delete(`admin/users/${userId}/`);
+    const response = await apiClient.delete(`admin/users/delete/`, { data: { id: userId } });
     return response.data;
   }
 

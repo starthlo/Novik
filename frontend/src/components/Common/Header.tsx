@@ -145,7 +145,6 @@ const Header = () => {
   const adminItems = [
     { text: 'Admin Dashboard', to: '/admin/dashboard' },
     { text: 'User Management', to: '/admin/users' },
-    { text: 'Legacy User Management', to: '/users' },
     { text: 'Banner Management', to: '/banner' },
   ];
 
