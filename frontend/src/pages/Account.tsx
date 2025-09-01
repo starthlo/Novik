@@ -13,9 +13,17 @@ import {
   styled,
   IconButton,
   InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Autocomplete,
+  List,
+  ListItem,
 } from '@mui/material';
-import { Visibility, VisibilityOff, Edit } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Edit, Check, Close } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { Country, State, City } from 'country-state-city';
 import { userService, UserProfile, ChangePasswordData } from '../services/userService';
 import { useAuthStore } from '../stores/auth';
 import { novikTheme } from '../styles/theme';
@@ -68,6 +76,27 @@ const CancelButton = styled(FormButton)({
   },
 });
 
+const PasswordChecklist = styled(List)({
+  border: `1px solid ${novikTheme.colors.border}`,
+  borderRadius: '12px',
+  padding: '10px 12px',
+  marginTop: '10px',
+  marginBottom: '14px',
+  fontSize: '0.9rem',
+});
+
+const ChecklistItem = styled(ListItem)<{ valid: boolean }>(({ valid }) => ({
+  listStyle: 'none',
+  margin: '0.35rem 0',
+  padding: 0,
+  color: valid ? '#179b4d' : '#d14343',
+  fontSize: '0.9rem',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontFamily: novikTheme.typography.fontFamily,
+}));
+
 type AlertType = {
   open: boolean;
   message: string;
@@ -84,6 +113,14 @@ const Account = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
 
+  // Location data states
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [selectedState, setSelectedState] = useState<any>(null);
+  const [selectedCity, setSelectedCity] = useState<any>(null);
+
   const [passwordData, setPasswordData] = useState<ChangePasswordData>({
     current_password: '',
     new_password: '',
@@ -96,6 +133,11 @@ const Account = () => {
     confirm: false,
   });
 
+  const [passwordValid, setPasswordValid] = useState({
+    length: false,
+    complexity: false,
+  });
+
   const [alert, setAlert] = useState<AlertType>({
     open: false,
     message: '',
@@ -104,7 +146,30 @@ const Account = () => {
 
   useEffect(() => {
     loadProfile();
+    // Load countries on component mount
+    const allCountries = Country.getAllCountries();
+    setCountries(allCountries);
   }, []);
+
+  // Load states when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
+      setStates(countryStates);
+      setSelectedState(null);
+      setSelectedCity(null);
+      setCities([]);
+    }
+  }, [selectedCountry]);
+
+  // Load cities when state changes
+  useEffect(() => {
+    if (selectedCountry && selectedState) {
+      const stateCities = City.getCitiesOfState(selectedCountry.isoCode, selectedState.isoCode);
+      setCities(stateCities);
+      setSelectedCity(null);
+    }
+  }, [selectedState, selectedCountry]);
 
   const loadProfile = async () => {
     try {
@@ -112,6 +177,14 @@ const Account = () => {
       const data = await userService.getProfile();
       setProfile(data);
       setEditedProfile(data);
+
+      // Pre-select location if available
+      if (data.country) {
+        const country = countries.find(c => c.name === data.country);
+        if (country) {
+          setSelectedCountry(country);
+        }
+      }
     } catch (error) {
       showAlert('Failed to load profile', 'error');
       console.error('Error loading profile:', error);
@@ -152,6 +225,30 @@ const Account = () => {
       return;
     }
 
+    // Validate phone format
+    if (editedProfile.phone && !/^[\d\s\-\+\(\)]+$/.test(editedProfile.phone)) {
+      showAlert('Please enter a valid phone number', 'error');
+      return;
+    }
+
+    // Validate date of birth (must be at least 18)
+    if (editedProfile.dob) {
+      const dob = new Date(editedProfile.dob);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+
+      if (dob > today) {
+        showAlert('Date of birth must be in the past', 'error');
+        return;
+      } else if (age < 18) {
+        showAlert('You must be at least 18 years old', 'error');
+        return;
+      } else if (age > 120) {
+        showAlert('Please enter a valid date of birth', 'error');
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       const updatedProfile = await userService.updateProfile(editedProfile);
@@ -171,6 +268,25 @@ const Account = () => {
 
   const handlePasswordChange = (field: keyof ChangePasswordData, value: string) => {
     setPasswordData(prev => ({ ...prev, [field]: value }));
+
+    // Check password validity for new password
+    if (field === 'new_password') {
+      checkPasswordValidity(value);
+    }
+  };
+
+  const checkPasswordValidity = (password: string) => {
+    const hasLength = password.length >= 8;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*]/.test(password);
+    const complexityCount = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
+
+    setPasswordValid({
+      length: hasLength,
+      complexity: complexityCount >= 3,
+    });
   };
 
   const handlePasswordSave = async () => {
@@ -189,8 +305,13 @@ const Account = () => {
       return;
     }
 
-    if (passwordData.new_password.length < 8) {
-      showAlert('New password must be at least 8 characters long', 'error');
+    // Check password complexity
+    checkPasswordValidity(passwordData.new_password);
+    if (!passwordValid.length || !passwordValid.complexity) {
+      showAlert(
+        'Password must be at least 8 characters and contain at least 3 of: lowercase, uppercase, numbers, special characters',
+        'error'
+      );
       return;
     }
 
@@ -308,46 +429,95 @@ const Account = () => {
               <TextField
                 fullWidth
                 label="Phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
                 value={editedProfile.phone || ''}
                 onChange={e => handleProfileChange('phone', e.target.value)}
                 disabled={!editing}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Occupation"
-                value={editedProfile.occupation || ''}
-                onChange={e => handleProfileChange('occupation', e.target.value)}
-                disabled={!editing}
-              />
+              {editing ? (
+                <FormControl fullWidth>
+                  <InputLabel>Occupation</InputLabel>
+                  <Select
+                    value={editedProfile.occupation || ''}
+                    onChange={e => handleProfileChange('occupation', e.target.value as string)}
+                    label="Occupation"
+                  >
+                    <MenuItem value="">Select your role</MenuItem>
+                    <MenuItem value="Dentist">Dentist</MenuItem>
+                    <MenuItem value="Dental Hygienist">Dental Hygienist</MenuItem>
+                    <MenuItem value="Dental Assistant">Dental Assistant</MenuItem>
+                    <MenuItem value="Orthodontist">Orthodontist</MenuItem>
+                    <MenuItem value="Oral Surgeon">Oral Surgeon</MenuItem>
+                    <MenuItem value="Student">Student</MenuItem>
+                    <MenuItem value="Other">Other Healthcare Professional</MenuItem>
+                  </Select>
+                </FormControl>
+              ) : (
+                <TextField
+                  fullWidth
+                  label="Occupation"
+                  value={editedProfile.occupation || ''}
+                  disabled
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                label="Country"
-                value={editedProfile.country || ''}
-                onChange={e => handleProfileChange('country', e.target.value)}
-                disabled={!editing}
-              />
+              {editing ? (
+                <Autocomplete
+                  value={selectedCountry}
+                  onChange={(_, newValue) => {
+                    setSelectedCountry(newValue);
+                    handleProfileChange('country', newValue?.name || '');
+                  }}
+                  options={countries}
+                  getOptionLabel={option => option.name}
+                  renderInput={params => <TextField {...params} label="Country" />}
+                />
+              ) : (
+                <TextField fullWidth label="Country" value={editedProfile.country || ''} disabled />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                label="State/Province"
-                value={editedProfile.state || ''}
-                onChange={e => handleProfileChange('state', e.target.value)}
-                disabled={!editing}
-              />
+              {editing ? (
+                <Autocomplete
+                  value={selectedState}
+                  onChange={(_, newValue) => {
+                    setSelectedState(newValue);
+                    handleProfileChange('state', newValue?.name || '');
+                  }}
+                  options={states}
+                  getOptionLabel={option => option.name}
+                  renderInput={params => <TextField {...params} label="State/Province" />}
+                  disabled={!selectedCountry}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  label="State/Province"
+                  value={editedProfile.state || ''}
+                  disabled
+                />
+              )}
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
-                label="City"
-                value={editedProfile.city || ''}
-                onChange={e => handleProfileChange('city', e.target.value)}
-                disabled={!editing}
-              />
+              {editing ? (
+                <Autocomplete
+                  value={selectedCity}
+                  onChange={(_, newValue) => {
+                    setSelectedCity(newValue);
+                    handleProfileChange('city', newValue?.name || '');
+                  }}
+                  options={cities}
+                  getOptionLabel={option => option.name}
+                  renderInput={params => <TextField {...params} label="City" />}
+                  disabled={!selectedState}
+                />
+              ) : (
+                <TextField fullWidth label="City" value={editedProfile.city || ''} disabled />
+              )}
             </Grid>
           </Grid>
 
@@ -403,7 +573,7 @@ const Account = () => {
                             </IconButton>
                           </InputAdornment>
                         ),
-                      }
+                      },
                     }}
                   />
                 </Grid>
@@ -423,9 +593,29 @@ const Account = () => {
                             </IconButton>
                           </InputAdornment>
                         ),
-                      }
+                      },
                     }}
                   />
+                  {passwordData.new_password && (
+                    <PasswordChecklist>
+                      <ChecklistItem valid={passwordValid.length}>
+                        {passwordValid.length ? (
+                          <Check fontSize="small" />
+                        ) : (
+                          <Close fontSize="small" />
+                        )}
+                        At least 8 characters
+                      </ChecklistItem>
+                      <ChecklistItem valid={passwordValid.complexity}>
+                        {passwordValid.complexity ? (
+                          <Check fontSize="small" />
+                        ) : (
+                          <Close fontSize="small" />
+                        )}
+                        At least 3 of: lowercase, uppercase, numbers, special chars
+                      </ChecklistItem>
+                    </PasswordChecklist>
+                  )}
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
@@ -445,8 +635,8 @@ const Account = () => {
                               {showPasswords.confirm ? <VisibilityOff /> : <Visibility />}
                             </IconButton>
                           </InputAdornment>
-                        )
-                      }
+                        ),
+                      },
                     }}
                   />
                 </Grid>
