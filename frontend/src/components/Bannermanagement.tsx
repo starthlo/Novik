@@ -280,7 +280,9 @@ export default function BannerManagement() {
 
   if (loading)
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}
+      >
         <CircularProgress sx={{ color: novikTheme.colors.primary }} />
       </Box>
     );
@@ -326,7 +328,9 @@ export default function BannerManagement() {
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit}>
-            <Box sx={{ display: 'grid', gap: 3, mb: 3, gridTemplateColumns: { md: 'repeat(2, 1fr)' } }}>
+            <Box
+              sx={{ display: 'grid', gap: 3, mb: 3, gridTemplateColumns: { md: 'repeat(2, 1fr)' } }}
+            >
               <StyledTextField
                 name="title"
                 label="Title"
@@ -381,11 +385,7 @@ export default function BannerManagement() {
                 onChange={handleFile}
               />
               <label htmlFor="raised-button-file">
-                <UploadButton
-                  component="span"
-                  fullWidth
-                  startIcon={<CloudUploadIcon />}
-                >
+                <UploadButton component="span" fullWidth startIcon={<CloudUploadIcon />}>
                   {file ? file.name : 'Choose Image File'}
                 </UploadButton>
               </label>
@@ -653,7 +653,8 @@ export default function BannerManagement() {
                         <Typography
                           sx={{
                             fontWeight: 600,
-                            color: s.views > 0 ? novikTheme.colors.primary : novikTheme.colors.textMuted,
+                            color:
+                              s.views > 0 ? novikTheme.colors.primary : novikTheme.colors.textMuted,
                             fontFamily: novikTheme.typography.fontFamily,
                           }}
                         >
@@ -732,7 +733,9 @@ export default function BannerManagement() {
                     {(() => {
                       const totalViews = stats.reduce((sum, s) => sum + s.views, 0);
                       const totalClicks = stats.reduce((sum, s) => sum + s.clicks, 0);
-                      return totalViews > 0 ? `${((totalClicks / totalViews) * 100).toFixed(2)}%` : '0%';
+                      return totalViews > 0
+                        ? `${((totalClicks / totalViews) * 100).toFixed(2)}%`
+                        : '0%';
                     })()}
                   </Typography>
                 </Box>

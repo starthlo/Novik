@@ -132,7 +132,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}
+      >
         <CircularProgress sx={{ color: novikTheme.colors.primary }} size={48} />
       </Box>
     );
@@ -246,7 +248,13 @@ export default function AdminDashboard() {
             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
               <MetricCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                    }}
+                  >
                     <Box sx={{ flex: 1 }}>
                       <Typography
                         variant="body2"
@@ -296,7 +304,14 @@ export default function AdminDashboard() {
           <Grid size={{ xs: 12, md: 4 }}>
             <DataCard>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
                   <Typography
                     variant="h6"
                     sx={{
@@ -350,7 +365,14 @@ export default function AdminDashboard() {
           <Grid size={{ xs: 12, md: 4 }}>
             <DataCard>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
                   <Typography
                     variant="h6"
                     sx={{
@@ -366,7 +388,13 @@ export default function AdminDashboard() {
                 <Box>
                   {stats.recentRegistrations.map(user => (
                     <UserListItem key={user.id}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Avatar
                             sx={{
@@ -424,7 +452,14 @@ export default function AdminDashboard() {
           <Grid size={{ xs: 12, md: 4 }}>
             <DataCard>
               <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
                   <Typography
                     variant="h6"
                     sx={{
@@ -440,7 +475,13 @@ export default function AdminDashboard() {
                 <Box>
                   {stats.topUsers.map((user, index) => (
                     <UserListItem key={user.id}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Box
                             sx={{
@@ -450,7 +491,14 @@ export default function AdminDashboard() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              bgcolor: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#f0f0f0',
+                              bgcolor:
+                                index === 0
+                                  ? '#ffd700'
+                                  : index === 1
+                                    ? '#c0c0c0'
+                                    : index === 2
+                                      ? '#cd7f32'
+                                      : '#f0f0f0',
                               color: index < 3 ? '#fff' : novikTheme.colors.textMuted,
                               fontWeight: 700,
                             }}
