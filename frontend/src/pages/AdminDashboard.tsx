@@ -1,14 +1,111 @@
 import { useState, useEffect } from 'react';
-import {
-  FaUsers,
-  FaUserCheck,
-  FaComments,
-  FaGlobe,
-  FaCalendarAlt,
-  FaStar,
-} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Button,
+  CircularProgress,
+  Alert,
+  LinearProgress,
+  Avatar,
+  styled,
+  Paper,
+} from '@mui/material';
+import {
+  People as PeopleIcon,
+  PersonAdd as PersonAddIcon,
+  TrendingUp as TrendingUpIcon,
+  ChatBubble as ChatIcon,
+  Public as PublicIcon,
+  Star as StarIcon,
+  Group as GroupIcon,
+} from '@mui/icons-material';
 import adminService, { DashboardStats } from '../services/adminService';
+import { novikTheme } from '../styles/theme';
+
+// Styled Components
+const PageContainer = styled(Box)({
+  minHeight: '100vh',
+  backgroundColor: '#f5f6fa',
+});
+
+const HeaderSection = styled(Box)({
+  backgroundColor: '#ffffff',
+  borderBottom: '1px solid #e0e0e0',
+  padding: '1.5rem 0',
+});
+
+const MetricCard = styled(Card)({
+  height: '100%',
+  borderRadius: '12px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  transition: 'all 0.3s ease',
+  border: '1px solid rgba(0,0,0,0.06)',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    transform: 'translateY(-2px)',
+  },
+});
+
+const MetricIconBox = styled(Box)<{ bgcolor?: string }>(({ bgcolor }) => ({
+  width: 48,
+  height: 48,
+  borderRadius: '12px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: bgcolor || 'rgba(136, 169, 78, 0.1)',
+}));
+
+const DataCard = styled(Card)({
+  borderRadius: '12px',
+  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+  border: '1px solid rgba(0,0,0,0.06)',
+  height: '100%',
+});
+
+const ProgressBar = styled(LinearProgress)({
+  height: 6,
+  borderRadius: 3,
+  backgroundColor: '#e0e0e0',
+  '& .MuiLinearProgress-bar': {
+    borderRadius: 3,
+    backgroundColor: novikTheme.colors.primary,
+  },
+});
+
+const UserListItem = styled(Box)({
+  padding: '0.75rem 0',
+  borderBottom: '1px solid #f0f0f0',
+  '&:last-child': {
+    borderBottom: 'none',
+  },
+  '&:hover': {
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: '8px',
+    padding: '0.75rem 0.5rem',
+  },
+  transition: 'all 0.2s ease',
+});
+
+const CountryRow = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0.5rem 0',
+});
+
+const StatsFooter = styled(Paper)({
+  background: `linear-gradient(135deg, ${novikTheme.colors.primary} 0%, ${novikTheme.colors.primaryDark} 100%)`,
+  borderRadius: '12px',
+  padding: '2rem',
+  marginTop: '2rem',
+  color: '#ffffff',
+});
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -35,222 +132,483 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress sx={{ color: novikTheme.colors.primary }} size={48} />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> {error}</span>
-        </div>
-      </div>
+      <Container maxWidth="sm" sx={{ mt: 8 }}>
+        <Alert severity="error" sx={{ borderRadius: '12px' }}>
+          <Typography variant="subtitle1" fontWeight={600}>
+            Error Loading Dashboard
+          </Typography>
+          <Typography variant="body2">{error}</Typography>
+        </Alert>
+      </Container>
     );
   }
 
   if (!stats) return null;
 
+  const metrics = [
+    {
+      title: 'Total Users',
+      value: stats.userStats.total,
+      change: `+${stats.userStats.newThisMonth} this month`,
+      icon: <PeopleIcon />,
+      color: '#4a90e2',
+      bgColor: 'rgba(74, 144, 226, 0.1)',
+    },
+    {
+      title: 'Active Users',
+      value: stats.userStats.active,
+      change: `${((stats.userStats.active / stats.userStats.total) * 100).toFixed(1)}% of total`,
+      icon: <TrendingUpIcon />,
+      color: novikTheme.colors.primary,
+      bgColor: 'rgba(136, 169, 78, 0.1)',
+    },
+    {
+      title: 'Total Conversations',
+      value: stats.conversationStats.total,
+      change: `${stats.conversationStats.avgPerUser.toFixed(1)} per user`,
+      icon: <ChatIcon />,
+      color: '#6c63ff',
+      bgColor: 'rgba(108, 99, 255, 0.1)',
+    },
+    {
+      title: 'New This Week',
+      value: stats.userStats.newThisWeek,
+      change: 'User registrations',
+      icon: <PersonAddIcon />,
+      color: '#00bcd4',
+      bgColor: 'rgba(0, 188, 212, 0.1)',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageContainer>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-600">Monitor and manage your application</p>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => navigate('/admin/users')}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center"
+      <HeaderSection>
+        <Container maxWidth="xl">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  color: novikTheme.colors.text,
+                  fontFamily: novikTheme.typography.fontFamily,
+                }}
               >
-                <FaUsers className="mr-2" />
-                Manage Users
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+                Admin Dashboard
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: novikTheme.colors.textMuted,
+                  mt: 0.5,
+                  fontFamily: novikTheme.typography.fontFamily,
+                }}
+              >
+                Monitor and manage your application performance
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={<GroupIcon />}
+              onClick={() => navigate('/admin/users')}
+              sx={{
+                backgroundColor: novikTheme.colors.primary,
+                color: '#ffffff',
+                fontWeight: 600,
+                padding: '0.5rem 1.5rem',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontFamily: novikTheme.typography.fontFamily,
+                '&:hover': {
+                  backgroundColor: novikTheme.colors.primaryDark,
+                },
+              }}
+            >
+              Manage Users
+            </Button>
+          </Box>
+        </Container>
+      </HeaderSection>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Users */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.userStats.total.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  +{stats.userStats.newThisMonth} this month
-                </p>
-              </div>
-              <div className="bg-blue-100 rounded-full p-3">
-                <FaUsers className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Active Users */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">
-                  {stats.userStats.active.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {((stats.userStats.active / stats.userStats.total) * 100).toFixed(1)}% of total
-                </p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <FaUserCheck className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Conversations */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Conversations</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.conversationStats.total.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {stats.conversationStats.avgPerUser.toFixed(1)} per user
-                </p>
-              </div>
-              <div className="bg-purple-100 rounded-full p-3">
-                <FaComments className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* New This Week */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">New This Week</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {stats.userStats.newThisWeek}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">User registrations</p>
-              </div>
-              <div className="bg-orange-100 rounded-full p-3">
-                <FaCalendarAlt className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Users by Country */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Users by Country</h2>
-              <FaGlobe className="text-gray-400" />
-            </div>
-            <div className="space-y-3">
-              {stats.usersByCountry.slice(0, 5).map((country, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-900">{country.country}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-600 mr-2">{country.count}</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full"
-                        style={{
-                          width: `${(country.count / stats.userStats.total) * 100}%`,
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Key Metrics */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {metrics.map((metric, index) => (
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+              <MetricCard>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: novikTheme.colors.textMuted,
+                          fontWeight: 500,
+                          mb: 1,
+                          fontFamily: novikTheme.typography.fontFamily,
                         }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                      >
+                        {metric.title}
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{
+                          fontWeight: 700,
+                          color: novikTheme.colors.text,
+                          mb: 0.5,
+                          fontFamily: novikTheme.typography.fontFamily,
+                        }}
+                      >
+                        {metric.value.toLocaleString()}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: novikTheme.colors.textMuted,
+                          fontFamily: novikTheme.typography.fontFamily,
+                        }}
+                      >
+                        {metric.change}
+                      </Typography>
+                    </Box>
+                    <MetricIconBox bgcolor={metric.bgColor}>
+                      <Box sx={{ color: metric.color, display: 'flex' }}>{metric.icon}</Box>
+                    </MetricIconBox>
+                  </Box>
+                </CardContent>
+              </MetricCard>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Data Grids */}
+        <Grid container spacing={3}>
+          {/* Users by Country */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <DataCard>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.text,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Geographic Distribution
+                  </Typography>
+                  <PublicIcon sx={{ color: novikTheme.colors.textMuted }} />
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  {stats.usersByCountry.slice(0, 5).map((country, index) => {
+                    const percentage = (country.count / stats.userStats.total) * 100;
+                    return (
+                      <CountryRow key={index}>
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 500,
+                                color: novikTheme.colors.text,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {country.country}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: novikTheme.colors.textMuted,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {country.count} ({percentage.toFixed(1)}%)
+                            </Typography>
+                          </Box>
+                          <ProgressBar variant="determinate" value={percentage} />
+                        </Box>
+                      </CountryRow>
+                    );
+                  })}
+                </Box>
+              </CardContent>
+            </DataCard>
+          </Grid>
 
           {/* Recent Registrations */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Registrations</h2>
-              <FaUserCheck className="text-gray-400" />
-            </div>
-            <div className="space-y-3">
-              {stats.recentRegistrations.map(user => (
-                <div key={user.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {new Date(user.dateJoined).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <DataCard>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.text,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Recent Registrations
+                  </Typography>
+                  <PersonAddIcon sx={{ color: novikTheme.colors.textMuted }} />
+                </Box>
+                <Box>
+                  {stats.recentRegistrations.map(user => (
+                    <UserListItem key={user.id}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              bgcolor: novikTheme.colors.primary,
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            {user.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 500,
+                                color: novikTheme.colors.text,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {user.username}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: novikTheme.colors.textMuted,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {user.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: novikTheme.colors.textMuted,
+                            fontFamily: novikTheme.typography.fontFamily,
+                          }}
+                        >
+                          {new Date(user.dateJoined).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </Typography>
+                      </Box>
+                    </UserListItem>
+                  ))}
+                </Box>
+              </CardContent>
+            </DataCard>
+          </Grid>
 
-          {/* Top Users */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Most Active Users</h2>
-              <FaStar className="text-gray-400" />
-            </div>
-            <div className="space-y-3">
-              {stats.topUsers.map((user, index) => (
-                <div key={user.id} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="text-lg font-bold text-gray-400 mr-3">#{index + 1}</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold text-green-600">
-                    {user.conversationCount} chats
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          {/* Top Active Users */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <DataCard>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.text,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Most Active Users
+                  </Typography>
+                  <StarIcon sx={{ color: '#ffd700' }} />
+                </Box>
+                <Box>
+                  {stats.topUsers.map((user, index) => (
+                    <UserListItem key={user.id}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#f0f0f0',
+                              color: index < 3 ? '#fff' : novikTheme.colors.textMuted,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 500,
+                                color: novikTheme.colors.text,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {user.username}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: novikTheme.colors.textMuted,
+                                fontFamily: novikTheme.typography.fontFamily,
+                              }}
+                            >
+                              {user.email}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Box
+                          sx={{
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: '16px',
+                            bgcolor: 'rgba(136, 169, 78, 0.1)',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontWeight: 600,
+                              color: novikTheme.colors.primary,
+                              fontFamily: novikTheme.typography.fontFamily,
+                            }}
+                          >
+                            {user.conversationCount} chats
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </UserListItem>
+                  ))}
+                </Box>
+              </CardContent>
+            </DataCard>
+          </Grid>
+        </Grid>
 
-        {/* Quick Stats */}
-        <div className="mt-8 bg-green-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <p className="text-green-100 text-sm">Inactive Users</p>
-              <p className="text-2xl font-bold">{stats.userStats.inactive}</p>
-            </div>
-            <div>
-              <p className="text-green-100 text-sm">Conversations This Month</p>
-              <p className="text-2xl font-bold">{stats.conversationStats.thisMonth}</p>
-            </div>
-            <div>
-              <p className="text-green-100 text-sm">Countries Reached</p>
-              <p className="text-2xl font-bold">{stats.usersByCountry.length}</p>
-            </div>
-            <div>
-              <p className="text-green-100 text-sm">Avg Conversations/User</p>
-              <p className="text-2xl font-bold">{stats.conversationStats.avgPerUser.toFixed(1)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        {/* Summary Statistics Footer */}
+        <StatsFooter elevation={0}>
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 0.5,
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  Inactive Users
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  {stats.userStats.inactive}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 0.5,
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  Conversations This Month
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  {stats.conversationStats.thisMonth}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 0.5,
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  Countries Reached
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  {stats.usersByCountry.length}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.8)',
+                    mb: 0.5,
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  Avg Conversations/User
+                </Typography>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    fontFamily: novikTheme.typography.fontFamily,
+                  }}
+                >
+                  {stats.conversationStats.avgPerUser.toFixed(1)}
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </StatsFooter>
+      </Container>
+    </PageContainer>
   );
 }

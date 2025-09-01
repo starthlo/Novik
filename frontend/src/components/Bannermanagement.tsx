@@ -1,5 +1,35 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import Header from './Common/Header';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  IconButton,
+  FormControlLabel,
+  Switch,
+  Card,
+  CardContent,
+  CircularProgress,
+  Alert,
+  styled,
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  BarChart as StatsIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon,
+} from '@mui/icons-material';
+import { novikTheme } from '../styles/theme';
 
 type Banner = {
   id: number;
@@ -18,6 +48,115 @@ type BannerStat = {
   views: number;
   clicks: number;
 };
+
+// Styled Components
+const PageContainer = styled(Container)({
+  paddingTop: '2rem',
+  paddingBottom: '2rem',
+});
+
+const HeaderSection = styled(Box)({
+  marginBottom: '2rem',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+});
+
+const StyledCard = styled(Card)({
+  marginBottom: '2rem',
+  borderRadius: '12px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  },
+  transition: 'box-shadow 0.3s ease',
+});
+
+const FormSection = styled(CardContent)({
+  padding: '2rem',
+});
+
+const StyledTextField = styled(TextField)({
+  '& .MuiOutlinedInput-root': {
+    '&:hover fieldset': {
+      borderColor: novikTheme.colors.primary,
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: novikTheme.colors.primary,
+    },
+  },
+  '& .MuiInputLabel-root.Mui-focused': {
+    color: novikTheme.colors.primary,
+  },
+});
+
+const PrimaryButton = styled(Button)({
+  backgroundColor: novikTheme.colors.primary,
+  color: '#ffffff',
+  fontWeight: 600,
+  padding: '0.5rem 1.5rem',
+  borderRadius: '8px',
+  textTransform: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  '&:hover': {
+    backgroundColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const SecondaryButton = styled(Button)({
+  color: novikTheme.colors.primary,
+  borderColor: novikTheme.colors.primary,
+  fontWeight: 600,
+  padding: '0.4rem 1rem',
+  borderRadius: '8px',
+  textTransform: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  '&:hover': {
+    backgroundColor: 'rgba(136, 169, 78, 0.08)',
+    borderColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const UploadButton = styled(Button)<any>({
+  backgroundColor: 'rgba(136, 169, 78, 0.1)',
+  color: novikTheme.colors.primary,
+  border: `2px dashed ${novikTheme.colors.primary}`,
+  padding: '1rem',
+  borderRadius: '8px',
+  textTransform: 'none',
+  fontFamily: novikTheme.typography.fontFamily,
+  '&:hover': {
+    backgroundColor: 'rgba(136, 169, 78, 0.15)',
+    borderColor: novikTheme.colors.primaryDark,
+  },
+});
+
+const StyledTableCell = styled(TableCell)({
+  fontFamily: novikTheme.typography.fontFamily,
+});
+
+const StyledTableHeadCell = styled(TableCell)({
+  fontFamily: novikTheme.typography.fontFamily,
+  fontWeight: 600,
+  backgroundColor: '#f8f9fa',
+  color: novikTheme.colors.text,
+});
+
+const ActiveChip = styled(Chip)<{ active?: boolean }>(({ active }) => ({
+  backgroundColor: active ? 'rgba(136, 169, 78, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+  color: active ? novikTheme.colors.primary : '#666',
+  fontWeight: 500,
+  fontFamily: novikTheme.typography.fontFamily,
+}));
+
+const StyledSwitch = styled(Switch)({
+  '& .MuiSwitch-switchBase.Mui-checked': {
+    color: novikTheme.colors.primary,
+  },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    backgroundColor: novikTheme.colors.primary,
+  },
+});
 
 export default function BannerManagement() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -141,227 +280,467 @@ export default function BannerManagement() {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress sx={{ color: novikTheme.colors.primary }} />
+      </Box>
     );
 
   if (error)
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mx-auto max-w-4xl mt-4">
-        Error: {error}
-      </div>
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Alert severity="error" sx={{ borderRadius: '8px' }}>
+          Error: {error}
+        </Alert>
+      </Container>
     );
 
   return (
-    <>
-      <Header />
-      <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
-        {/* Form Section */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+    <PageContainer maxWidth="lg">
+      {/* Header Section */}
+      <HeaderSection>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 600,
+            color: novikTheme.colors.text,
+            fontFamily: novikTheme.typography.fontFamily,
+          }}
+        >
+          Banner Management
+        </Typography>
+      </HeaderSection>
+
+      {/* Form Section */}
+      <StyledCard>
+        <FormSection>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              mb: 3,
+              color: novikTheme.colors.text,
+              fontFamily: novikTheme.typography.fontFamily,
+            }}
+          >
             {editingId ? 'Edit Banner' : 'Create New Banner'}
-          </h2>
+          </Typography>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                <input
-                  name="title"
-                  value={form.title || ''}
-                  onChange={handleInput}
-                  className="w-full py-2 px-2 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
-                <input
-                  name="link"
-                  value={form.link || ''}
-                  onChange={handleInput}
-                  className="w-full py-2 px-1 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  placeholder="https://"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">HTML Code</label>
-              <textarea
-                name="code"
-                value={form.code || ''}
+          <Box component="form" onSubmit={handleSubmit}>
+            <Box sx={{ display: 'grid', gap: 3, mb: 3, gridTemplateColumns: { md: 'repeat(2, 1fr)' } }}>
+              <StyledTextField
+                name="title"
+                label="Title"
+                value={form.title || ''}
                 onChange={handleInput}
-                rows={4}
-                className="w-full py-2 px-2 rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                placeholder="<div>Your banner HTML here</div>"
+                required
+                fullWidth
+                variant="outlined"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Banner Image</label>
-              <div className="mt-1 flex items-center">
-                <input
-                  type="file"
-                  onChange={handleFile}
-                  accept="image/*"
-                  className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-orange-50 file:text-orange-700
-                    hover:file:bg-orange-100"
-                />
-              </div>
-            </div>
+              <StyledTextField
+                name="link"
+                label="Link URL"
+                value={form.link || ''}
+                onChange={handleInput}
+                placeholder="https://"
+                fullWidth
+                variant="outlined"
+              />
+            </Box>
 
-            <div className="flex items-center">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
+            <StyledTextField
+              name="code"
+              label="HTML Code"
+              value={form.code || ''}
+              onChange={handleInput}
+              multiline
+              rows={4}
+              fullWidth
+              variant="outlined"
+              placeholder="<div>Your banner HTML here</div>"
+              sx={{ mb: 3 }}
+            />
+
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  mb: 2,
+                  color: novikTheme.colors.text,
+                  fontWeight: 500,
+                  fontFamily: novikTheme.typography.fontFamily,
+                }}
+              >
+                Banner Image
+              </Typography>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="raised-button-file"
+                type="file"
+                onChange={handleFile}
+              />
+              <label htmlFor="raised-button-file">
+                <UploadButton
+                  component="span"
+                  fullWidth
+                  startIcon={<CloudUploadIcon />}
+                >
+                  {file ? file.name : 'Choose Image File'}
+                </UploadButton>
+              </label>
+            </Box>
+
+            <FormControlLabel
+              control={
+                <StyledSwitch
                   name="is_active"
                   checked={form.is_active || false}
                   onChange={handleInput}
-                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Active</span>
-              </label>
-            </div>
+              }
+              label="Active"
+              sx={{
+                mb: 3,
+                '& .MuiFormControlLabel-label': {
+                  fontFamily: novikTheme.typography.fontFamily,
+                  color: novikTheme.colors.text,
+                },
+              }}
+            />
 
-            <div className="flex justify-end">
-              <button
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              {editingId && (
+                <SecondaryButton
+                  variant="outlined"
+                  onClick={() => {
+                    setEditingId(null);
+                    setForm({});
+                    setFile(null);
+                  }}
+                >
+                  Cancel
+                </SecondaryButton>
+              )}
+              <PrimaryButton
                 type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                variant="contained"
+                startIcon={editingId ? <EditIcon /> : <AddIcon />}
               >
                 {editingId ? 'Update Banner' : 'Create Banner'}
-              </button>
-            </div>
-          </form>
-        </div>
+              </PrimaryButton>
+            </Box>
+          </Box>
+        </FormSection>
+      </StyledCard>
 
-        {/* Banners List */}
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">Manage Banners</h2>
+      {/* Banners List */}
+      <StyledCard>
+        <CardContent sx={{ p: 0 }}>
+          <Box sx={{ p: 3, borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                color: novikTheme.colors.text,
+                fontFamily: novikTheme.typography.fontFamily,
+              }}
+            >
+              Manage Banners
+            </Typography>
+          </Box>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preview
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stats
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {banners.map(b => (
-                  <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{b.title}</td>
-                    <td className="px-6 py-4">
-                      {b.image_url ? (
-                        <img
-                          src={b.image_url}
-                          alt={b.title}
-                          className="h-20 w-auto object-contain rounded"
-                        />
-                      ) : (
-                        <div
-                          className="max-w-xs overflow-hidden"
-                          dangerouslySetInnerHTML={{ __html: b.code || '' }}
-                        />
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        ${b.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <StyledTableHeadCell>Title</StyledTableHeadCell>
+                  <StyledTableHeadCell>Preview</StyledTableHeadCell>
+                  <StyledTableHeadCell>Status</StyledTableHeadCell>
+                  <StyledTableHeadCell align="center">Actions</StyledTableHeadCell>
+                  <StyledTableHeadCell align="center">Statistics</StyledTableHeadCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {banners.length === 0 ? (
+                  <TableRow>
+                    <StyledTableCell colSpan={5} align="center">
+                      <Typography
+                        sx={{
+                          py: 4,
+                          color: novikTheme.colors.textMuted,
+                          fontFamily: novikTheme.typography.fontFamily,
+                        }}
                       >
-                        {b.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleEdit(b)}
-                          className="text-blue-600 hover:text-blue-900 font-medium cursor-pointer"
+                        No banners found. Create your first banner above.
+                      </Typography>
+                    </StyledTableCell>
+                  </TableRow>
+                ) : (
+                  banners.map(b => (
+                    <TableRow key={b.id} hover>
+                      <StyledTableCell>{b.title}</StyledTableCell>
+                      <StyledTableCell>
+                        {b.image_url ? (
+                          <Box
+                            component="img"
+                            src={b.image_url}
+                            alt={b.title}
+                            sx={{
+                              height: 80,
+                              width: 'auto',
+                              objectFit: 'contain',
+                              borderRadius: '8px',
+                              border: '1px solid #e0e0e0',
+                            }}
+                          />
+                        ) : b.code ? (
+                          <Box
+                            sx={{
+                              maxWidth: 300,
+                              overflow: 'hidden',
+                              p: 1,
+                              border: '1px solid #e0e0e0',
+                              borderRadius: '8px',
+                              backgroundColor: '#f8f9fa',
+                            }}
+                            dangerouslySetInnerHTML={{ __html: b.code }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              height: 80,
+                              width: 120,
+                              backgroundColor: '#f5f5f5',
+                              borderRadius: '8px',
+                              border: '1px solid #e0e0e0',
+                            }}
+                          >
+                            <ImageIcon sx={{ color: '#999' }} />
+                          </Box>
+                        )}
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <ActiveChip
+                          label={b.is_active ? 'Active' : 'Inactive'}
+                          active={b.is_active}
+                          size="small"
+                        />
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <IconButton
+                            onClick={() => handleEdit(b)}
+                            sx={{
+                              color: novikTheme.colors.primary,
+                              '&:hover': {
+                                backgroundColor: 'rgba(136, 169, 78, 0.08)',
+                              },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleDelete(b.id)}
+                            sx={{
+                              color: '#ef4444',
+                              '&:hover': {
+                                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <IconButton
+                          onClick={() => fetchStats(b.id)}
+                          sx={{
+                            color: '#3b82f6',
+                            '&:hover': {
+                              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                            },
+                          }}
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(b.id)}
-                          className="text-red-200 hover:text-red-900 font-medium cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => fetchStats(b.id)}
-                        className="text-blue-600 hover:text-blue-900 font-medium cursor-pointer"
-                      >
-                        View Stats
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                          <StatsIcon fontSize="small" />
+                        </IconButton>
+                      </StyledTableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </StyledCard>
 
-        {/* Stats Section */}
-        {stats.length > 0 && (
-          <div className="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
-            <h2 className="text-2xl font-semibold p-6 border-b bg-gray-50">Banner Statistics</h2>
+      {/* Stats Section */}
+      {stats.length > 0 && (
+        <StyledCard>
+          <CardContent sx={{ p: 0 }}>
+            <Box sx={{ p: 3, borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 600,
+                  color: novikTheme.colors.text,
+                  fontFamily: novikTheme.typography.fontFamily,
+                }}
+              >
+                Banner Statistics
+              </Typography>
+            </Box>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Country
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Views
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Clicks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableHeadCell>Date</StyledTableHeadCell>
+                    <StyledTableHeadCell>Country</StyledTableHeadCell>
+                    <StyledTableHeadCell align="center">Views</StyledTableHeadCell>
+                    <StyledTableHeadCell align="center">Clicks</StyledTableHeadCell>
+                    <StyledTableHeadCell align="center">CTR</StyledTableHeadCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {stats.map(s => (
-                    <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{s.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{s.country}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{s.views}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{s.clicks}</td>
-                    </tr>
+                    <TableRow key={s.id} hover>
+                      <StyledTableCell>
+                        {new Date(s.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <Chip
+                          label={s.country}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(136, 169, 78, 0.08)',
+                            color: novikTheme.colors.text,
+                            fontFamily: novikTheme.typography.fontFamily,
+                          }}
+                        />
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Typography
+                          sx={{
+                            fontWeight: 500,
+                            color: novikTheme.colors.text,
+                            fontFamily: novikTheme.typography.fontFamily,
+                          }}
+                        >
+                          {s.views.toLocaleString()}
+                        </Typography>
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Typography
+                          sx={{
+                            fontWeight: 500,
+                            color: novikTheme.colors.primary,
+                            fontFamily: novikTheme.typography.fontFamily,
+                          }}
+                        >
+                          {s.clicks.toLocaleString()}
+                        </Typography>
+                      </StyledTableCell>
+                      <StyledTableCell align="center">
+                        <Typography
+                          sx={{
+                            fontWeight: 600,
+                            color: s.views > 0 ? novikTheme.colors.primary : novikTheme.colors.textMuted,
+                            fontFamily: novikTheme.typography.fontFamily,
+                          }}
+                        >
+                          {s.views > 0 ? `${((s.clicks / s.views) * 100).toFixed(2)}%` : '0%'}
+                        </Typography>
+                      </StyledTableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Stats Summary */}
+            <Box sx={{ p: 3, backgroundColor: '#f8f9fa', borderTop: '1px solid #e0e0e0' }}>
+              <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: novikTheme.colors.textMuted,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Total Views
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.text,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    {stats.reduce((sum, s) => sum + s.views, 0).toLocaleString()}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: novikTheme.colors.textMuted,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Total Clicks
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.primary,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    {stats.reduce((sum, s) => sum + s.clicks, 0).toLocaleString()}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: novikTheme.colors.textMuted,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    Average CTR
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: novikTheme.colors.primary,
+                      fontFamily: novikTheme.typography.fontFamily,
+                    }}
+                  >
+                    {(() => {
+                      const totalViews = stats.reduce((sum, s) => sum + s.views, 0);
+                      const totalClicks = stats.reduce((sum, s) => sum + s.clicks, 0);
+                      return totalViews > 0 ? `${((totalClicks / totalViews) * 100).toFixed(2)}%` : '0%';
+                    })()}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </CardContent>
+        </StyledCard>
+      )}
+    </PageContainer>
   );
 }
