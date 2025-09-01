@@ -156,7 +156,13 @@ function Login() {
     try {
       const { accessToken, user } = await authService.login(formData.email, formData.password);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
-      navigate('/dashboard');
+
+      // Check if profile is completed
+      if (!user.profileCompleted) {
+        navigate('/complete-profile');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
@@ -176,7 +182,13 @@ function Login() {
     try {
       const { accessToken, user } = await authService.loginWithGoogle(res.credential);
       useAuthStore.setState({ accessToken, isAuthorized: true, user });
-      navigate('/dashboard');
+
+      // Check if profile is completed
+      if (!user.profileCompleted) {
+        navigate('/complete-profile');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Google login failed');
     } finally {

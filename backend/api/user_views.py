@@ -61,6 +61,25 @@ def update_profile_view(request):
         if "username" in serializer.validated_data:
             del serializer.validated_data["username"]
 
+        # Check if required fields are now filled to mark profile as complete
+        user = request.user
+        # required_fields = ['occupation', 'dob', 'phone', 'country', 'state', 'city']
+
+        # # Merge existing data with new data
+        # updated_data = {**serializer.validated_data}
+
+        # # Check if all required fields will be filled after update
+        # all_required_filled = all(
+        #     updated_data.get(field) or getattr(user, field)
+        #     for field in required_fields
+        # )
+
+        # # Also check if agree_to_terms is True (already set or being set)
+        # agree_to_terms = updated_data.get('agree_to_terms', user.agree_to_terms)
+
+        if not user.profile_completed:
+            serializer.validated_data["profile_completed"] = True
+
         serializer.save()
         return Response(serializer.data)
 

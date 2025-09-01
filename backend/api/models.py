@@ -16,6 +16,10 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=100, blank=True, null=True)
     agree_to_terms = models.BooleanField(default=False)
     receive_info = models.BooleanField(default=False)
+    profile_completed = models.BooleanField(
+        default=False,
+        help_text="Indicates if the user has completed their profile information",
+    )
 
     groups = models.ManyToManyField(
         "auth.Group",

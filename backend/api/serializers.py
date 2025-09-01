@@ -22,6 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
             "country",
             "state",
             "city",
+            "agree_to_terms",
+            "receive_info",
+            "profile_completed",
+            "is_superuser",
         )
         read_only_fields = ("id",)
 
@@ -89,6 +93,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         user.set_password(validated_data["password"])
+        # Mark profile as completed for manual registration since all fields are provided
+        user.profile_completed = True
         user.save()
 
         return user

@@ -229,6 +229,7 @@ function Register() {
     country: '',
     state: '',
     city: '',
+    phone: '',
   });
 
   // Location data states
@@ -327,11 +328,18 @@ function Register() {
       }
     }
 
+    // Validate phone format (basic validation)
+    if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
+      setError('Please enter a valid phone number');
+      return;
+    }
+
     if (
       formData.fullName &&
       formData.occupation &&
       formData.licenseId &&
       formData.dob &&
+      formData.phone &&
       formData.country &&
       formData.state &&
       formData.city &&
@@ -372,13 +380,13 @@ function Register() {
         firstName: firstName,
         lastName: lastName,
         occupation: formData.occupation,
-        agreeToTerms: formData.agreeToTerms,
-        receiveInfo: false,
         dob: formData.dob,
-        phone: '',
+        phone: formData.phone,
         country: formData.country,
         state: formData.state,
         city: formData.city,
+        agreeToTerms: formData.agreeToTerms,
+        receiveInfo: false,
       };
 
       const { accessToken, user } = await authService.register(registerData);
@@ -527,6 +535,17 @@ function Register() {
                 type="text"
                 label="Professional ID"
                 value={formData.licenseId}
+                onChange={handleChange}
+                required
+              />
+
+              <StyledTextField
+                fullWidth
+                name="phone"
+                type="tel"
+                label="Phone"
+                placeholder="+1 (555) 123-4567"
+                value={formData.phone}
                 onChange={handleChange}
                 required
               />

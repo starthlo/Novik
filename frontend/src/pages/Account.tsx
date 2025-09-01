@@ -141,6 +141,17 @@ const Account = () => {
   };
 
   const handleProfileSave = async () => {
+    // Validate required fields
+    const requiredFields = ['occupation', 'dob', 'phone', 'country', 'state', 'city'];
+    const missingFields = requiredFields.filter(
+      field => !editedProfile[field as keyof UserProfile]
+    );
+
+    if (missingFields.length > 0) {
+      showAlert(`Please fill in all required fields: ${missingFields.join(', ')}`, 'error');
+      return;
+    }
+
     try {
       setLoading(true);
       const updatedProfile = await userService.updateProfile(editedProfile);
@@ -290,7 +301,7 @@ const Account = () => {
                 value={editedProfile.dob || ''}
                 onChange={e => handleProfileChange('dob', e.target.value)}
                 disabled={!editing}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -365,6 +376,7 @@ const Account = () => {
                   borderColor: novikTheme.colors.primaryDark,
                   backgroundColor: 'rgba(136, 169, 78, 0.05)',
                 },
+                fontFamily: novikTheme.typography.fontFamily,
               }}
             >
               Change Password
@@ -379,17 +391,19 @@ const Account = () => {
                     type={showPasswords.current ? 'text' : 'password'}
                     value={passwordData.current_password}
                     onChange={e => handlePasswordChange('current_password', e.target.value)}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => togglePasswordVisibility('current')}
-                            edge="end"
-                          >
-                            {showPasswords.current ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => togglePasswordVisibility('current')}
+                              edge="end"
+                            >
+                              {showPasswords.current ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }
                     }}
                   />
                 </Grid>
@@ -400,14 +414,16 @@ const Account = () => {
                     type={showPasswords.new ? 'text' : 'password'}
                     value={passwordData.new_password}
                     onChange={e => handlePasswordChange('new_password', e.target.value)}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton onClick={() => togglePasswordVisibility('new')} edge="end">
-                            {showPasswords.new ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => togglePasswordVisibility('new')} edge="end">
+                              {showPasswords.new ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }
                     }}
                   />
                 </Grid>
@@ -418,17 +434,19 @@ const Account = () => {
                     type={showPasswords.confirm ? 'text' : 'password'}
                     value={passwordData.confirm_password}
                     onChange={e => handlePasswordChange('confirm_password', e.target.value)}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => togglePasswordVisibility('confirm')}
-                            edge="end"
-                          >
-                            {showPasswords.confirm ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => togglePasswordVisibility('confirm')}
+                              edge="end"
+                            >
+                              {showPasswords.confirm ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
                     }}
                   />
                 </Grid>
@@ -469,6 +487,7 @@ const Account = () => {
                 logout();
                 navigate('/login');
               }}
+              sx={{ fontFamily: novikTheme.typography.fontFamily }}
             >
               Sign Out
             </Button>

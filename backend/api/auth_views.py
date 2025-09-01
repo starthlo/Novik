@@ -369,6 +369,8 @@ def google_auth_token(request):
                 last_name=user_data.get("family_name", ""),
                 # Set agree_to_terms to True as they're coming from Google OAuth
                 agree_to_terms=True,
+                # Profile is NOT complete for Google OAuth users - they need to fill additional info
+                profile_completed=False,
             )
             # Set an unusable password as they'll login via Google
             user.set_unusable_password()

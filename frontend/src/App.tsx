@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
 import Account from './pages/Account';
+import ProfileCompletion from './pages/ProfileCompletion';
 import LegalNotice from './pages/LegalNotice';
 import FAQs from './pages/FAQs';
 import WhyFree from './pages/WhyFree';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />}></Route>
             <Route path="/reset-password" element={<ResetPassword />}></Route>
           </Route>
+          <Route path="/complete-profile" element={<ProfileCompletion />}></Route>
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />}></Route>
