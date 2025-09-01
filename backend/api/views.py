@@ -340,7 +340,6 @@ def enrich_response(text: str, anchor: str) -> str:
         The enriched text with medication links and PubMed references
     """
     # Dictionary of medications and their DrugBank IDs
-
     medications = {}
     file_path = os.path.join(os.path.dirname(__file__), "drugs/molecules.txt")
 
@@ -428,7 +427,7 @@ def enrich_response(text: str, anchor: str) -> str:
         )
 
         # Add new PubMed references
-        text = f"{text.rstrip()}\n\n---\n\n### PubMed References\n\n{ref_block}\n"
+        text = f"{text.rstrip()}\n\n\n### PubMed References\n\n{ref_block}\n"
     else:
         # Clean up PubMed search terms sections even if no articles found
         text = re.sub(

@@ -520,7 +520,7 @@ const Dashboard = () => {
                 <MessageRow key={msg.id} isUser={msg.role === 'user'}>
                   <MessageBubble isUser={msg.role === 'user'}>
                     {msg.role === 'assistant' ? (
-                      <MarkdownContent content={msg.content} isUser={false} />
+                      <MarkdownContent content={msg.content} />
                     ) : (
                       <>
                         {msg.content}
