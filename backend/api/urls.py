@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from . import auth_views, password_reset_views, views
+from . import auth_views, password_reset_views, user_views, views
 
 router = DefaultRouter()
 router.register("banners", views.BannerViewSet, basename="banner")
@@ -35,6 +35,12 @@ urlpatterns = [
         "auth/reset-password/",
         password_reset_views.reset_password_view,
         name="reset-password",
+    ),
+    # User Profile URLs
+    path("user/profile/", user_views.get_profile_view, name="get-profile"),
+    path("user/profile/update/", user_views.update_profile_view, name="update-profile"),
+    path(
+        "user/change-password/", user_views.change_password_view, name="change-password"
     ),
     # Novik Backend URLs
     path("patient/assistant/", views.patient_assistant_view),

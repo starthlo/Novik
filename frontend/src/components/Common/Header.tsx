@@ -17,10 +17,14 @@ import {
   useMediaQuery,
   styled,
   Typography,
+  Divider,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
 import NovikLogo from '../../assets/novik-logo.png';
 import { useAuthStore } from '../../stores/auth';
 import { novikTheme } from '../../styles/theme';
@@ -126,6 +130,7 @@ const Header = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminAnchorEl, setAdminAnchorEl] = useState<null | HTMLElement>(null);
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   const navItems: NavItem[] = [
     { text: 'Home', to: '/', requiresAuth: false },
@@ -159,6 +164,19 @@ const Header = () => {
 
   const closeAdminMenu = () => {
     setAdminAnchorEl(null);
+  };
+
+  const openUserMenu = (e: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchorEl(e.currentTarget);
+  };
+
+  const closeUserMenu = () => {
+    setUserMenuAnchorEl(null);
+  };
+
+  const handleUserMenuClick = (path: string) => {
+    navigate(path);
+    closeUserMenu();
   };
 
   const visibleNavItems = navItems.filter(item => !item.requiresAuth || isAuthorized);
@@ -239,7 +257,7 @@ const Header = () => {
                 </>
               )}
 
-              {/* Login/Logout Button */}
+              {/* User Menu / Login Button */}
               {!isAuthorized ? (
                 <LoginButton
                   component={RouterLink}
@@ -250,9 +268,76 @@ const Header = () => {
                   Login
                 </LoginButton>
               ) : (
-                <LoginButton onClick={handleLogout} variant="contained" disableElevation>
-                  Logout
-                </LoginButton>
+                <>
+                  <IconButton
+                    onClick={openUserMenu}
+                    sx={{
+                      ml: 1,
+                      color: novikTheme.colors.primary,
+                      '&:hover': {
+                        backgroundColor: 'rgba(136, 169, 78, 0.08)',
+                      },
+                    }}
+                  >
+                    <AccountCircleIcon sx={{ fontSize: 32 }} />
+                  </IconButton>
+                  <Menu
+                    anchorEl={userMenuAnchorEl}
+                    open={Boolean(userMenuAnchorEl)}
+                    onClose={closeUserMenu}
+                    PaperProps={{
+                      sx: {
+                        mt: 1.5,
+                        minWidth: 200,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        borderRadius: '8px',
+                      },
+                    }}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e0e0e0' }}>
+                      <Typography sx={{ fontWeight: 600, color: novikTheme.colors.text }}>
+                        {user?.first_name && user?.last_name
+                          ? `${user.first_name} ${user.last_name}`
+                          : user?.username || 'User'}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.875rem', color: novikTheme.colors.textMuted }}>
+                        {user?.email}
+                      </Typography>
+                    </Box>
+                    <MenuItem
+                      onClick={() => handleUserMenuClick('/account')}
+                      sx={{
+                        fontFamily: novikTheme.typography.fontFamily,
+                        py: 1.5,
+                        '&:hover': {
+                          backgroundColor: novikTheme.colors.section,
+                        },
+                      }}
+                    >
+                      <PersonIcon
+                        sx={{ mr: 1.5, fontSize: 20, color: novikTheme.colors.textMuted }}
+                      />
+                      My Account
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem
+                      onClick={handleLogout}
+                      sx={{
+                        fontFamily: novikTheme.typography.fontFamily,
+                        py: 1.5,
+                        color: '#dc3545',
+                        '&:hover': {
+                          backgroundColor: 'rgba(220, 53, 69, 0.08)',
+                        },
+                      }}
+                    >
+                      <LogoutIcon sx={{ mr: 1.5, fontSize: 20 }} />
+                      Sign Out
+                    </MenuItem>
+                  </Menu>
+                </>
               )}
             </Box>
           )}
@@ -314,6 +399,44 @@ const Header = () => {
               </>
             )}
 
+            {/* User Account Section in Mobile */}
+            {isAuthorized && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <ListItem sx={{ mb: 1 }}>
+                  <Box sx={{ width: '100%' }}>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        color: novikTheme.colors.text,
+                        fontSize: '0.9rem',
+                        fontFamily: novikTheme.typography.fontFamily,
+                      }}
+                    >
+                      {user?.first_name && user?.last_name
+                        ? `${user.first_name} ${user.last_name}`
+                        : user?.username || 'User'}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: novikTheme.colors.textMuted,
+                        fontSize: '0.8rem',
+                        fontFamily: novikTheme.typography.fontFamily,
+                      }}
+                    >
+                      {user?.email}
+                    </Typography>
+                  </Box>
+                </ListItem>
+                <ListItem disablePadding>
+                  <DrawerListItem component={RouterLink} to="/account" onClick={toggleMobile}>
+                    <PersonIcon sx={{ mr: 2, fontSize: 20, color: novikTheme.colors.textMuted }} />
+                    <ListItemText primary="My Account" />
+                  </DrawerListItem>
+                </ListItem>
+              </>
+            )}
+
             {/* Login/Logout in Mobile */}
             <ListItem disablePadding sx={{ mt: 3 }}>
               {!isAuthorized ? (
@@ -348,11 +471,11 @@ const Header = () => {
                   sx={{
                     mx: 2,
                     borderRadius: '20px',
-                    backgroundColor: novikTheme.colors.primary,
+                    backgroundColor: '#dc3545',
                     color: '#ffffff',
                     textAlign: 'center',
                     '&:hover': {
-                      backgroundColor: novikTheme.colors.primaryDark,
+                      backgroundColor: '#c82333',
                       color: '#ffffff',
                     },
                     '& .MuiListItemText-primary': {
@@ -361,7 +484,8 @@ const Header = () => {
                     },
                   }}
                 >
-                  <ListItemText primary="Logout" />
+                  <LogoutIcon sx={{ mr: 1, fontSize: 20, color: '#ffffff' }} />
+                  <ListItemText primary="Sign Out" />
                 </DrawerListItem>
               )}
             </ListItem>

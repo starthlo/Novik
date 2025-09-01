@@ -11,6 +11,7 @@ import ResetPassword from './pages/ResetPassword';
 import HomePage from './pages/HomePage';
 import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
+import Account from './pages/Account';
 import LegalNotice from './pages/LegalNotice';
 import FAQs from './pages/FAQs';
 import WhyFree from './pages/WhyFree';
@@ -44,6 +45,7 @@ export default function App() {
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />}></Route>
+              <Route path="/account" element={<Account />}></Route>
               <Route path="/banner" element={<BannerManagement />}></Route>
               <Route path="/users" element={<UserManagement />}></Route>
             </Route>
