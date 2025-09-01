@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { SWRConfig } from 'swr';
 
-import UserManagement from './components/UserManagement';
 import BannerManagement from './components/Bannermanagement';
 
 import Login from './pages/Login';
@@ -60,7 +59,6 @@ export default function App() {
               <Route path="/admin/dashboard" element={<AdminDashboard />}></Route>
               <Route path="/admin/users" element={<AdminUsers />}></Route>
               <Route path="/banner" element={<BannerManagement />}></Route>
-              <Route path="/users" element={<UserManagement />}></Route>
             </Route>
           </Route>
           <Route path="/legal-notice" element={<LegalNotice />}></Route>

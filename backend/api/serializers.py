@@ -16,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "license_id",
             "dob",
             "phone",
             "occupation",
@@ -23,10 +24,12 @@ class UserSerializer(serializers.ModelSerializer):
             "state",
             "city",
             "agree_to_terms",
+            "attest_professional",
             "receive_info",
             "profile_completed",
             "is_superuser",
             "is_staff",
+            "date_joined",
         )
         read_only_fields = ("id",)
 
@@ -46,6 +49,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "license_id",
             "dob",
             "phone",
             "occupation",
@@ -53,6 +57,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "state",
             "city",
             "agree_to_terms",
+            "attest_professional",
             "receive_info",
         )
         extra_kwargs = {
@@ -60,6 +65,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             "first_name": {"required": False},
             "last_name": {"required": False},
             "agree_to_terms": {"required": True},
+            "attest_professional": {"required": True},
+            "license_id": {"required": True},
         }
 
     def validate(self, attrs):
@@ -84,12 +91,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
             dob=validated_data.get("dob", None),
+            license_id=validated_data.get("license_id", ""),
             phone=validated_data.get("phone", ""),
             occupation=validated_data.get("occupation", ""),
             country=validated_data.get("country", ""),
             state=validated_data.get("state", ""),
             city=validated_data.get("city", ""),
             agree_to_terms=validated_data.get("agree_to_terms", False),
+            attest_professional=validated_data.get("attest_professional", False),
             receive_info=validated_data.get("receive_info", False),
         )
 

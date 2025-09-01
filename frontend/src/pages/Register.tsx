@@ -380,12 +380,14 @@ function Register() {
         firstName: firstName,
         lastName: lastName,
         occupation: formData.occupation,
+        licenseId: formData.licenseId,
         dob: formData.dob,
         phone: formData.phone,
         country: formData.country,
         state: formData.state,
         city: formData.city,
         agreeToTerms: formData.agreeToTerms,
+        attestProfessional: formData.attestProfessional,
         receiveInfo: false,
       };
 
@@ -533,7 +535,7 @@ function Register() {
                 fullWidth
                 name="licenseId"
                 type="text"
-                label="Professional ID"
+                label="Dental license/registration number"
                 value={formData.licenseId}
                 onChange={handleChange}
                 required
@@ -600,7 +602,7 @@ function Register() {
                       size="small"
                     />
                   }
-                  label="I confirm I am a licensed healthcare professional."
+                  label="I confirm that I am a licensed/registered dental professional and understand that Novik is an informational assistant—not a decision-making tool or a substitute for clinical judgment. *"
                 />
               </CheckboxGroup>
 
@@ -624,7 +626,7 @@ function Register() {
                       <LinkText component={RouterLink} to="/legal#privacy">
                         Privacy Policy
                       </LinkText>
-                      .
+                      . *
                     </span>
                   }
                 />

@@ -148,11 +148,12 @@ const ProfileCompletion = () => {
   const [formData, setFormData] = useState({
     occupation: '',
     dob: '',
-    phone: '',
+    licenseId: '',
     country: '',
     state: '',
     city: '',
     agreeToTerms: false,
+    attestProfessional: false,
     receiveInfo: false,
   });
 
@@ -207,11 +208,12 @@ const ProfileCompletion = () => {
     setFormData({
       occupation: user.occupation || '',
       dob: user.dob || '',
-      phone: user.phone || '',
+      licenseId: user.licenseId || '',
       country: user.country || '',
       state: user.state || '',
       city: user.city || '',
       agreeToTerms: user.agreeToTerms || false,
+      attestProfessional: user.attestProfessional || false,
       receiveInfo: user.receiveInfo || false,
     });
 
@@ -237,16 +239,15 @@ const ProfileCompletion = () => {
 
     if (!formData.occupation) newErrors.occupation = 'Occupation is required';
     if (!formData.dob) newErrors.dob = 'Date of birth is required';
-    if (!formData.phone) newErrors.phone = 'Phone number is required';
+    if (!formData.licenseId) newErrors.licenseId = 'Dental license/registration number is required';
     if (!formData.country) newErrors.country = 'Country is required';
     if (!formData.state) newErrors.state = 'State/Province is required';
     if (!formData.city) newErrors.city = 'City is required';
     if (!formData.agreeToTerms)
       newErrors.agreeToTerms = 'You must agree to the terms and conditions';
-
-    if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
-    }
+    if (!formData.attestProfessional)
+      newErrors.attestProfessional =
+        'You must attest that you are a licensed/registered dental professional';
 
     // Validate date of birth (must be in the past and reasonable age)
     if (formData.dob) {
@@ -340,7 +341,7 @@ const ProfileCompletion = () => {
                   onChange={e => handleChange('dob', e.target.value)}
                   error={!!errors.dob}
                   helperText={errors.dob}
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               </Grid>
 
@@ -348,12 +349,11 @@ const ProfileCompletion = () => {
                 <StyledTextField
                   fullWidth
                   required
-                  label="Phone Number"
-                  placeholder="+1 (555) 123-4567"
-                  value={formData.phone}
-                  onChange={e => handleChange('phone', e.target.value)}
-                  error={!!errors.phone}
-                  helperText={errors.phone}
+                  label="Dental license/registration number"
+                  value={formData.licenseId}
+                  onChange={e => handleChange('licenseId', e.target.value)}
+                  error={!!errors.licenseId}
+                  helperText={errors.licenseId}
                 />
               </Grid>
 
@@ -443,7 +443,29 @@ const ProfileCompletion = () => {
                   <FormHelperText error>{errors.agreeToTerms}</FormHelperText>
                 )}
               </Grid>
-
+              <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.attestProfessional}
+                      onChange={e => handleChange('attestProfessional', e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Typography
+                      sx={{ fontSize: '0.9rem', fontFamily: novikTheme.typography.fontFamily }}
+                    >
+                      I confirm that I am a licensed/registered dental professional and understand
+                      that Novik is an informational assistant—not a decision-making tool or a
+                      substitute for clinical judgment. *
+                    </Typography>
+                  }
+                />
+                {errors.attestProfessional && (
+                  <FormHelperText error>{errors.attestProfessional}</FormHelperText>
+                )}
+              </Grid>
               <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={

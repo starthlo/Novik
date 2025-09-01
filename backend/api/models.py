@@ -8,6 +8,7 @@ from django.utils import timezone
 
 
 class CustomUser(AbstractUser):
+    license_id = models.CharField(max_length=100, blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     occupation = models.CharField(max_length=100, blank=True, null=True)
@@ -15,6 +16,7 @@ class CustomUser(AbstractUser):
     state = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     agree_to_terms = models.BooleanField(default=False)
+    attest_professional = models.BooleanField(default=False)
     receive_info = models.BooleanField(default=False)
     profile_completed = models.BooleanField(
         default=False,
