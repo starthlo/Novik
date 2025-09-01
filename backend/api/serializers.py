@@ -30,6 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "is_staff",
             "date_joined",
+            "is_active"
         )
         read_only_fields = ("id",)
 
