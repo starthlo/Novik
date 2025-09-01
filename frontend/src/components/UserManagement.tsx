@@ -13,7 +13,7 @@ type User = {
   state: string;
   city: string;
   is_staff: boolean;
-  is_superuser: boolean;
+  isSuperuser: boolean;
   is_active: boolean;
   date_joined: string;
 };
@@ -188,7 +188,7 @@ export default function UserManagement() {
                 </div>
                 <div className="detail-item">
                   <strong>Superuser?</strong>
-                  <span>{u.is_superuser ? 'Yes' : 'No'}</span>
+                  <span>{u.isSuperuser ? 'Yes' : 'No'}</span>
                 </div>
 
                 <div className="detail-item">&nbsp;</div>

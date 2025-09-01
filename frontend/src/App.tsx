@@ -13,6 +13,8 @@ import ContactUs from './pages/ContactUs';
 import DashboardPage from './pages/Dashboard';
 import Account from './pages/Account';
 import ProfileCompletion from './pages/ProfileCompletion';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
 import LegalNotice from './pages/LegalNotice';
 import FAQs from './pages/FAQs';
 import WhyFree from './pages/WhyFree';
@@ -20,8 +22,10 @@ import Partners from './pages/Partners';
 
 import { PublicRoute } from './routes/PublicRoute';
 import { PrivateRoute } from './routes/PrivateRoute';
+import { AdminRoute } from './routes/AdminRoute';
 import PublicLayout from './layouts/PublicLayout';
 import AppLayout from './layouts/AppLayout';
+import Forbidden from './pages/Forbidden';
 import ApiPage from './pages/Api';
 import CookiePolicy from './pages/CookiePolicy';
 import TermsOfUse from './pages/TermsOfUse';
@@ -44,10 +48,17 @@ export default function App() {
             <Route path="/reset-password" element={<ResetPassword />}></Route>
           </Route>
           <Route path="/complete-profile" element={<ProfileCompletion />}></Route>
+          <Route path="/forbidden" element={<Forbidden />}></Route>
           <Route element={<PrivateRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />}></Route>
               <Route path="/account" element={<Account />}></Route>
+            </Route>
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />}></Route>
+              <Route path="/admin/users" element={<AdminUsers />}></Route>
               <Route path="/banner" element={<BannerManagement />}></Route>
               <Route path="/users" element={<UserManagement />}></Route>
             </Route>

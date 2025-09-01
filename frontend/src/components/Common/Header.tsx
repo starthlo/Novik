@@ -143,7 +143,9 @@ const Header = () => {
   ];
 
   const adminItems = [
-    { text: 'User Management', to: '/users' },
+    { text: 'Admin Dashboard', to: '/admin/dashboard' },
+    { text: 'User Management', to: '/admin/users' },
+    { text: 'Legacy User Management', to: '/users' },
     { text: 'Banner Management', to: '/banner' },
   ];
 
@@ -229,11 +231,13 @@ const Header = () => {
                     anchorEl={adminAnchorEl}
                     open={Boolean(adminAnchorEl)}
                     onClose={closeAdminMenu}
-                    PaperProps={{
-                      sx: {
-                        mt: 1,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        borderRadius: '8px',
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          mt: 1,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          borderRadius: '8px',
+                        },
                       },
                     }}
                   >
@@ -285,12 +289,14 @@ const Header = () => {
                     anchorEl={userMenuAnchorEl}
                     open={Boolean(userMenuAnchorEl)}
                     onClose={closeUserMenu}
-                    PaperProps={{
-                      sx: {
-                        mt: 1.5,
-                        minWidth: 200,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        borderRadius: '8px',
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          mt: 1.5,
+                          minWidth: 200,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          borderRadius: '8px',
+                        },
                       },
                     }}
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -321,6 +327,41 @@ const Header = () => {
                       />
                       My Account
                     </MenuItem>
+                    {(user?.is_staff || user?.isSuperuser) && [
+                      <Divider key="admin-divider" />,
+                      <MenuItem
+                        key="admin-dashboard"
+                        onClick={() => handleUserMenuClick('/admin/dashboard')}
+                        sx={{
+                          fontFamily: novikTheme.typography.fontFamily,
+                          py: 1.5,
+                          '&:hover': {
+                            backgroundColor: novikTheme.colors.section,
+                          },
+                        }}
+                      >
+                        <PersonIcon
+                          sx={{ mr: 1.5, fontSize: 20, color: novikTheme.colors.textMuted }}
+                        />
+                        Admin Dashboard
+                      </MenuItem>,
+                      <MenuItem
+                        key="admin-users"
+                        onClick={() => handleUserMenuClick('/admin/users')}
+                        sx={{
+                          fontFamily: novikTheme.typography.fontFamily,
+                          py: 1.5,
+                          '&:hover': {
+                            backgroundColor: novikTheme.colors.section,
+                          },
+                        }}
+                      >
+                        <PersonIcon
+                          sx={{ mr: 1.5, fontSize: 20, color: novikTheme.colors.textMuted }}
+                        />
+                        Manage Users
+                      </MenuItem>,
+                    ]}
                     <Divider />
                     <MenuItem
                       onClick={handleLogout}

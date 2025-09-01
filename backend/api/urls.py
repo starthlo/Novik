@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from . import auth_views, password_reset_views, user_views, views
+from . import admin_views, auth_views, password_reset_views, user_views, views
 
 router = DefaultRouter()
 router.register("banners", views.BannerViewSet, basename="banner")
@@ -44,6 +44,39 @@ urlpatterns = [
     ),
     # Novik Backend URLs
     path("patient/assistant/", views.patient_assistant_view),
+    # Admin URLs
+    path("admin/users/", admin_views.get_users_view, name="admin-users"),
+    path(
+        "admin/users/<int:user_id>/",
+        admin_views.get_user_detail_view,
+        name="admin-user-detail",
+    ),
+    path(
+        "admin/users/<int:user_id>/update/",
+        admin_views.update_user_view,
+        name="admin-user-update",
+    ),
+    path(
+        "admin/users/<int:user_id>/staff/",
+        admin_views.make_staff_view,
+        name="admin-make-staff",
+    ),
+    path(
+        "admin/users/toggle-status/",
+        admin_views.toggle_user_status_view,
+        name="admin-toggle-status",
+    ),
+    path("admin/users/delete/", admin_views.delete_user_view, name="admin-delete-user"),
+    path(
+        "admin/users/export/",
+        admin_views.export_users_csv_view,
+        name="admin-export-users",
+    ),
+    path(
+        "admin/dashboard/stats/",
+        admin_views.get_dashboard_stats_view,
+        name="admin-dashboard-stats",
+    ),
 ]
 
 urlpatterns += router.urls

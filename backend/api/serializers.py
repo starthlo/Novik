@@ -26,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             "receive_info",
             "profile_completed",
             "is_superuser",
+            "is_staff",
         )
         read_only_fields = ("id",)
 
