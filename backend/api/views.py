@@ -436,7 +436,7 @@ def enrich_response(text: str, anchor: str) -> str:
             text,
             flags=re.MULTILINE,
         )
-        text = f"{text.rstrip()}\n\n**No recent PubMed references were found that specifically relate to these factors.**\n"
+        # text = f"{text.rstrip()}\n\n**No recent PubMed references were found that specifically relate to these factors.**\n"
 
     return text
 
