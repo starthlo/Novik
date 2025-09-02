@@ -402,7 +402,7 @@ def enrich_response(text: str, anchor: str) -> str:
                     anchor_index += 1
                     text = re.sub(
                         rf"\[\^{order_num}\]",
-                        f"[^{anchor_index}^](#{anchor_index}{anchor}) [^{order_num}]",
+                        f" [^{anchor_index}^](#{anchor_index}{anchor}) [^{order_num}]",
                         text,
                     )
                 all_refs.extend(articles)
