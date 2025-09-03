@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 import random
@@ -18,6 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Banner, BannerStat, Conversation
+from .prompts import get_system_instructions
 from .pubmed import get_articles
 from .schemas.openai_schemas import (
     ErrorResponseSerializer,
@@ -35,7 +37,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
+# ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
 
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -234,22 +236,8 @@ def patient_assistant_view(request):
         # If PDF is provided, process it and combine with message content
         file = None
         if pdf_file:
-            import PyPDF2
-
-            reader = PyPDF2.PdfReader(pdf_file)
-
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() or ""
-
-            if not text.strip():
-                return Response(
-                    {"error": "Could not extract text from PDF"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if text:
-                file = {"file_name": pdf_file.name, "text": text}
+            base64_string = base64.b64encode(pdf_file.read()).decode("utf-8")
+            file = {"name": pdf_file.name, "data": base64_string}
         else:
             if not content:
                 return Response(
@@ -260,58 +248,43 @@ def patient_assistant_view(request):
         conversation = Conversation.objects.filter(user=request.user).first()
         conversation.add_message("user", content, file=file)
 
-        thread = client.beta.threads.create()
+        messages = []
         for message in conversation.messages:
-            content_to_process = message["content"]
+            content_parts = []
             if message["file"]:
-                content_to_process += f"\n\n{message['file']['text']}"
-            client.beta.threads.messages.create(
-                thread_id=thread.id, role=message["role"], content=content_to_process
+                content_parts.append(
+                    {
+                        "type": "input_file",
+                        "filename": message["file"]["name"],
+                        "file_data": f"data:application/pdf;base64,{message['file']['data']}",
+                    }
+                )
+
+            content_parts.append(
+                {
+                    "type": "input_text"
+                    if message["role"] == "user"
+                    else "output_text",
+                    "text": message["content"],
+                }
             )
 
-        run = client.beta.threads.runs.create(
-            thread_id=thread.id, assistant_id=ASSISTANT_ID
-        )
-
-        while True:
-            run_status = client.beta.threads.runs.retrieve(
-                thread_id=thread.id, run_id=run.id
+            messages.append(
+                {
+                    "role": message["role"],
+                    "content": content_parts,
+                }
             )
-            if run_status.status == "completed":
-                break
-            time.sleep(1)
-
-        messages = client.beta.threads.messages.list(thread_id=thread.id)
-        text = messages.data[0].content[0].text.value
-        annotations = messages.data[0].content[0].text.annotations
 
         anchor = "".join(random.choices(string.ascii_letters + string.digits, k=5))
 
-        # Iterate over the annotations and add footnotes
-        citations = []
-        for index, annotation in enumerate(annotations):
-            ## Replace the text with a footnote
-            text = text.replace(annotation.text, "", 1)
-            # Gather citations based on annotation attributes
-            if file_citation := getattr(annotation, "file_citation", None):
-                cited_file = client.files.retrieve(file_citation.file_id)
-                citations.append(f"[{index + 1}] {cited_file.filename}")
-            elif file_path := getattr(annotation, "file_path", None):
-                cited_file = client.files.retrieve(file_path.file_id)
-                citations.append(
-                    f"[{index + 1}] Click <here> to download {cited_file.filename}"
-                )
+        response = client.responses.create(
+            model="gpt-5",
+            instructions=get_system_instructions(),
+            input=messages,
+        )
 
-        if citations:
-            for ref_marker in ["### References", "**References"]:
-                ref_index = text.find(ref_marker)
-                if ref_index != -1:
-                    text = text[:ref_index]
-                    break
-
-            text = f"{text}\r\n\n### References:  \r\n{chr(10).join(f'  {citation}' for citation in citations)}\r\n"
-
-        enriched_response = enrich_response(text + "\n", anchor)
+        enriched_response = enrich_response(response.output_text + "\n", anchor)
 
         conversation.add_message("assistant", enriched_response)
         return Response({"message": enriched_response}, status=status.HTTP_200_OK)
@@ -413,10 +386,10 @@ def enrich_response(text: str, anchor: str) -> str:
     # Format and add references to the output
     if match_found and all_refs:
         # Remove existing references section
-        text = re.sub(r"### References:[\s\S]*?(?=\n###|\Z)", "", text)
         text = re.sub(
-            r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n(?:\d+\.\s+\([^)]+\)\s*\n)*(?:\n(?=\*\*[A-Z]\.)|(?=\n###)|$)",
-            "",
+            # r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n(?:\d+\.\s+\([^)]+\)\s*\n)*(?:\n(?=\*\*[A-Z]\.)|(?=\n###)|$)",
+            r"\n*PubMed Search Terms:\s*\n(?:\d+\..*\n)+(?:.*\n)*?(?=\n[A-Z]\.|$)",
+            "\n",
             text,
             flags=re.MULTILINE,
         )
@@ -431,8 +404,8 @@ def enrich_response(text: str, anchor: str) -> str:
     else:
         # Clean up PubMed search terms sections even if no articles found
         text = re.sub(
-            r"(\*\*)?PubMed Search Terms:(\*\*)?\s*\n(?:\d+\.\s+\([^)]+\)\s*\n)*(?:\n(?=\*\*[A-Z]\.)|(?=\n###)|$)",
-            "",
+            r"\n*PubMed Search Terms:\s*\n(?:\d+\..*\n)+(?:.*\n)*?(?=\n[A-Z]\.|$)",
+            "\n",
             text,
             flags=re.MULTILINE,
         )
